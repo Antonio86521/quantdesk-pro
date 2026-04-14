@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import norm, skew, kurtosis
+from auth import require_login, sidebar_user_widget
+
+require_login()
+sidebar_user_widget()
 
 
 # ── Return metrics ────────────────────────────────────────────────────────────
