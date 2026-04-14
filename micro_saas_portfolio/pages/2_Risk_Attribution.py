@@ -252,7 +252,7 @@ fig_sw, ax_sw = plt.subplots(figsize=(10, 3))
 colors_sw = [RED if v < pos_val.sum() else GREEN for v in sweep_vals]
 ax_sw.bar(sweep_range, sweep_vals, width=3.5, color=colors_sw, alpha=0.75, edgecolor="#0a0e1a")
 ax_sw.axhline(pos_val.sum(), color="white", lw=1.2, ls="--", label="Current Value")
-ax_sw.axhline(total_cost if True else 0, color=YELLOW, lw=1, ls=":", label="Cost Basis")
+ax_sw.axhline(pos_val.sum(), color="white", lw=1.2, ls="--", label="Current Value")
 ax_sw.set_xlabel("Market Move (%)"); ax_sw.set_ylabel("Portfolio Value ($)")
 ax_sw.set_title("Portfolio Value Across Market Scenarios")
 ax_sw.legend(); ax_sw.grid(True, alpha=0.3, axis="y")
