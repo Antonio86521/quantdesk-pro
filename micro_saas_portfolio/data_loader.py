@@ -1,7 +1,10 @@
 import yfinance as yf
 import pandas as pd
 import streamlit as st
+from auth import require_login, sidebar_user_widget
 
+require_login()
+sidebar_user_widget()
 
 @st.cache_data(ttl=600)
 def load_price_history(ticker: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
