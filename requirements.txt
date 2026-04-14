@@ -5,3 +5,5 @@ numpy
 matplotlib
 scipy
 plotly
+supabase
+Authlib>=1.3.2Authlib>=1.3.2
