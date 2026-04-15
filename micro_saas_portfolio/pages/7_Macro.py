@@ -24,7 +24,28 @@ from analytics import annualized_return, annualized_vol, correlation_matrix, rol
 
 st.set_page_config(page_title="Macro Dashboard", layout="wide", page_icon="🌍")
 apply_theme()
-page_header("Macro Dashboard", "Rates · FX · Commodities · Equities · Crypto · Regimes", badge="LIVE")
+st.markdown("""
+<div style="padding: 2px 0 14px 0; border-bottom: 1px solid #1b2638; margin-bottom: 16px;">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <span style="font-size:24px; font-weight:800; color:#d6deeb;">
+      Macro Dashboard
+    </span>
+    <span style="
+        padding:2px 7px;
+        border-radius:999px;
+        font-size:9px;
+        font-weight:800;
+        border:1px solid #1b2638;
+        color:#35c2ff;">
+      LIVE
+    </span>
+  </div>
+
+  <div style="margin-top:6px; font-size:11px; color:#7f8ea3;">
+    RATES · FX · COMMODITIES · EQUITIES · CRYPTO · REGIMES
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 require_login()
 
@@ -283,7 +304,24 @@ for lbl in headline_labels:
     delta = f"{row['1D %']:+.2f}%" if pd.notna(row["1D %"]) else "—"
     monitor_items.append((lbl, value, delta))
 
-monitor_strip(monitor_items)
+html = ""
+for label, value, delta in monitor_items:
+    color = "#00d27a" if str(delta).startswith("+") else "#ff5c5c"
+
+    html += f"""
+    <div style="padding:7px 12px; border-right:1px solid #1b2638;
+                min-width:120px; display:flex; align-items:center; gap:6px;">
+        <span style="color:#7f8ea3; font-size:9px; font-weight:700;">{label}</span>
+        <span style="color:#d6deeb; font-size:13px; font-weight:700;">{value}</span>
+        <span style="color:{color}; font-size:11px; font-weight:700;">{delta}</span>
+    </div>
+    """
+
+st.markdown(f"""
+<div style="display:flex; flex-wrap:wrap; border:1px solid #1b2638; border-radius:7px; overflow:hidden;">
+{html}
+</div>
+""", unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
