@@ -22,7 +22,7 @@ apply_theme()
 page_header("Macro Dashboard", "Rates · FX · Commodities · Equities · Crypto · Regimes")
 
 require_login()
-sidebar_user_widget()
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Universe Definition
