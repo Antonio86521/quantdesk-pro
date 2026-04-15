@@ -6,7 +6,9 @@ Run with:  streamlit run ap.py
 """
 
 import streamlit as st
-from utils import apply_theme
+import pandas as pd
+
+from utils import apply_theme, terminal_ribbon
 from auth import (
     _auth_configured,
     get_user_name,
@@ -15,7 +17,7 @@ from auth import (
     sidebar_user_widget,
 )
 from database import create_profile_if_needed
-from data_loader import load_macro_dataset, load_macro_snapshot, load_price_history, load_close_series
+from data_loader import load_close_series
 
 st.set_page_config(
     page_title="QuantDesk Pro",
@@ -25,41 +27,100 @@ st.set_page_config(
 )
 apply_theme()
 
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def build_ribbon_item(label: str, ticker: str):
+    s = load_close_series(ticker, period="5d")
+    if s.empty or len(s) < 2:
+        return (label, "N/A", "—")
+
+    last = float(s.iloc[-1])
+    prev = float(s.iloc[-2])
+    chg = ((last / prev) - 1) * 100 if prev != 0 else 0.0
+
+    if abs(last) >= 1000:
+        value = f"{last:,.0f}"
+    elif abs(last) >= 100:
+        value = f"{last:,.2f}"
+    else:
+        value = f"{last:.2f}"
+
+    delta = f"{chg:+.2f}%"
+    return (label, value, delta)
+
+
+def module_card(icon: str, title: str, page_path: str, features: list[str], status: str = "LIVE"):
+    st.markdown(
+        f"""
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:14px 14px 10px 14px;
+                    min-height:210px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div>
+              <div style="font-size:20px; line-height:1;">{icon}</div>
+              <div style="color:#d6deeb; font-size:14px; font-weight:800; letter-spacing:0.04em; margin-top:8px;">
+                {title}
+              </div>
+            </div>
+            <div style="display:inline-block; padding:2px 8px; border-radius:999px;
+                        border:1px solid #1b2638; color:#35c2ff; font-size:9px; font-weight:800;
+                        letter-spacing:0.12em; text-transform:uppercase;">
+              {status}
+            </div>
+          </div>
+          <ul style="margin:8px 0 12px 0; padding-left:18px;">
+            {"".join(f'<li style="color:#7f8ea3; font-size:12px; margin:4px 0;">{f}</li>' for f in features)}
+          </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if st.button(f"Open {title}", key=f"open_{page_path}", use_container_width=True):
+        st.switch_page(page_path)
+
+
 # ── Login gate ────────────────────────────────────────────────────────────────
+
 if _auth_configured():
     if not st.user.get("is_logged_in", False):
         st.markdown(
             """
-            <div style="padding: 40px 0 16px 0; text-align:center;">
-              <span style="font-size:44px; font-weight:900; letter-spacing:-1px; color:#e2e8f0;">
-                Quant<span style="color:#00d4ff;">Desk</span> <span style="color:#7c3aed;">Pro</span>
+            <div style="padding: 42px 0 10px 0; text-align:center;">
+              <span style="font-size:44px; font-weight:900; letter-spacing:-1px; color:#d6deeb;">
+                Quant<span style="color:#35c2ff;">Desk</span> <span style="color:#4f8cff;">Pro</span>
               </span>
             </div>
-            <div style="text-align:center; font-size:13px; color:#64748b; letter-spacing:0.15em;
-                        text-transform:uppercase; margin-bottom:36px;">
-              Professional Quantitative Finance Dashboard
+            <div style="text-align:center; font-size:12px; color:#7f8ea3; letter-spacing:0.16em;
+                        text-transform:uppercase; margin-bottom:28px;">
+              Multi-Asset Analytics Workstation
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        col = st.columns([1, 2, 1])[1]
+        col = st.columns([1, 1.6, 1])[1]
         with col:
             st.markdown(
                 """
-                <div style="background:#111827; border:1px solid #1e2d45; border-radius:12px;
-                            padding:32px 36px; text-align:center;">
-                  <div style="font-size:28px; margin-bottom:12px;">🔐</div>
-                  <p style="color:#94a3b8; font-size:15px; line-height:1.8; margin:0 0 24px 0;">
-                    Sign in with your Google account to access your personal
-                    portfolio, saved strategies, and all analytics tools.
+                <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                            border:1px solid #1b2638; border-radius:10px;
+                            padding:30px 34px; text-align:center;">
+                  <div style="font-size:28px; margin-bottom:10px;">🔐</div>
+                  <div style="color:#d6deeb; font-size:18px; font-weight:800; margin-bottom:10px;">
+                    Secure Access
+                  </div>
+                  <p style="color:#7f8ea3; font-size:14px; line-height:1.8; margin:0 0 20px 0;">
+                    Sign in to access portfolio analytics, derivatives tools, macro dashboards,
+                    volatility surfaces, and saved workspace data.
                   </p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
             st.button(
-                "🔑  Sign in with Google",
+                "Sign in with Google",
                 on_click=st.login,
                 kwargs={"provider": "google"},
                 use_container_width=True,
@@ -73,130 +134,258 @@ if _auth_configured():
     if user_id:
         create_profile_if_needed(user_id, user_email, user_name)
 
-# ── Sidebar user widget ───────────────────────────────────────────────────────
 sidebar_user_widget()
 
-# ── Homepage ──────────────────────────────────────────────────────────────────
+
+# ── Header ────────────────────────────────────────────────────────────────────
+
 st.markdown(
     """
-    <div style="padding: 24px 0 8px 0;">
-      <span style="font-size:40px; font-weight:900; letter-spacing:-1px; color:#e2e8f0;">
-        Quant<span style="color:#00d4ff;">Desk</span> <span style="color:#7c3aed;">Pro</span>
-      </span>
-    </div>
-    <div style="font-size:13px; color:#64748b; letter-spacing:0.15em;
-                text-transform:uppercase; margin-bottom:28px;">
-      Professional Quantitative Finance Dashboard
+    <div style="padding: 2px 0 12px 0; border-bottom:1px solid #1b2638; margin-bottom:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div style="font-size:28px; font-weight:900; letter-spacing:-0.5px; color:#d6deeb;">
+            Quant<span style="color:#35c2ff;">Desk</span> <span style="color:#4f8cff;">Pro</span>
+          </div>
+          <div style="margin-top:4px; color:#7f8ea3; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;">
+            Multi-Asset Analytics Workstation
+          </div>
+        </div>
+        <div style="display:inline-block; padding:3px 8px; border-radius:999px;
+                    border:1px solid #1b2638; color:#35c2ff; font-size:9px; font-weight:800;
+                    letter-spacing:0.12em; text-transform:uppercase;">
+          Terminal Mode
+        </div>
+      </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# Welcome banner
 if _auth_configured():
     name = get_user_name()
     st.markdown(
         f"""
-        <div style="background:linear-gradient(135deg,#00d4ff12,#7c3aed12);
-                    border:1px solid #1e2d45; border-radius:10px;
-                    padding:14px 20px; margin-bottom:20px;">
-          <span style="color:#e2e8f0; font-size:15px;">
-            Welcome back, <strong>{name}</strong> 👋
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px;
+                    padding:10px 14px; margin-bottom:12px;">
+          <span style="color:#d6deeb; font-size:13px; font-weight:700;">
+            USER SESSION:
+          </span>
+          <span style="color:#7f8ea3; font-size:13px; margin-left:8px;">
+            {name}
           </span>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-st.markdown(
-    """
-    <div style="background:#111827; border:1px solid #1e2d45; border-radius:12px;
-                padding:20px 28px; margin-bottom:24px;">
-      <p style="color:#94a3b8; margin:0; line-height:1.8; font-size:15px;">
-        A full-stack quantitative finance workstation built in Python.
-        Analyse your portfolio, price options across three models, study the volatility surface,
-        run Monte Carlo simulations, and backtest option strategies — all in one place.
-      </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
-# ── Module cards ──────────────────────────────────────────────────────────────
-modules = [
-    ("📊", "Portfolio Analytics", "1_Portfolio", [
-        "P&L, Sharpe, Sortino, Calmar",
-        "Benchmark comparison & alpha/beta",
-        "Technical indicators (RSI, MACD, BBands)",
-        "Save & load portfolios from database",
-    ]),
-    ("⚠️", "Risk & Attribution", "2_Risk_Attribution", [
-        "Rolling vol, Sharpe, beta, correlation",
-        "VaR / CVaR (historical & parametric)",
-        "Correlation heatmap",
-        "Stress test & custom scenario analysis",
-    ]),
-    ("📐", "Derivatives", "3__Derivatives", [
-        "Black-Scholes, Binomial, Monte Carlo pricing",
-        "Full Greeks + ITM probability",
-        "Put-call parity checker",
-        "Greeks curves & P&L heatmap",
-    ]),
-    ("🌊", "Volatility Surface", "4_Vol_Surface", [
-        "Live options chain from market data",
-        "Volatility smile per expiry",
-        "ATM IV term structure",
-        "2D heatmap & 3D IV surface",
-    ]),
-    ("🎲", "Monte Carlo & Strategy Lab", "5_Monte_Carlo__Strategy_Lab", [
-        "GBM paths with antithetic variates",
-        "MC vs BS convergence",
-        "14 option strategy payoff diagrams",
-        "Breakeven & risk summary",
-    ]),
-    ("🔬", "Screener & Watchlist", "6_Screener", [
-        "Multi-ticker snapshot",
-        "RSI & momentum signals",
-        "52-week high/low proximity",
-        "Volume & volatility filters",
-    ]),
+# ── Top ribbon ────────────────────────────────────────────────────────────────
 
-    ("🌍", "Macro Dashboard", "7_Macro", [
-    "Rates, FX, commodities, bonds",
-    "Cross-asset correlation",
-    "Market regime analysis",
-    "Yield curve & macro signals",
-]),
-]
+with st.spinner("Loading market ribbon…"):
+    ribbon_items = [
+        build_ribbon_item("SPX", "^GSPC"),
+        build_ribbon_item("NDX", "^NDX"),
+        build_ribbon_item("VIX", "^VIX"),
+        build_ribbon_item("US10Y", "^TNX"),
+        build_ribbon_item("DXY", "DX-Y.NYB"),
+        build_ribbon_item("GOLD", "GC=F"),
+        build_ribbon_item("WTI", "CL=F"),
+        build_ribbon_item("BTC", "BTC-USD"),
+        build_ribbon_item("EURUSD", "EURUSD=X"),
+    ]
+terminal_ribbon(ribbon_items)
 
-cols_layout = st.columns(3)
-for i, (icon, title, page, features) in enumerate(modules):
-    with cols_layout[i % 3]:
-        features_html = "".join(
-            f'<li style="color:#94a3b8; font-size:13px; margin:3px 0;">{f}</li>'
-            for f in features
-        )
-        st.markdown(
-            f"""
-            <div style="background:#111827; border:1px solid #1e2d45; border-radius:10px;
-                        padding:18px 20px; margin-bottom:16px; min-height:160px;">
-              <div style="font-size:20px; margin-bottom:6px;">{icon}
-                <span style="font-size:15px; font-weight:700; color:#e2e8f0;
-                             margin-left:6px;">{title}</span>
-              </div>
-              <ul style="margin:8px 0 0 0; padding-left:18px;">
-                {features_html}
-              </ul>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+
+# ── Main layout ───────────────────────────────────────────────────────────────
+
+left, right = st.columns([2.15, 1], gap="large")
+
+with left:
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin-bottom:14px;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            Workspace Launcher
+          </div>
+          <div style="color:#7f8ea3; font-size:11px; margin-top:6px;">
+            Launch analytics modules, risk tools, derivatives screens, and macro monitors.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    modules = [
+        (
+            "📊",
+            "Portfolio Analytics",
+            "pages/1_Portfolio.py",
+            [
+                "P&L, Sharpe, Sortino, Calmar",
+                "Benchmark comparison & alpha/beta",
+                "Technical indicators and holdings view",
+                "Save & load portfolios",
+            ],
+        ),
+        (
+            "⚠️",
+            "Risk & Attribution",
+            "pages/2_Risk_Attribution.py",
+            [
+                "Rolling vol, beta, correlation",
+                "VaR / CVaR and stress testing",
+                "Return distribution and heatmaps",
+                "Volatility contribution analysis",
+            ],
+        ),
+        (
+            "📐",
+            "Derivatives",
+            "pages/3__Derivatives.py",
+            [
+                "Black-Scholes, Binomial, Monte Carlo",
+                "Greeks and ITM probability",
+                "Live option chain",
+                "P&L heatmaps and parity checks",
+            ],
+        ),
+        (
+            "🌊",
+            "Volatility Surface",
+            "pages/4_Vol_Surface.py",
+            [
+                "Smile by expiry",
+                "ATM term structure",
+                "2D IV heatmaps",
+                "3D implied vol surface",
+            ],
+        ),
+        (
+            "🎲",
+            "Monte Carlo & Strategy Lab",
+            "pages/5_Monte_Carlo__Strategy_Lab.py",
+            [
+                "GBM path simulation",
+                "MC vs BS convergence",
+                "Strategy payoff diagrams",
+                "Breakeven and risk summary",
+            ],
+        ),
+        (
+            "🔬",
+            "Screener & Watchlist",
+            "pages/6_Screener.py",
+            [
+                "Multi-ticker snapshot",
+                "RSI and momentum signals",
+                "52-week proximity view",
+                "Volume and volatility filters",
+            ],
+        ),
+        (
+            "🌍",
+            "Macro Dashboard",
+            "pages/7_Macro.py",
+            [
+                "FX, commodities, rates and bonds",
+                "Cross-asset correlation",
+                "Regime analysis",
+                "Yield curve and macro monitor",
+            ],
+        ),
+    ]
+
+    grid_cols = st.columns(3)
+    for i, (icon, title, page_path, features) in enumerate(modules):
+        with grid_cols[i % 3]:
+            module_card(icon, title, page_path, features)
+
+with right:
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            System Status
+          </div>
+          <div style="color:#7f8ea3; font-size:11px; margin-top:6px;">
+            Workspace, routing, and market data health.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    status_df = pd.DataFrame(
+        {
+            "Module": [
+                "Portfolio",
+                "Risk",
+                "Derivatives",
+                "Vol Surface",
+                "Strategy Lab",
+                "Screener",
+                "Macro",
+            ],
+            "Status": ["READY", "READY", "READY", "READY", "READY", "READY", "READY"],
+        }
+    )
+    st.dataframe(status_df, use_container_width=True, height=282)
+
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin:12px 0;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            Quick Access
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    qa1, qa2 = st.columns(2)
+    with qa1:
+        if st.button("Open Macro", use_container_width=True, key="qa_macro"):
+            st.switch_page("pages/7_Macro.py")
+    with qa2:
+        if st.button("Open Portfolio", use_container_width=True, key="qa_port"):
+            st.switch_page("pages/1_Portfolio.py")
+
+    qb1, qb2 = st.columns(2)
+    with qb1:
+        if st.button("Open Risk", use_container_width=True, key="qa_risk"):
+            st.switch_page("pages/2_Risk_Attribution.py")
+    with qb2:
+        if st.button("Open Vol Surface", use_container_width=True, key="qa_vol"):
+            st.switch_page("pages/4_Vol_Surface.py")
+
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin:12px 0;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            Desk Notes
+          </div>
+          <div style="color:#7f8ea3; font-size:12px; line-height:1.8; margin-top:8px;">
+            • Use the Macro Dashboard as the flagship terminal page.<br>
+            • Then tighten Portfolio and Risk layouts for a denser desk-style experience.<br>
+            • Later add watchlists, movers, news, and alert panels.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 st.markdown("---")
 st.markdown(
     """
-    <div style="color:#475569; font-size:12px; text-align:center; letter-spacing:0.08em;">
-      QuantDesk Pro | Data via yfinance | For educational and research purposes only. Not financial advice.
+    <div style="color:#7f8ea3; font-size:11px; text-align:center; letter-spacing:0.10em; text-transform:uppercase;">
+      QuantDesk Pro | Multi-Asset Analytics Workstation | Data via yfinance | For educational and research purposes only
     </div>
     """,
     unsafe_allow_html=True,
