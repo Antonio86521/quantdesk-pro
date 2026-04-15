@@ -358,12 +358,13 @@ def terminal_ribbon(items):
     blocks = ""
     for label, value, delta in items:
         delta_str = str(delta)
+
         if delta_str.startswith("+"):
-            color = GREEN
+            color = "#00d27a"
         elif delta_str.startswith("-"):
-            color = RED
+            color = "#ff5c5c"
         else:
-            color = MUTED
+            color = "#7f8ea3"
 
         blocks += f"""
         <div class="terminal-ribbon-item">
@@ -373,8 +374,10 @@ def terminal_ribbon(items):
         </div>
         """
 
-   st.markdown(f"""
-<div class="terminal-ribbon">
-  {blocks}
-</div>
-""", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="terminal-ribbon">
+      {blocks}
+    </div>
+    """, unsafe_allow_html=True)
+
+ 
