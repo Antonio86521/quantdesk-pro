@@ -139,28 +139,34 @@ sidebar_user_widget()
 
 # ── Header ────────────────────────────────────────────────────────────────────
 
-st.markdown(
-    """
-    <div style="padding: 2px 0 12px 0; border-bottom:1px solid #1b2638; margin-bottom:14px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <div>
-          <div style="font-size:28px; font-weight:900; letter-spacing:-0.5px; color:#d6deeb;">
-            Quant<span style="color:#35c2ff;">Desk</span> <span style="color:#4f8cff;">Pro</span>
-          </div>
-          <div style="margin-top:4px; color:#7f8ea3; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;">
-            Multi-Asset Analytics Workstation
-          </div>
-        </div>
-        <div style="display:inline-block; padding:3px 8px; border-radius:999px;
-                    border:1px solid #1b2638; color:#35c2ff; font-size:9px; font-weight:800;
-                    letter-spacing:0.12em; text-transform:uppercase;">
-          Terminal Mode
-        </div>
-      </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+st.markdown("""
+<div style="
+    padding: 6px 0 14px 0;
+    border-bottom:1px solid #1b2638;
+    margin-bottom:16px;
+">
+  <div style="
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:-0.5px;
+      color:#ffffff;
+  ">
+    Quant<span style="color:#35c2ff;">Desk</span>
+    <span style="color:#4f8cff;">Pro</span>
+  </div>
+
+  <div style="
+      margin-top:6px;
+      color:#7f8ea3;
+      font-size:11px;
+      letter-spacing:0.14em;
+      text-transform:uppercase;
+  ">
+    Multi-Asset Analytics Workstation
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 
 if _auth_configured():
     name = get_user_name()
