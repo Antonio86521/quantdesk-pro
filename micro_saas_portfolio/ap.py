@@ -173,6 +173,10 @@ for i, (icon, title, page, features) in enumerate(modules):
           </div>
           <ul style="margin:8px 0 0 0; padding-left:18px;">
             {features_html}
+          </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
 @@ -90,7 +169,7 @@
 st.markdown("---")
 st.markdown("""
@@ -183,4 +187,4 @@ st.markdown("""
   For educational and research purposes only. Not financial advice.
 </div>
 """, unsafe_allow_html=True)
-""", unsafe_allow_html=True)
+
