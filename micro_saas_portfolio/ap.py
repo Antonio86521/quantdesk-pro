@@ -15,6 +15,7 @@ from auth import (
     sidebar_user_widget,
 )
 from database import create_profile_if_needed
+from data_loader import load_macro_dataset, load_macro_snapshot, load_price_history, load_close_series
 
 st.set_page_config(
     page_title="QuantDesk Pro",
