@@ -538,6 +538,7 @@ with tabs[3]:
             plt.close()
 
 # ── Tab 5
+# ── Tab 5
 with tabs[4]:
     section_box("Crypto Monitor", "Major crypto assets and volatility")
 
@@ -556,18 +557,21 @@ with tabs[4]:
                 row["Asset"],
                 f"${row['Last']:,.2f}",
                 delta=f"{row['1D %']:.2f}%"
-
-    n_crypto_cols = max(1, min(len(crypto_snap), 3))
-top_cols = st.columns(n_crypto_cols)
-    for i, (_, row) in enumerate(crypto_snap.iterrows()):
-        top_cols[i].metric(row["Asset"], f"${row['Last']:,.2f}", delta=f"{row['1D %']:.2f}%")
+            )
 
     if not crypto_prices.empty:
         c1, c2 = st.columns(2, gap="large")
+
         with c1:
             fig, ax = plt.subplots(figsize=(8, 4))
             for i, col in enumerate(crypto_prices.columns):
-                ax.plot(crypto_prices.index, crypto_prices[col], lw=1.8, label=col, color=PALETTE[i % len(PALETTE)])
+                ax.plot(
+                    crypto_prices.index,
+                    crypto_prices[col],
+                    lw=1.8,
+                    label=col,
+                    color=PALETTE[i % len(PALETTE)]
+                )
             ax.set_yscale("log")
             ax.set_title("Crypto Prices (log scale)")
             ax.legend(fontsize=8)
@@ -579,8 +583,17 @@ top_cols = st.columns(n_crypto_cols)
         with c2:
             fig2, ax2 = plt.subplots(figsize=(8, 4))
             for i, col in enumerate(crypto_prices.columns):
-                rv = rolling_vol(crypto_prices[col].pct_change().dropna(), window=roll_window) * 100
-                ax2.plot(rv.index, rv.values, lw=1.8, label=col, color=PALETTE[i % len(PALETTE)])
+                rv = rolling_vol(
+                    crypto_prices[col].pct_change().dropna(),
+                    window=roll_window
+                ) * 100
+                ax2.plot(
+                    rv.index,
+                    rv.values,
+                    lw=1.8,
+                    label=col,
+                    color=PALETTE[i % len(PALETTE)]
+                )
             ax2.set_title(f"Rolling {roll_window}D Annualised Vol (%)")
             ax2.legend(fontsize=8)
             ax2.grid(True, alpha=0.2)
