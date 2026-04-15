@@ -144,6 +144,12 @@ modules = [
         "52-week high/low proximity",
         "Volume & volatility filters",
     ]),
+    ("🌍", "Macro Dashboard", "7_Macro", [
+        "Commodities, bonds, FX and crypto",
+        "Rates curve and cross-asset monitor",
+        "Relative performance & momentum heatmap",
+        "Correlation and volatility regime view",
+    ]),
 ]
 
 cols_layout = st.columns(3)
