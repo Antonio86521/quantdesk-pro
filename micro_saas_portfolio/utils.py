@@ -356,6 +356,7 @@ def terminal_panel(title: str, subtitle: str = ""):
 
 def terminal_ribbon(items):
     blocks = ""
+
     for label, value, delta in items:
         delta_str = str(delta)
 
@@ -374,10 +375,12 @@ def terminal_ribbon(items):
         </div>
         """
 
-    st.markdown(f"""
+    html = f"""
     <div class="terminal-ribbon">
       {blocks}
     </div>
-    """, unsafe_allow_html=True)
+    """
+
+    st.markdown(html, unsafe_allow_html=True)
 
  
