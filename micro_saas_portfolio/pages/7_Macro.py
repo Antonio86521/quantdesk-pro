@@ -545,7 +545,8 @@ with tabs[4]:
     crypto_snap = snap[snap["Asset"].isin(crypto_labels)].copy()
     crypto_prices = prices[[x for x in crypto_labels if x in prices.columns]]
 
-    top_cols = st.columns(min(len(crypto_snap), 3))
+    n_crypto_cols = max(1, min(len(crypto_snap), 3))
+top_cols = st.columns(n_crypto_cols)
     for i, (_, row) in enumerate(crypto_snap.iterrows()):
         top_cols[i].metric(row["Asset"], f"${row['Last']:,.2f}", delta=f"{row['1D %']:.2f}%")
 
