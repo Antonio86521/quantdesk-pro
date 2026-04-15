@@ -201,7 +201,35 @@ with st.spinner("Loading market ribbon…"):
         build_ribbon_item("BTC", "BTC-USD"),
         build_ribbon_item("EURUSD", "EURUSD=X"),
     ]
-terminal_ribbon(ribbon_items)
+ribbon_html = """
+<div style="
+    display:flex;
+    flex-wrap:wrap;
+    gap:0;
+    background:linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+    border:1px solid #1b2638;
+    border-radius:7px;
+    overflow:hidden;
+    margin-bottom:12px;
+">
+  <div style="padding:7px 12px; border-right:1px solid #1b2638; min-width:120px; display:flex; align-items:center; gap:6px;">
+    <span style="color:#7f8ea3; font-size:9px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;">SPX</span>
+    <span style="color:#d6deeb; font-size:13px; font-weight:700;">7,017</span>
+    <span style="color:#00d27a; font-size:11px; font-weight:700;">+0.72%</span>
+  </div>
+  <div style="padding:7px 12px; border-right:1px solid #1b2638; min-width:120px; display:flex; align-items:center; gap:6px;">
+    <span style="color:#7f8ea3; font-size:9px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;">NDX</span>
+    <span style="color:#d6deeb; font-size:13px; font-weight:700;">26,172</span>
+    <span style="color:#00d27a; font-size:11px; font-weight:700;">+1.28%</span>
+  </div>
+  <div style="padding:7px 12px; border-right:1px solid #1b2638; min-width:120px; display:flex; align-items:center; gap:6px;">
+    <span style="color:#7f8ea3; font-size:9px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;">VIX</span>
+    <span style="color:#d6deeb; font-size:13px; font-weight:700;">17.99</span>
+    <span style="color:#ff5c5c; font-size:11px; font-weight:700;">-2.02%</span>
+  </div>
+</div>
+"""
+st.markdown(ribbon_html, unsafe_allow_html=True)
 
 
 # ── Main layout ───────────────────────────────────────────────────────────────
