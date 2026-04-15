@@ -361,26 +361,57 @@ def terminal_ribbon(items):
         delta_str = str(delta)
 
         if delta_str.startswith("+"):
-            color = "#00d27a"
+            color = GREEN
         elif delta_str.startswith("-"):
-            color = "#ff5c5c"
+            color = RED
         else:
-            color = "#7f8ea3"
+            color = MUTED
 
         blocks += f"""
-        <div class="terminal-ribbon-item">
-          <span class="terminal-ribbon-label">{label}</span>
-          <span class="terminal-ribbon-value">{value}</span>
-          <span class="terminal-ribbon-delta" style="color:{color};">{delta}</span>
+        <div style="
+            padding:7px 12px;
+            border-right:1px solid {BORDER};
+            min-width:120px;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        ">
+          <span style="
+              color:{MUTED};
+              font-size:9px;
+              font-weight:700;
+              letter-spacing:0.14em;
+              text-transform:uppercase;
+          ">{label}</span>
+
+          <span style="
+              color:{TEXT};
+              font-size:13px;
+              font-weight:700;
+          ">{value}</span>
+
+          <span style="
+              color:{color};
+              font-size:11px;
+              font-weight:700;
+          ">{delta}</span>
         </div>
         """
 
     html = f"""
-    <div class="terminal-ribbon">
+    <div style="
+        display:flex;
+        flex-wrap:wrap;
+        gap:0;
+        background:linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+        border:1px solid {BORDER};
+        border-radius:7px;
+        overflow:hidden;
+        margin-bottom:12px;
+    ">
       {blocks}
     </div>
     """
 
     st.markdown(html, unsafe_allow_html=True)
-
  
