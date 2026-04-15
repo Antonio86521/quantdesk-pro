@@ -373,8 +373,8 @@ def terminal_ribbon(items):
         </div>
         """
 
-    st.markdown(f"""
-    <div class="terminal-ribbon">
-      {blocks}
-    </div>
-    """, unsafe_allow_html=True)
+   st.markdown(f"""
+<div class="terminal-ribbon">
+  {blocks}
+</div>
+""", unsafe_allow_html=True)
