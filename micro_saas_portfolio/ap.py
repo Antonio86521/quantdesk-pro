@@ -176,8 +176,7 @@ for i, (icon, title, page, features) in enumerate(modules):
           </ul>
         </div>
         """, unsafe_allow_html=True)
-
-@@ -90,7 +169,7 @@
+                     
 st.markdown("---")
 st.markdown("""
 <div style="color:#475569; font-size:12px; text-align:center; letter-spacing:0.08em;">
