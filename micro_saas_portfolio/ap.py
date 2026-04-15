@@ -160,6 +160,13 @@ modules = [
         "52-week high/low proximity",
         "Volume & volatility filters",
     ]),
+
+    ("🌍", "Macro Dashboard", "7_Macro", [
+    "Rates, FX, commodities, bonds",
+    "Cross-asset correlation",
+    "Market regime analysis",
+    "Yield curve & macro signals",
+]),
 ]
 
 cols_layout = st.columns(3)
