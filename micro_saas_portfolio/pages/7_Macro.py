@@ -306,18 +306,7 @@ for lbl in headline_labels:
     delta = f"{row['1D %']:+.2f}%" if pd.notna(row["1D %"]) else "—"
     monitor_items.append((lbl, value, delta))
 
-html = ""
-for label, value, delta in monitor_items:
-    color = "#00d27a" if str(delta).startswith("+") else "#ff5c5c"
-
-    html += f"""
-    <div style="padding:7px 12px; border-right:1px solid #1b2638;
-                min-width:120px; display:flex; align-items:center; gap:6px;">
-        <span style="color:#7f8ea3; font-size:9px; font-weight:700;">{label}</span>
-        <span style="color:#d6deeb; font-size:13px; font-weight:700;">{value}</span>
-        <span style="color:{color}; font-size:11px; font-weight:700;">{delta}</span>
-    </div>
-    """
+monitor_strip(monitor_items)
 
 st.markdown(f"""
 <div style="display:flex; flex-wrap:wrap; border:1px solid #1b2638; border-radius:7px; overflow:hidden;">
