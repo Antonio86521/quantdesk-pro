@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+from auth import require_login, sidebar_user_widget
 from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from data_loader import load_option_expiries, load_option_chain, load_spot_price
 from options_models import (
@@ -15,6 +16,8 @@ from options_models import (
 
 st.set_page_config(page_title="Derivatives", layout="wide", page_icon="📊")
 apply_theme()
+require_login()
+sidebar_user_widget()
 page_header("Derivatives", "Black-Scholes · Binomial · Monte Carlo · Live Chain")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
