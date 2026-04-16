@@ -1,10 +1,11 @@
-from auth import require_login, sidebar_user_widget
+from auth import require_login
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+from auth import require_login, sidebar_user_widget
 from utils import (
     apply_theme,
     page_header,
@@ -17,7 +18,6 @@ from utils import (
     PALETTE,
     MUTED,
     BORDER,
-    SURFACE,
     TEXT,
 )
 from data_loader import load_close_series
