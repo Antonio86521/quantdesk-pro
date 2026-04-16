@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from auth import require_login, sidebar_user_widget
 from utils import apply_theme, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from data_loader import load_close_series, load_price_history
 from analytics import (
@@ -12,6 +13,8 @@ from analytics import (
 
 st.set_page_config(page_title="Screener & Watchlist", layout="wide", page_icon="📊")
 apply_theme()
+require_login()
+sidebar_user_widget()
 page_header("Screener & Watchlist", "Multi-ticker snapshot · Signals · Momentum")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
