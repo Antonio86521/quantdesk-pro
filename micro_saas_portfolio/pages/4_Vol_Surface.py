@@ -4,11 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
 
+from auth import require_login, sidebar_user_widget
 from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW
 from data_loader import load_option_expiries, load_option_chain, load_price_history, load_spot_price
 
 st.set_page_config(page_title="Vol Surface", layout="wide", page_icon="📊")
 apply_theme()
+require_login()
+sidebar_user_widget()
 page_header("Volatility Surface", "Smile · Term Structure · Heatmap · 3D Surface")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
