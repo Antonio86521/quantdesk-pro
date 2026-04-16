@@ -414,4 +414,4 @@ def terminal_ribbon(items):
     """
 
     st.markdown(html, unsafe_allow_html=True)
- 
+
