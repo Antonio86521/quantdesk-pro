@@ -1,4 +1,4 @@
-from auth import require_login
+from auth import require_login, sidebar_user_widget
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -17,6 +17,7 @@ from utils import (
     PALETTE,
     MUTED,
     BORDER,
+    SURFACE,
     TEXT,
 )
 from data_loader import load_close_series
@@ -48,6 +49,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 require_login()
+sidebar_user_widget()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
