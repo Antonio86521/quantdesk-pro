@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+from auth import require_login, sidebar_user_widget
 from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from options_models import monte_carlo_paths, bs_price_only, monte_carlo_option_price
 from strategies import (
@@ -18,6 +19,8 @@ from strategies import (
 
 st.set_page_config(page_title="Monte Carlo & Strategy Lab", layout="wide", page_icon="📊")
 apply_theme()
+require_login()
+sidebar_user_widget()
 page_header("Monte Carlo & Strategy Lab", "GBM Simulation · Option Pricing · Payoff Diagrams")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
