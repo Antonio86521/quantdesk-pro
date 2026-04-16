@@ -87,10 +87,13 @@ benchmark_label = st.sidebar.selectbox(
     ["S&P 500", "Gold", "DXY", "Bitcoin", "TLT"],
     index=0,
 )
-custom_input = st.sidebar.text_input("Custom Yahoo tickers", placeholder="e.g. GLD, USO, XLE")
-run_page = st.sidebar.button("Load Macro Dashboard", use_container_width=True)
+if "macro_loaded" not in st.session_state:
+    st.session_state.macro_loaded = False
 
-if not run_page:
+if st.sidebar.button("Load Macro Dashboard", use_container_width=True):
+    st.session_state.macro_loaded = True
+
+if not st.session_state.macro_loaded:
     st.markdown(
         """
         <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
@@ -108,7 +111,6 @@ if not run_page:
         unsafe_allow_html=True,
     )
     st.stop()
-
 
 @st.cache_data(ttl=600)
 def load_macro_prices(labels, period_value="1y"):
