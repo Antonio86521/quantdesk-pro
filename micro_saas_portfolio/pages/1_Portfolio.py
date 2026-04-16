@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+from auth import require_login, sidebar_user_widget
 from utils import apply_theme, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW
 from data_loader import load_close_series, load_price_history, load_news
 from analytics import (
@@ -18,6 +19,8 @@ from analytics import (
 
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 apply_theme()
+require_login()
+sidebar_user_widget()
 page_header("Portfolio Analytics", "Performance · Attribution · Technicals")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
