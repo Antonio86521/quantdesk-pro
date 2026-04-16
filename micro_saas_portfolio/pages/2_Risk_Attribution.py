@@ -1,3 +1,4 @@
+from auth import require_login, sidebar_user_widget
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -16,6 +17,8 @@ from analytics import (
 st.set_page_config(page_title="Risk & Attribution", layout="wide", page_icon="📊")
 apply_theme()
 page_header("Risk & Attribution", "Rolling Metrics · VaR · Stress Test · Factor Analysis")
+require_login()
+sidebar_user_widget()
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Inputs")
@@ -252,11 +255,7 @@ fig_sw, ax_sw = plt.subplots(figsize=(10, 3))
 colors_sw = [RED if v < pos_val.sum() else GREEN for v in sweep_vals]
 ax_sw.bar(sweep_range, sweep_vals, width=3.5, color=colors_sw, alpha=0.75, edgecolor="#0a0e1a")
 ax_sw.axhline(pos_val.sum(), color="white", lw=1.2, ls="--", label="Current Value")
-ax_sw.axhline(pos_val.sum(), color="white", lw=1.2, ls="--", label="Current Value")
 ax_sw.set_xlabel("Market Move (%)"); ax_sw.set_ylabel("Portfolio Value ($)")
 ax_sw.set_title("Portfolio Value Across Market Scenarios")
 ax_sw.legend(); ax_sw.grid(True, alpha=0.3, axis="y")
 st.pyplot(fig_sw); plt.close()
-
-total_cost = (np.array(buy_prices_input if False else [float(x.strip())
-              for x in "180,350,500".split(",")]) * shares).sum()
