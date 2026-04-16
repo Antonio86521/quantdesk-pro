@@ -308,12 +308,6 @@ for lbl in headline_labels:
 
 monitor_strip(monitor_items)
 
-st.markdown(f"""
-<div style="display:flex; flex-wrap:wrap; border:1px solid #1b2638; border-radius:7px; overflow:hidden;">
-{html}
-</div>
-""", unsafe_allow_html=True)
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Top summary
