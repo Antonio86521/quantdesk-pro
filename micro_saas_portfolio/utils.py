@@ -206,4 +206,3 @@ def apply_theme():
         color: var(--text);
         letter-spacing: -0.02em;
       }
-
