@@ -11,11 +11,13 @@ import streamlit as st
 
 
 def _auth_configured() -> bool:
-    """Return True if [auth] section exists in secrets.toml."""
+    """Return True if Streamlit auth APIs and [auth] secrets are available."""
+    if not hasattr(st, "user") or not hasattr(st, "login") or not hasattr(st, "logout"):
+        return False
     try:
         _ = st.secrets["auth"]
         return True
-    except (KeyError, FileNotFoundError):
+    except (KeyError, FileNotFoundError, AttributeError):
         return False
 
 
@@ -31,7 +33,8 @@ def require_login() -> None:
         # Dev mode — auth not set up, skip the gate
         return
 
-    if not st.user.get("is_logged_in", False):
+    user = getattr(st, "user", {}) or {}
+    if not user.get("is_logged_in", False):
         st.warning("🔒 Please log in to access this page.")
         st.markdown(
             """
@@ -52,16 +55,18 @@ def get_user_id() -> str | None:
     """Return the logged-in user's subject ID, or None."""
     if not _auth_configured():
         return "local_dev_user"
-    return st.user.get("sub") or st.user.get("email")
+    user = getattr(st, "user", {}) or {}
+    return user.get("sub") or user.get("email")
 
 
 def get_user_name() -> str:
     """Return a display name for the logged-in user."""
     if not _auth_configured():
         return "Local User"
+    user = getattr(st, "user", {}) or {}
     return (
-        st.user.get("name")
-        or st.user.get("email")
+        user.get("name")
+        or user.get("email")
         or "User"
     )
 
@@ -70,7 +75,8 @@ def get_user_email() -> str | None:
     """Return the logged-in user's email."""
     if not _auth_configured():
         return None
-    return st.user.get("email")
+    user = getattr(st, "user", {}) or {}
+    return user.get("email")
 
 
 def sidebar_user_widget() -> None:
