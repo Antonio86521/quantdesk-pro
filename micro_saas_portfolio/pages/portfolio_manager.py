@@ -189,7 +189,7 @@ with action2:
                 st.error(f"Could not delete portfolio: {e}")
 
 st.page_link(
-    "pages/saved_portfolio_analysis.py",
+    "pages/portfolio_analysis.py",
     label="Analyze This Portfolio",
     icon="📈"
 )
