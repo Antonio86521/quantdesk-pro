@@ -49,6 +49,13 @@ st.markdown("""
 require_login()
 sidebar_user_widget()
 
+# Persistent page-load state
+if "load_macro_clicked" not in st.session_state:
+    st.session_state["load_macro_clicked"] = False
+
+def _set_load_macro_clicked():
+    st.session_state["load_macro_clicked"] = True
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Universe
@@ -134,7 +141,7 @@ benchmark_label = st.sidebar.selectbox(
 custom_input = st.sidebar.text_input("Custom Yahoo tickers", placeholder="e.g. GLD, USO, XLE")
 run_page = st.sidebar.button("Load Macro Dashboard", use_container_width=True, on_click=_set_load_macro_clicked)
 
-if not st.session_state.get("load_macro_clicked", False):
+if not st.session_state["load_macro_clicked"]:
     st.markdown("""
     <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
                 border:1px solid #1b2638; border-radius:8px; padding:26px; text-align:center; margin-top:16px;">
@@ -160,9 +167,26 @@ def load_macro_prices(labels, period="1y") -> pd.DataFrame:
     df = pd.DataFrame()
     for label in labels:
         ticker = UNIVERSE.get(label, label)
-        s = load_close_series(ticker, period=period)
-        if not s.empty:
+        try:
+            s = load_close_series(ticker, period=period)
+
+            if s is None:
+                continue
+
+            if isinstance(s, pd.DataFrame):
+                if s.empty:
+                    continue
+                s = s.iloc[:, 0]
+
+            s = pd.to_numeric(s, errors="coerce").dropna()
+
+            if s.empty:
+                continue
+
             df[label] = s
+        except Exception:
+            continue
+
     return df.dropna(how="all")
 
 
@@ -357,7 +381,7 @@ with tabs[0]:
     with left:
         section_box("Cross-Asset Monitor", "Sortable snapshot across the loaded universe")
         sort_by   = st.selectbox("Sort by", ["1D %", "1M %", "3M %", "YTD %", "20D Vol %", "Ann. Ret %", "Asset"], key="macro_sort")
-        ascending = st.checkbox("Ascending sort", value=False)
+        ascending = st.checkbox("Ascending sort", value=False, key="macro_ascending_sort")
         disp      = snap.sort_values(sort_by, ascending=ascending).reset_index(drop=True)
         cols      = ["Asset", "Last", "1D %", "5D %", "1M %", "3M %", "YTD %", "20D Vol %", "Ann. Ret %"]
         st.dataframe(style_perf_table(disp[cols]), use_container_width=True, height=520)
