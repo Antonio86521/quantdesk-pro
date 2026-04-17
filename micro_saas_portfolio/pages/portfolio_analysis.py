@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, page_header, MUTED
+from utils import apply_theme, page_header
 from portfolio_service import get_portfolios, get_positions
 from data_loader import load_close_series
 from analytics import (
@@ -21,13 +21,18 @@ from analytics import (
     return_kurtosis,
     parametric_var,
     historical_var,
-    cvar
+    cvar,
 )
 
 # ─────────────────────────────────────────────
 # PAGE SETUP
 # ─────────────────────────────────────────────
-st.set_page_config(page_title="Saved Portfolio Analysis", layout="wide", page_icon="📊")
+st.set_page_config(
+    page_title="Saved Portfolio Analysis",
+    layout="wide",
+    page_icon="📊"
+)
+
 apply_theme()
 require_login()
 sidebar_user_widget()
@@ -55,22 +60,11 @@ def safe_float(x, default=0.0):
         return default
 
 
-def sharpe_ratio(returns: pd.Series, rf: float = 0.0) -> float:
-    if returns.empty:
-        return 0.0
-    ann_ret = annualized_return(returns)
-    ann_vol = annualized_vol(returns)
-    if ann_vol == 0 or pd.isna(ann_vol):
-        return 0.0
-    return float((ann_ret - rf) / ann_vol)
-
-
 def compute_portfolio_returns(price_df: pd.DataFrame, weights: np.ndarray) -> pd.Series:
     rets = price_df.pct_change().dropna()
     if rets.empty:
         return pd.Series(dtype=float)
-    port_rets = rets.mul(weights, axis=1).sum(axis=1)
-    return port_rets
+    return rets.mul(weights, axis=1).sum(axis=1)
 
 
 def latest_valid_prices(price_df: pd.DataFrame) -> pd.Series:
@@ -90,13 +84,15 @@ if not portfolios:
 
 portfolio_map = {p["name"]: p["id"] for p in portfolios}
 
+portfolio_names = list(portfolio_map.keys())
+
 if "selected_saved_portfolio" not in st.session_state:
-    st.session_state.selected_saved_portfolio = list(portfolio_map.keys())[0]
+    st.session_state.selected_saved_portfolio = portfolio_names[0]
 
 selected_name = st.selectbox(
     "Select Portfolio",
-    options=list(portfolio_map.keys()),
-    index=list(portfolio_map.keys()).index(st.session_state.selected_saved_portfolio)
+    options=portfolio_names,
+    index=portfolio_names.index(st.session_state.selected_saved_portfolio)
     if st.session_state.selected_saved_portfolio in portfolio_map
     else 0,
 )
@@ -132,7 +128,7 @@ if pos_df.empty:
     st.warning("No valid positions found in this portfolio.")
     st.stop()
 
-# Optional: combine duplicate tickers
+# combine duplicate tickers
 pos_df = (
     pos_df.groupby("ticker", as_index=False)
     .agg({
@@ -143,13 +139,18 @@ pos_df = (
 
 tickers = pos_df["ticker"].tolist()
 
-# Sidebar controls
+
+# ─────────────────────────────────────────────
+# SIDEBAR SETTINGS
+# ─────────────────────────────────────────────
 st.sidebar.markdown("### Analysis Settings")
+
 lookback = st.sidebar.selectbox(
     "Lookback Period",
     ["6mo", "1y", "2y", "5y"],
     index=1
 )
+
 risk_free_rate = st.sidebar.number_input(
     "Risk-Free Rate",
     min_value=0.0,
@@ -158,6 +159,7 @@ risk_free_rate = st.sidebar.number_input(
     step=0.005
 )
 
+
 # ─────────────────────────────────────────────
 # LOAD MARKET DATA
 # ─────────────────────────────────────────────
@@ -165,7 +167,7 @@ price_data = {}
 
 for ticker in tickers:
     try:
-        s = load_close_series(ticker, period=lookback)
+        s = load_close_series(ticker, period=lookback, source="auto")
         if s is not None and not s.empty:
             s = pd.Series(s).dropna()
             s.name = ticker
@@ -194,7 +196,7 @@ price_df = price_df[pos_df["ticker"].tolist()].copy()
 
 
 # ─────────────────────────────────────────────
-# COMPUTE WEIGHTS
+# COMPUTE WEIGHTS / RETURNS
 # ─────────────────────────────────────────────
 latest_prices = latest_valid_prices(price_df)
 
@@ -240,9 +242,14 @@ var_param = parametric_var(portfolio_returns)
 var_hist = historical_var(portfolio_returns)
 cvar_val = cvar(portfolio_returns, var_hist)
 
+num_positions = len(pos_df)
+portfolio_cost = float((pos_df["shares"] * pos_df["buy_price"]).sum())
+unrealized_pnl = total_value - portfolio_cost
+unrealized_pnl_pct = (unrealized_pnl / portfolio_cost) if portfolio_cost > 0 else 0.0
+
 
 # ─────────────────────────────────────────────
-# TOP METRICS
+# METRIC CARDS
 # ─────────────────────────────────────────────
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Portfolio Value", f"${total_value:,.0f}")
@@ -275,7 +282,7 @@ c17.metric("Unrealized P&L %", f"{unrealized_pnl_pct:.2%}")
 
 
 # ─────────────────────────────────────────────
-# POSITIONS TABLE
+# HOLDINGS TABLE
 # ─────────────────────────────────────────────
 st.markdown("### Holdings Overview")
 
