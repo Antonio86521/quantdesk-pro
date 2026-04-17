@@ -13,10 +13,8 @@ def load_price_history(ticker: str, period: str = "1y", interval: str = "1d") ->
         df = yf.Ticker(ticker).history(period=period, interval=interval, auto_adjust=True)
         if df is not None and not df.empty:
             return df
-    except Exception as e1:
-        first_error = str(e1)
-    else:
-        first_error = "Ticker().history() returned empty data"
+    except Exception:
+        pass
 
     try:
         df = yf.download(
@@ -25,10 +23,8 @@ def load_price_history(ticker: str, period: str = "1y", interval: str = "1d") ->
         )
         if df is not None and not df.empty:
             return df
-    except Exception as e2:
-        second_error = str(e2)
-    else:
-        second_error = "yf.download() returned empty data"
+    except Exception:
+        pass
 
     st.warning(f"Yahoo data failed for {ticker}.")
     return pd.DataFrame()
@@ -175,3 +171,4 @@ def load_macro_snapshot(universe: dict, period: str = "1y") -> pd.DataFrame:
     if not records:
         return pd.DataFrame()
     return pd.DataFrame(records).reset_index(drop=True)
+
