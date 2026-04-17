@@ -413,21 +413,8 @@ st.markdown("")
 render_quick_actions()
 st.markdown("")
 
-left, right = st.columns([1.15, 0.85], gap="large")
-with left:
-    st.markdown(
-        """
-        <div class="status-box">
-          <div class="status-title">Open Access</div>
-          <div class="status-text">
-            This version of QuantDesk Pro is publicly accessible so users can explore the analytics,
-            macro monitoring, derivatives workflows, and risk dashboards without account friction.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with right:
+c1, c2, c3 = st.columns([1, 1.5, 1])
+with c2:
     render_future_upgrades()
 
 st.markdown("")
