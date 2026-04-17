@@ -38,21 +38,22 @@ apply_theme()
 # ─────────────────────────────────────────────
 # INLINE LOGIN HANDLING
 # ─────────────────────────────────────────────
-user = st.user
-
 if not user or not user.get("is_logged_in"):
 
-    st.markdown("## 🔐 Login Required")
-    st.markdown("Access your saved portfolios and analytics.")
+    st.markdown("""
+    <div style="text-align:center; padding:60px 0;">
+        <h2>🔐 Access Your Portfolio</h2>
+        <p style="color:rgba(255,255,255,0.7);">
+            Sign in to view and analyze your saved portfolios
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1,2,1])
 
     with col2:
-        st.markdown("### Sign in to continue")
-
-        # Google login (Streamlit native auth)
-        if st.button("Continue with Google"):
-            st.login()   # this triggers Streamlit auth
+        if st.button("Continue with Google", use_container_width=True):
+            st.login()
 
     st.stop()
 
