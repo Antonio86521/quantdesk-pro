@@ -7,8 +7,22 @@ from auth import require_login, sidebar_user_widget
 from utils import apply_theme, page_header, MUTED
 from portfolio_service import get_portfolios, get_positions
 from data_loader import load_close_series
-from analytics import annualized_return, annualized_vol, correlation_matrix, rolling_vol
-
+from analytics import (
+    annualized_return,
+    annualized_vol,
+    correlation_matrix,
+    rolling_vol,
+    max_drawdown_from_returns,
+    sortino_ratio,
+    calmar_ratio,
+    omega_ratio,
+    gain_to_pain,
+    return_skew,
+    return_kurtosis,
+    parametric_var,
+    historical_var,
+    cvar
+)
 
 # ─────────────────────────────────────────────
 # PAGE SETUP
@@ -214,12 +228,26 @@ cum_returns = (1 + portfolio_returns).cumprod()
 
 
 # ─────────────────────────────────────────────
-# METRICS
+# ADVANCED METRICS
 # ─────────────────────────────────────────────
-ann_ret = float(annualized_return(portfolio_returns))
-ann_vol = float(annualized_vol(portfolio_returns))
-sr = sharpe_ratio(portfolio_returns, rf=risk_free_rate)
-mdd = max_drawdown_from_returns(portfolio_returns)
+ann_ret = annualized_return(portfolio_returns)
+ann_vol = annualized_vol(portfolio_returns)
+
+sharpe = (ann_ret - risk_free_rate) / ann_vol if ann_vol and not pd.isna(ann_vol) else np.nan
+
+max_dd, _ = max_drawdown_from_returns(portfolio_returns)
+
+sortino = sortino_ratio(ann_ret, risk_free_rate, portfolio_returns)
+calmar = calmar_ratio(ann_ret, max_dd)
+omega = omega_ratio(portfolio_returns)
+gtp = gain_to_pain(portfolio_returns)
+
+sk = return_skew(portfolio_returns)
+kt = return_kurtosis(portfolio_returns)
+
+var_param = parametric_var(portfolio_returns)
+var_hist = historical_var(portfolio_returns)
+cvar_val = cvar(portfolio_returns, var_hist)
 
 num_positions = len(pos_df)
 portfolio_cost = float((pos_df["shares"] * pos_df["buy_price"]).sum())
@@ -231,17 +259,33 @@ unrealized_pnl_pct = (unrealized_pnl / portfolio_cost) if portfolio_cost > 0 els
 # TOP METRICS
 # ─────────────────────────────────────────────
 c1, c2, c3, c4, c5 = st.columns(5)
+c1.metric("Portfolio Value", f"${total_value:,.0f}")
+c2.metric("Ann Return", f"{ann_ret:.2%}")
+c3.metric("Volatility", f"{ann_vol:.2%}")
+c4.metric("Sharpe", f"{sharpe:.2f}")
+c5.metric("Max Drawdown", f"{max_dd:.2%}")
 
-c1.metric("Portfolio Value", f"${total_value:,.2f}")
-c2.metric("Positions", f"{num_positions}")
-c3.metric("Annualized Return", f"{ann_ret:.2%}")
-c4.metric("Annualized Volatility", f"{ann_vol:.2%}")
-c5.metric("Sharpe Ratio", f"{sr:.2f}")
+c6, c7, c8, c9 = st.columns(4)
+c6.metric("Sortino", f"{sortino:.2f}")
+c7.metric("Calmar", f"{calmar:.2f}")
+c8.metric("Omega", f"{omega:.2f}")
+c9.metric("Gain/Pain", f"{gtp:.2f}")
 
-c6, c7, c8 = st.columns(3)
-c6.metric("Max Drawdown", f"{mdd:.2%}")
-c7.metric("Unrealized P&L", f"${unrealized_pnl:,.2f}")
-c8.metric("Unrealized P&L %", f"{unrealized_pnl_pct:.2%}")
+st.markdown("### Risk Metrics")
+c10, c11, c12 = st.columns(3)
+c10.metric("Parametric VaR (95%)", f"{var_param:.2%}")
+c11.metric("Historical VaR (95%)", f"{var_hist:.2%}")
+c12.metric("CVaR", f"{cvar_val:.2%}")
+
+st.markdown("### Return Distribution")
+c13, c14 = st.columns(2)
+c13.metric("Skewness", f"{sk:.2f}")
+c14.metric("Kurtosis", f"{kt:.2f}")
+
+c15, c16, c17 = st.columns(3)
+c15.metric("Positions", f"{num_positions}")
+c16.metric("Unrealized P&L", f"${unrealized_pnl:,.2f}")
+c17.metric("Unrealized P&L %", f"{unrealized_pnl_pct:.2%}")
 
 
 # ─────────────────────────────────────────────
