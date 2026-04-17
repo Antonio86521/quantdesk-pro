@@ -53,7 +53,7 @@ if load_chain_btn:
     if not expiries:
         st.warning(f"No option expiries found for **{chain_ticker.upper()}**.")
     else:
-        spot = load_spot_price(chain_ticker.upper())
+        spot = load_spot_price(chain_ticker.upper(), source="auto")
         st.markdown(f"**Spot: ${spot:.2f}** &nbsp;|&nbsp; {len(expiries)} expiries available")
 
         selected_exp = st.selectbox("Select expiry", expiries, key="chain_expiry")
@@ -313,4 +313,5 @@ if calc_iv:
         st.pyplot(fig_iv); plt.close()
 else:
     st.info("Enter a market price and click **Calculate IV**.")
+
 
