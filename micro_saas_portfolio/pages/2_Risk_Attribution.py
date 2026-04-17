@@ -24,6 +24,7 @@ page_header("Risk & Attribution", "Rolling Metrics · VaR · Stress Test · Fact
 st.sidebar.markdown("## Inputs")
 tickers_input    = st.sidebar.text_input("Tickers", "AAPL,MSFT,SPY")
 shares_input     = st.sidebar.text_input("Shares", "2,1,3")
+buy_prices_input = st.sidebar.text_input("Buy prices", "180,350,500")
 period           = st.sidebar.selectbox("Period", ["3mo", "6mo", "1y", "2y", "5y"], index=2)
 benchmark_ticker = st.sidebar.selectbox("Benchmark", ["SPY", "QQQ", "DIA", "IWM"])
 risk_free_rate   = st.sidebar.number_input("Risk-free rate (%)", 0.0, 15.0, 2.0, 0.1)
@@ -37,14 +38,18 @@ if not run_page:
 
 # ── Parse & load ──────────────────────────────────────────────────────────────
 try:
-    tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
-    shares  = np.array([float(x.strip()) for x in shares_input.split(",") if x.strip()])
+    tickers    = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
+    shares     = np.array([float(x.strip()) for x in shares_input.split(",") if x.strip()])
+    buy_prices = np.array([float(x.strip()) for x in buy_prices_input.split(",") if x.strip()])
 except ValueError:
-    st.error("Check that shares are numeric.")
+    st.error("Check that shares and buy prices are numeric.")
     st.stop()
 
 if len(tickers) != len(shares):
     st.error("Tickers and shares must have the same length.")
+    st.stop()
+if len(tickers) != len(buy_prices):
+    st.error("Tickers, shares, and buy prices must all have the same length.")
     st.stop()
 
 with st.spinner("Loading data…"):
@@ -61,6 +66,7 @@ with st.spinner("Loading data…"):
 
 latest   = prices.iloc[-1]
 pos_val  = latest.values * shares
+cost     = buy_prices * shares
 weights  = pos_val / pos_val.sum()
 ret      = prices.pct_change().dropna()
 port_ret = ret.dot(weights)
@@ -77,8 +83,8 @@ st.markdown("### Risk Summary")
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Ann. Volatility",  f"{ann_vol*100:.2f}%")
 c2.metric("Max Drawdown",     f"{max_dd*100:.2f}%")
-c3.metric("Beta",             f"{beta:.2f}"       if not np.isnan(beta)  else "N/A")
-c4.metric("Alpha (ann.)",     f"{alpha_ann*100:.2f}%" if not np.isnan(alpha_ann) else "N/A")
+c3.metric("Beta",             f"{beta:.2f}"            if not np.isnan(beta)      else "N/A")
+c4.metric("Alpha (ann.)",     f"{alpha_ann*100:.2f}%"  if not np.isnan(alpha_ann) else "N/A")
 
 var95    = historical_var(port_ret, 0.95)
 cvar95   = cvar(port_ret, var95)
@@ -164,7 +170,7 @@ st.pyplot(fig3); plt.close()
 
 # ── Vol Contribution ──────────────────────────────────────────────────────────
 st.markdown("### Volatility Contribution by Asset")
-cov_ann    = covariance_matrix(ret)
+cov_ann     = covariance_matrix(ret)
 vol_contrib = marginal_vol_contribution(weights, cov_ann.values)
 
 fig_vc, ax_vc = plt.subplots(figsize=(8, 3))
@@ -188,7 +194,7 @@ s2.metric("Shocked Value",  f"${shocked_values.sum():,.2f}")
 s3.metric("Scenario P&L",   f"${scenario_pnl.sum():,.2f}")
 
 shock_df = pd.DataFrame({
-    "Ticker":       tickers,
+    "Ticker":         tickers,
     "Current Price":  latest.values,
     "Shocked Price":  shocked_prices.values,
     "Current Value":  pos_val,
@@ -223,9 +229,9 @@ custom_vals    = custom_shocked * shares
 custom_pnl     = custom_vals - pos_val
 
 ca1, ca2, ca3 = st.columns(3)
-ca1.metric("Current Value", f"${pos_val.sum():,.2f}")
+ca1.metric("Current Value",  f"${pos_val.sum():,.2f}")
 ca2.metric("Scenario Value", f"${custom_vals.sum():,.2f}")
-ca3.metric("Scenario P&L",  f"${custom_pnl.sum():,.2f}")
+ca3.metric("Scenario P&L",   f"${custom_pnl.sum():,.2f}")
 
 custom_df = pd.DataFrame({
     "Ticker":         tickers,
@@ -249,17 +255,26 @@ st.dataframe(
 # ── Multi-scenario sweep ──────────────────────────────────────────────────────
 st.markdown("### Scenario Sweep — Portfolio Value vs Market Move")
 sweep_range = np.arange(-40, 41, 5)
-sweep_vals  = [(latest.values * (1 + s/100) * shares).sum() for s in sweep_range]
+sweep_vals  = [(latest.values * (1 + s / 100) * shares).sum() for s in sweep_range]
 
 fig_sw, ax_sw = plt.subplots(figsize=(10, 3))
 colors_sw = [RED if v < pos_val.sum() else GREEN for v in sweep_vals]
 ax_sw.bar(sweep_range, sweep_vals, width=3.5, color=colors_sw, alpha=0.75, edgecolor="#0a0e1a")
-ax_sw.axhline(pos_val.sum(), color="white", lw=1.2, ls="--", label="Current Value")
 ax_sw.axhline(pos_val.sum(), color="white", lw=1.2, ls="--", label="Current Value")
 ax_sw.set_xlabel("Market Move (%)"); ax_sw.set_ylabel("Portfolio Value ($)")
 ax_sw.set_title("Portfolio Value Across Market Scenarios")
 ax_sw.legend(); ax_sw.grid(True, alpha=0.3, axis="y")
 st.pyplot(fig_sw); plt.close()
 
-total_cost = (np.array(buy_prices_input if False else [float(x.strip())
-              for x in "180,350,500".split(",")]) * shares).sum()
+# ── Export ────────────────────────────────────────────────────────────────────
+export_df = pd.DataFrame({
+    "Ticker":       tickers,
+    "Shares":       shares,
+    "Buy Price":    buy_prices,
+    "Latest Price": latest.values,
+    "Position Val": pos_val,
+    "Cost Basis":   cost,
+    "Weight":       weights,
+})
+csv = export_df.to_csv(index=False).encode("utf-8")
+st.download_button("⬇ Download Risk Report CSV", csv, "risk_report.csv", "text/csv")
