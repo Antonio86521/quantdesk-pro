@@ -132,9 +132,9 @@ benchmark_label = st.sidebar.selectbox(
     index=0,
 )
 custom_input = st.sidebar.text_input("Custom Yahoo tickers", placeholder="e.g. GLD, USO, XLE")
-run_page = st.sidebar.button("Load Macro Dashboard", use_container_width=True)
+run_page = st.sidebar.button("Load Macro Dashboard", use_container_width=True, on_click=_set_load_macro_clicked)
 
-if not run_page:
+if not st.session_state.get("load_macro_clicked", False):
     st.markdown("""
     <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
                 border:1px solid #1b2638; border-radius:8px; padding:26px; text-align:center; margin-top:16px;">
