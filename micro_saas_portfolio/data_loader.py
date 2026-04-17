@@ -171,4 +171,3 @@ def load_macro_snapshot(universe: dict, period: str = "1y") -> pd.DataFrame:
     if not records:
         return pd.DataFrame()
     return pd.DataFrame(records).reset_index(drop=True)
-
