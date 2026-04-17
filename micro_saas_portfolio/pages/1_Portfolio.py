@@ -227,7 +227,7 @@ st.pyplot(fig5); plt.close()
 st.markdown("### Technical Snapshot")
 
 tech_ticker = st.selectbox("Select ticker for technical analysis", tickers)
-tech_df     = load_price_history(tech_ticker, period=period)
+tech_df     = load_price_history(tech_ticker, period=period, source="auto")
 
 if not tech_df.empty:
     tc = tech_df["Close"]
