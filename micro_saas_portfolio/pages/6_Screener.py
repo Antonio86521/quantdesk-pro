@@ -244,3 +244,4 @@ for signal, count in signal_counts.items():
 # ── Export ────────────────────────────────────────────────────────────────────
 csv = df.to_csv(index=False).encode("utf-8")
 st.download_button("⬇ Download Screener CSV", csv, "screener.csv", "text/csv")
+
