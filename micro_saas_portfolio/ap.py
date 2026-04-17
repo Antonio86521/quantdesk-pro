@@ -239,7 +239,7 @@ def inject_home_css():
 
 
 def render_hero(user_name: str | None):
-    name_part = "QuantDesk Pro"
+    name_part = ""
     st.markdown(
         f"""
         <div class="hero">
