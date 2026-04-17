@@ -61,3 +61,10 @@ def rename_portfolio(portfolio_id, new_name):
 def delete_portfolio(portfolio_id):
     res = supabase.table("portfolios").delete().eq("id", portfolio_id).execute()
     return res.data
+
+def update_position(position_id, shares, buy_price):
+    res = supabase.table("portfolio_positions").update({
+        "shares": shares,
+        "buy_price": buy_price
+    }).eq("id", position_id).execute()
+    return res.data
