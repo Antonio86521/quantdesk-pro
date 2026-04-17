@@ -90,3 +90,4 @@ def strategy_summary(S_range: np.ndarray, pnl: np.ndarray) -> dict:
         "max_loss":     float(np.min(pnl)),
         "breakevens":   find_breakevens(S_range, pnl),
     }
+
