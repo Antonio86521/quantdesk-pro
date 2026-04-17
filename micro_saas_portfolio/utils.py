@@ -314,22 +314,40 @@ def apply_theme():
         "axes.titlesize":   11,
     })
 
+def page_header(title: str, subtitle: str = ""):
+    import streamlit as st
 
-def page_header(title: str, subtitle: str = "", badge: str | None = None):
-    badge_html = ""
-    if badge:
-        badge_html = f'<span class="terminal-badge" style="color:#35c2ff; margin-left:10px;">{badge}</span>'
-
-    html = textwrap.dedent(f"""
-    <div style="padding: 2px 0 14px 0; border-bottom: 1px solid #1b2638; margin-bottom: 16px;">
-      <span style="font-size:24px; font-weight:800; letter-spacing:-0.4px; color:#d6deeb;">
-        {title}
-      </span>
-      {badge_html}
-      {"" if not subtitle else f'<div style="margin-top:6px; font-size:11px; color:#7f8ea3; letter-spacing:0.12em; text-transform:uppercase;">{subtitle}</div>'}
-    </div>
-    """).strip()
-    st.markdown(html, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="
+            padding: 18px 0 14px 0;
+            margin-top: 6px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #1b2638;
+        ">
+            <div style="
+                font-size: 34px;
+                font-weight: 900;
+                letter-spacing: -0.02em;
+                color: #e5eefb;
+                line-height: 1.1;
+                margin-bottom: 6px;
+            ">
+                {title}
+            </div>
+            <div style="
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: #7f8ea3;
+            ">
+                {subtitle}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def metric_row(data: dict):
