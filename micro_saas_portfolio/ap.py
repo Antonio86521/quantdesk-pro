@@ -31,24 +31,27 @@ apply_theme()
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def build_ribbon_item(label: str, ticker: str):
-    s = load_close_series(ticker, period="5d")
-    if s.empty or len(s) < 2:
+    try:
+        s = load_close_series(ticker, period="5d")
+        s = pd.to_numeric(s, errors="coerce").dropna()
+
+        if len(s) < 2:
+            return (label, "N/A", "—")
+
+        last = float(s.iloc[-1])
+        prev = float(s.iloc[-2])
+        chg = ((last / prev) - 1) * 100 if prev != 0 else 0.0
+
+        if abs(last) >= 1000:
+            value = f"{last:,.0f}"
+        elif abs(last) >= 100:
+            value = f"{last:,.2f}"
+        else:
+            value = f"{last:.2f}"
+
+        return (label, value, f"{chg:+.2f}%")
+    except Exception:
         return (label, "N/A", "—")
-
-    last = float(s.iloc[-1])
-    prev = float(s.iloc[-2])
-    chg = ((last / prev) - 1) * 100 if prev != 0 else 0.0
-
-    if abs(last) >= 1000:
-        value = f"{last:,.0f}"
-    elif abs(last) >= 100:
-        value = f"{last:,.2f}"
-    else:
-        value = f"{last:.2f}"
-
-    delta = f"{chg:+.2f}%"
-    return (label, value, delta)
-
 
 def module_card(icon: str, title: str, page_path: str, features: list[str], status: str = "LIVE"):
     st.markdown(
