@@ -13,8 +13,6 @@ from analytics import (
 
 st.set_page_config(page_title="Screener & Watchlist", layout="wide", page_icon="📊")
 apply_theme()
-require_login()
-sidebar_user_widget()
 page_header("Screener & Watchlist", "Multi-ticker snapshot · Signals · Momentum")
 
 def _set_run_screener_clicked():
