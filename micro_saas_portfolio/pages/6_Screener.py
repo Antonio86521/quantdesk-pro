@@ -17,6 +17,9 @@ require_login()
 sidebar_user_widget()
 page_header("Screener & Watchlist", "Multi-ticker snapshot · Signals · Momentum")
 
+def _set_run_screener_clicked():
+    st.session_state["run_screener_clicked"] = True
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Screener Inputs")
 default_tickers = "AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA,SPY,QQQ,BRK-B"
@@ -25,9 +28,9 @@ tickers_input   = st.sidebar.text_area("Tickers (one per line or comma-separated
 period          = st.sidebar.selectbox("Lookback period", ["1mo", "3mo", "6mo", "1y"], index=2)
 rsi_ob          = st.sidebar.slider("RSI overbought threshold", 60, 90, 70, 5)
 rsi_os          = st.sidebar.slider("RSI oversold threshold",  10, 40, 30, 5)
-run_screen      = st.sidebar.button("Run Screener", use_container_width=True)
+run_screen      = st.sidebar.button("Run Screener", use_container_width=True, on_click=_set_run_screener_clicked)
 
-if not run_screen:
+if not st.session_state.get("run_screener_clicked", False):
     st.info("Enter tickers in the sidebar and click **Run Screener**.")
     st.stop()
 
