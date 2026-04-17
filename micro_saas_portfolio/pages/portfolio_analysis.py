@@ -158,25 +158,23 @@ portfolios = get_portfolios(user_id)
 if not portfolios:
     st.warning("No saved portfolios found yet.")
     st.stop()
-
 portfolio_map = {p["name"]: p["id"] for p in portfolios}
 portfolio_names = list(portfolio_map.keys())
 
-if "selected_saved_portfolio" not in st.session_state:
-    st.session_state.selected_saved_portfolio = portfolio_names[0]
+default_portfolio = st.session_state.get("analysis_selected_portfolio")
 
-top_left, top_right = st.columns([3, 1])
+if default_portfolio not in portfolio_map:
+    default_portfolio = portfolio_names[0]
 
-with top_left:
-    selected_name = st.selectbox(
-        "Select Portfolio",
-        options=portfolio_names,
-        index=portfolio_names.index(st.session_state.selected_saved_portfolio)
-        if st.session_state.selected_saved_portfolio in portfolio_map
-        else 0,
-    )
+selected_name = st.selectbox(
+    "Select Portfolio",
+    options=portfolio_names,
+    index=portfolio_names.index(default_portfolio),
+)
 
-st.session_state.selected_saved_portfolio = selected_name
+st.session_state["analysis_selected_portfolio"] = selected_name
+st.session_state["selected_saved_portfolio"] = selected_name
+
 selected_portfolio_id = portfolio_map[selected_name]
 
 positions = get_positions(selected_portfolio_id)
