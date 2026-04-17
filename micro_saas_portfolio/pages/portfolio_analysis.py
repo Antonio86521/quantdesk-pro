@@ -235,7 +235,7 @@ ann_vol = annualized_vol(portfolio_returns)
 
 sharpe = (ann_ret - risk_free_rate) / ann_vol if ann_vol and not pd.isna(ann_vol) else np.nan
 
-max_dd, _ = max_drawdown_from_returns(portfolio_returns)
+max_dd, drawdown_series = max_drawdown_from_returns(portfolio_returns)
 
 sortino = sortino_ratio(ann_ret, risk_free_rate, portfolio_returns)
 calmar = calmar_ratio(ann_ret, max_dd)
