@@ -51,3 +51,13 @@ def get_positions(portfolio_id):
 # ─────────────────────────────
 def delete_position(position_id):
     supabase.table("portfolio_positions").delete().eq("id", position_id).execute()
+
+def rename_portfolio(portfolio_id, new_name):
+    res = supabase.table("portfolios").update({
+        "name": new_name
+    }).eq("id", portfolio_id).execute()
+    return res.data
+
+def delete_portfolio(portfolio_id):
+    res = supabase.table("portfolios").delete().eq("id", portfolio_id).execute()
+    return res.data
