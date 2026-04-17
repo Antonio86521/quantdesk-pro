@@ -35,7 +35,7 @@ if not st.session_state.get("load_vol_clicked", False):
 ticker = smile_ticker.upper()
 
 with st.spinner(f"Loading data for {ticker}…"):
-    spot_df  = load_price_history(ticker, period="5d")
+    spot_df  = load_price_history(ticker, period="5d", source="auto")
     expiries = load_option_expiries(ticker)
 
 if spot_df.empty:
