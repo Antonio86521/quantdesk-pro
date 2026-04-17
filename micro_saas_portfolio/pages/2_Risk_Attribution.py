@@ -20,6 +20,9 @@ require_login()
 sidebar_user_widget()
 page_header("Risk & Attribution", "Rolling Metrics · VaR · Stress Test · Factor Analysis")
 
+def _set_risk_analysis_clicked():
+    st.session_state["risk_analysis_clicked"] = True
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Inputs")
 tickers_input    = st.sidebar.text_input("Tickers", "AAPL,MSFT,SPY")
@@ -30,9 +33,9 @@ benchmark_ticker = st.sidebar.selectbox("Benchmark", ["SPY", "QQQ", "DIA", "IWM"
 risk_free_rate   = st.sidebar.number_input("Risk-free rate (%)", 0.0, 15.0, 2.0, 0.1)
 roll_window      = st.sidebar.slider("Rolling window (days)", 10, 60, 20, 5)
 market_shock     = st.sidebar.slider("Uniform market shock (%)", -50, 20, -10, 1)
-run_page         = st.sidebar.button("Run Risk Analysis", use_container_width=True)
+run_page         = st.sidebar.button("Run Risk Analysis", use_container_width=True, on_click=_set_risk_analysis_clicked)
 
-if not run_page:
+if not st.session_state.get("risk_analysis_clicked", False):
     st.info("Fill in the sidebar and click **Run Risk Analysis**.")
     st.stop()
 
