@@ -58,14 +58,14 @@ if len(tickers) != len(buy_prices):
 with st.spinner("Loading data…"):
     prices = pd.DataFrame()
     for t in tickers:
-        s = load_close_series(t, period=period)
+        s = load_close_series(t, period=period, source="auto")
         if s.empty:
             st.error(f"No data for {t}")
             st.stop()
         prices[t] = s
     prices = prices.dropna()
 
-    bench = load_close_series(benchmark_ticker, period=period).reindex(prices.index).dropna()
+    bench = load_close_series(benchmark_ticker, period=period, source="auto").reindex(prices.index).dropna()
 
 latest   = prices.iloc[-1]
 pos_val  = latest.values * shares
