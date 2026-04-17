@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from mpl_toolkits.mplot3d import Axes3D  # noqa
 
 from auth import require_login, sidebar_user_widget
 from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
@@ -263,7 +264,6 @@ if calc_option:
 
     # ── 3D Surface ────────────────────────────────────────────────────────────
     st.markdown("#### 3D Call Price Surface")
-    from mpl_toolkits.mplot3d import Axes3D  # noqa
     sr = np.linspace(max(1, S * 0.5), S * 1.5, 30)
     vr = np.linspace(0.05, max(0.6, sigma * 1.5), 30)
     SG, VG = np.meshgrid(sr, vr)
