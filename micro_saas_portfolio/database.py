@@ -159,3 +159,4 @@ def delete_portfolio(portfolio_id: str) -> bool:
         st.error(f"Could not delete portfolio: {e}")
         return False
 
+
