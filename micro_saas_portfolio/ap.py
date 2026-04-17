@@ -51,8 +51,6 @@ apply_theme()
 auth_enabled = _auth_configured()
 is_logged_in = bool(getattr(st.user, "is_logged_in", False)) if auth_enabled else True
 
-is_logged_in = bool(getattr(st.user, "is_logged_in", False))
-
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper functions
 # ──────────────────────────────────────────────────────────────────────────────
