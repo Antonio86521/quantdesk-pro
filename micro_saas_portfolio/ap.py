@@ -425,7 +425,7 @@ def render_user_panel(user_name: str | None, user_email: str | None, user_id: st
         st.markdown(
             """
             <div class="status-box">
-              <div class="status-title">Recommended next upgrades</div>
+              <div class="status-title">Future upgrades</div>
               <div class="status-text">
                 1. Saved user portfolios<br>
                 2. Pro dashboard / landing page cards<br>
