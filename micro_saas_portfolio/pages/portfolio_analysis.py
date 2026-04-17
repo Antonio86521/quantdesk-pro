@@ -55,15 +55,6 @@ def safe_float(x, default=0.0):
         return default
 
 
-def max_drawdown_from_returns(returns: pd.Series) -> float:
-    if returns.empty:
-        return 0.0
-    wealth = (1 + returns).cumprod()
-    peak = wealth.cummax()
-    dd = wealth / peak - 1
-    return float(dd.min())
-
-
 def sharpe_ratio(returns: pd.Series, rf: float = 0.0) -> float:
     if returns.empty:
         return 0.0
