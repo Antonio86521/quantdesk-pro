@@ -9,6 +9,7 @@ import streamlit as st
 import pandas as pd
 
 from utils import apply_theme
+from auth import login_screen
 
 # Optional helpers from your project
 try:
@@ -47,8 +48,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 apply_theme()
-
-from auth import login_screen
 
 if not st.user.is_logged_in:
     login_screen()
