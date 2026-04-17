@@ -48,6 +48,9 @@ st.set_page_config(
 )
 apply_theme()
 
+auth_enabled = _auth_configured()
+is_logged_in = bool(getattr(st.user, "is_logged_in", False)) if auth_enabled else True
+
 is_logged_in = bool(getattr(st.user, "is_logged_in", False))
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -506,6 +509,33 @@ if not is_logged_in:
                 st.login()
             except Exception:
                 st.error("Login is not available from this page yet. In that case, send me your auth.py and I’ll wire it correctly.")
+
+    st.markdown("")
+    st.caption("Sign in to continue to the protected pages.")
+    st.stop()
+
+st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
+
+if auth_enabled and not is_logged_in:
+    st.markdown(
+        """
+        <div class="status-box" style="margin-top:18px; max-width:720px;">
+          <div class="status-title">Welcome to QuantDesk Pro</div>
+          <div class="status-text">
+            Please sign in to access portfolio analytics, macro monitoring,
+            derivatives tools, volatility surface analysis, and risk dashboards.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("")
+
+    c1, c2, c3 = st.columns([1, 1.2, 1])
+    with c2:
+        if st.button("Sign in", use_container_width=True):
+            st.login()
 
     st.markdown("")
     st.caption("Sign in to continue to the protected pages.")
