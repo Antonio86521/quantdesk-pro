@@ -281,3 +281,4 @@ if pnl is not None:
         "Iron Condor":      "Low vol / range-bound. Profit from time decay in a sideways market.",
     }
     st.info(f"**{strategy}**: {descriptions.get(strategy, '')}")
+
