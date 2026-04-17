@@ -11,6 +11,7 @@ from portfolio_service import (
     delete_position,
     rename_portfolio,
     delete_portfolio,
+    update_position,
 )
 from database import create_profile_if_needed
 
@@ -133,6 +134,24 @@ selected_name = st.selectbox(
     if st.session_state.selected_portfolio_manager in portfolio_map
     else 0,
 )
+
+positions = get_positions(portfolio_id)
+
+# ─────────────────────────────
+# PORTFOLIO ACTIONS
+# ─────────────────────────────
+... your rename/delete code ...
+
+st.divider()
+
+# 👇 ADD THIS HERE
+st.page_link(
+    "pages/saved_portfolio_analysis.py",
+    label="Analyze This Portfolio",
+    icon="📈"
+)
+
+st.divider()
 
 st.session_state.selected_portfolio_manager = selected_name
 portfolio_id = portfolio_map[selected_name]
@@ -269,37 +288,58 @@ else:
     pos_df["buy_price"] = pd.to_numeric(pos_df["buy_price"], errors="coerce").fillna(0.0)
     pos_df["cost_basis"] = pos_df["shares"] * pos_df["buy_price"]
 
-    display_df = pos_df[["ticker", "shares", "buy_price", "cost_basis"]].rename(columns={
-        "ticker": "Ticker",
-        "shares": "Shares",
-        "buy_price": "Buy Price",
-        "cost_basis": "Cost Basis"
-    }).copy()
+    st.markdown("### Edit Positions")
 
-    display_df["Shares"] = display_df["Shares"].map(lambda x: f"{x:,.2f}")
-    display_df["Buy Price"] = display_df["Buy Price"].map(lambda x: f"${x:,.2f}")
-    display_df["Cost Basis"] = display_df["Cost Basis"].map(lambda x: f"${x:,.2f}")
-
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    st.markdown("### Delete Position")
+    header = st.columns([2, 1.2, 1.2, 1.2, 1, 1])
+    header[0].markdown("**Ticker**")
+    header[1].markdown("**Shares**")
+    header[2].markdown("**Buy Price**")
+    header[3].markdown("**Cost Basis**")
+    header[4].markdown("**Save**")
+    header[5].markdown("**Delete**")
 
     for _, pos in pos_df.iterrows():
-        d1, d2, d3, d4, d5 = st.columns([2, 1, 1, 1, 1])
+        row = st.columns([2, 1.2, 1.2, 1.2, 1, 1])
 
-        d1.write(pos["ticker"])
-        d2.write(f'{pos["shares"]:,.2f}')
-        d3.write(f'${pos["buy_price"]:,.2f}')
-        d4.write(f'${pos["cost_basis"]:,.2f}')
+        row[0].write(pos["ticker"])
 
-        if d5.button("Delete", key=f'del_{pos["id"]}'):
+        new_shares = row[1].number_input(
+            f"Shares {pos['id']}",
+            min_value=0.0,
+            value=float(pos["shares"]),
+            step=1.0,
+            key=f"shares_{pos['id']}",
+            label_visibility="collapsed",
+        )
+
+        new_buy_price = row[2].number_input(
+            f"Buy Price {pos['id']}",
+            min_value=0.0,
+            value=float(pos["buy_price"]),
+            step=1.0,
+            key=f"buy_price_{pos['id']}",
+            label_visibility="collapsed",
+        )
+
+        row[3].write(f"${new_shares * new_buy_price:,.2f}")
+
+        if row[4].button("Save", key=f"save_{pos['id']}"):
+            if new_shares <= 0:
+                st.warning("Shares must be greater than 0.")
+            elif new_buy_price <= 0:
+                st.warning("Buy price must be greater than 0.")
+            else:
+                try:
+                    update_position(pos["id"], new_shares, new_buy_price)
+                    st.success(f"Updated {pos['ticker']}.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Could not update position: {e}")
+
+        if row[5].button("Delete", key=f"del_{pos['id']}"):
             try:
                 delete_position(pos["id"])
-                st.success(f'Deleted {pos["ticker"]}.')
+                st.success(f"Deleted {pos['ticker']}.")
                 st.rerun()
             except Exception as e:
                 st.error(f"Could not delete position: {e}")
