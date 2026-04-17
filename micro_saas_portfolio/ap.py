@@ -8,7 +8,7 @@ Run with:  streamlit run ap.py
 import streamlit as st
 import pandas as pd
 
-from utils import apply_theme, terminal_ribbon
+from utils import apply_theme
 from auth import (
     _auth_configured,
     get_user_name,
@@ -31,27 +31,24 @@ apply_theme()
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def build_ribbon_item(label: str, ticker: str):
-    try:
-        s = load_close_series(ticker, period="5d")
-        s = pd.to_numeric(s, errors="coerce").dropna()
-
-        if len(s) < 2:
-            return (label, "N/A", "—")
-
-        last = float(s.iloc[-1])
-        prev = float(s.iloc[-2])
-        chg = ((last / prev) - 1) * 100 if prev != 0 else 0.0
-
-        if abs(last) >= 1000:
-            value = f"{last:,.0f}"
-        elif abs(last) >= 100:
-            value = f"{last:,.2f}"
-        else:
-            value = f"{last:.2f}"
-
-        return (label, value, f"{chg:+.2f}%")
-    except Exception:
+    s = load_close_series(ticker, period="5d")
+    if s.empty or len(s) < 2:
         return (label, "N/A", "—")
+
+    last = float(s.iloc[-1])
+    prev = float(s.iloc[-2])
+    chg = ((last / prev) - 1) * 100 if prev != 0 else 0.0
+
+    if abs(last) >= 1000:
+        value = f"{last:,.0f}"
+    elif abs(last) >= 100:
+        value = f"{last:,.2f}"
+    else:
+        value = f"{last:.2f}"
+
+    delta = f"{chg:+.2f}%"
+    return (label, value, delta)
+
 
 def module_card(icon: str, title: str, page_path: str, features: list[str], status: str = "LIVE"):
     st.markdown(
@@ -190,10 +187,8 @@ if _auth_configured():
     )
 
 
-# ── Top ribbon ────────────────────────────────────────────────────────────────
+# ── Top ribbon removed to avoid raw HTML rendering issues
 
-# --- Top spacer / clean header area ---
-st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
 
 # ── Main layout ───────────────────────────────────────────────────────────────
@@ -242,7 +237,7 @@ with left:
         (
             "📐",
             "Derivatives",
-            "pages/3_Derivatives.py",
+            "pages/3__Derivatives.py",
             [
                 "Black-Scholes, Binomial, Monte Carlo",
                 "Greeks and ITM probability",
@@ -264,7 +259,7 @@ with left:
         (
             "🎲",
             "Monte Carlo & Strategy Lab",
-            "pages/5_Monte_Carlo_Strategy_Lab.py",
+            "pages/5_Monte_Carlo__Strategy_Lab.py",
             [
                 "GBM path simulation",
                 "MC vs BS convergence",
@@ -388,5 +383,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
