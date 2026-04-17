@@ -249,11 +249,6 @@ var_param = parametric_var(portfolio_returns)
 var_hist = historical_var(portfolio_returns)
 cvar_val = cvar(portfolio_returns, var_hist)
 
-num_positions = len(pos_df)
-portfolio_cost = float((pos_df["shares"] * pos_df["buy_price"]).sum())
-unrealized_pnl = total_value - portfolio_cost
-unrealized_pnl_pct = (unrealized_pnl / portfolio_cost) if portfolio_cost > 0 else 0.0
-
 
 # ─────────────────────────────────────────────
 # TOP METRICS
