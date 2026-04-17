@@ -192,19 +192,8 @@ if _auth_configured():
 
 # ── Top ribbon ────────────────────────────────────────────────────────────────
 
-with st.spinner("Loading market ribbon…"):
-    ribbon_items = [
-        build_ribbon_item("SPX", "^GSPC"),
-        build_ribbon_item("NDX", "^NDX"),
-        build_ribbon_item("VIX", "^VIX"),
-        build_ribbon_item("US10Y", "^TNX"),
-        build_ribbon_item("DXY", "DX-Y.NYB"),
-        build_ribbon_item("GOLD", "GC=F"),
-        build_ribbon_item("WTI", "CL=F"),
-        build_ribbon_item("BTC", "BTC-USD"),
-        build_ribbon_item("EURUSD", "EURUSD=X"),
-    ]
-terminal_ribbon(ribbon_items)
+# --- Top spacer / clean header area ---
+st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
 
 # ── Main layout ───────────────────────────────────────────────────────────────
