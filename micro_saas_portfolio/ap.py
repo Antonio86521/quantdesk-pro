@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 
 from utils import apply_theme
-from auth import login_screen
+from auth import require_login
 
 # Optional helpers from your project
 try:
@@ -49,9 +49,7 @@ st.set_page_config(
 )
 apply_theme()
 
-if not st.user.is_logged_in:
-    login_screen()
-    st.stop()
+require_login()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
