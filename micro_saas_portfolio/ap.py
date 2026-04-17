@@ -396,6 +396,8 @@ def load_market_bar_data():
     tickers = {
         "S&P 500": "^GSPC",
         "Nasdaq": "^NDX",
+        "DXY": "DX-Y.NYB",
+        "VIX": "^VIX",
         "Gold": "GC=F",
         "WTI": "CL=F",
         "EUR/USD": "EURUSD=X",
@@ -414,7 +416,9 @@ def load_market_bar_data():
             prev = float(s.iloc[-2])
             chg = ((last / prev) - 1) * 100
 
-            if abs(last) >= 1000:
+            if label == "US 10Y":
+                value = f"{last/10:.2f}%"
+            elif abs(last) >= 1000:
                 value = f"{last:,.0f}"
             else:
                 value = f"{last:,.2f}"
@@ -437,24 +441,28 @@ def render_market_bar():
 
     blocks = ""
     for item in data:
-        chg = item["chg"]
-        color = "#00e676" if chg >= 0 else "#ff4d6d"
-        sign = "+" if chg >= 0 else ""
+        chg = float(item["chg"])
+        is_up = chg >= 0
+        color = "#00e676" if is_up else "#ff4d6d"
+        glow = "rgba(0,230,118,0.16)" if is_up else "rgba(255,77,109,0.16)"
+        sign = "+" if is_up else ""
 
         blocks += f"""
         <div style="
-            padding:10px 16px;
-            border-right:1px solid #1f2d45;
-            min-width:135px;
-            display:flex;
-            flex-direction:column;
-            gap:2px;
+            padding: 12px 16px;
+            min-width: 132px;
+            border-right: 1px solid #1f2d45;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0.00) 100%);
         ">
             <div style="
                 color:#7f8ea3;
                 font-size:10px;
                 font-weight:800;
-                letter-spacing:0.12em;
+                letter-spacing:0.14em;
                 text-transform:uppercase;
             ">
                 {item["label"]}
@@ -462,14 +470,22 @@ def render_market_bar():
             <div style="
                 color:#e5eefb;
                 font-size:15px;
-                font-weight:800;
+                font-weight:900;
+                line-height:1.1;
             ">
                 {item["value"]}
             </div>
             <div style="
-                color:{color};
+                display:inline-flex;
+                align-items:center;
+                width:fit-content;
+                padding:3px 8px;
+                border-radius:999px;
                 font-size:11px;
                 font-weight:800;
+                color:{color};
+                background:{glow};
+                border:1px solid {color}22;
             ">
                 {sign}{chg:.2f}%
             </div>
@@ -479,16 +495,34 @@ def render_market_bar():
     st.markdown(
         f"""
         <div style="
-            display:flex;
-            flex-wrap:wrap;
-            overflow:hidden;
             border:1px solid #1f2d45;
-            border-radius:16px;
-            background:linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
-            margin-top:6px;
-            margin-bottom:8px;
+            border-radius:18px;
+            overflow:hidden;
+            background:
+                radial-gradient(circle at top right, rgba(53,194,255,0.06), transparent 30%),
+                linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+            margin-top: 4px;
+            margin-bottom: 10px;
         ">
-            {blocks}
+            <div style="
+                padding:9px 14px;
+                border-bottom:1px solid #1f2d45;
+                color:#7f8ea3;
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:0.16em;
+                text-transform:uppercase;
+            ">
+                Live Market Snapshot
+            </div>
+            <div style="
+                display:flex;
+                flex-wrap:wrap;
+                align-items:stretch;
+            ">
+                {blocks}
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
