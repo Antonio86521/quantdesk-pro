@@ -17,8 +17,6 @@ from options_models import (
 
 st.set_page_config(page_title="Derivatives", layout="wide", page_icon="📊")
 apply_theme()
-require_login()
-sidebar_user_widget()
 page_header("Derivatives", "Black-Scholes · Binomial · Monte Carlo · Live Chain")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
