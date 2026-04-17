@@ -468,30 +468,15 @@ if is_logged_in and callable(sidebar_user_widget):
 
 st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
 
-if auth_enabled and not is_logged_in:
-    st.markdown(
-        """
-        <div class="status-box" style="margin-top:18px; max-width:720px;">
-          <div class="status-title">Welcome to QuantDesk Pro</div>
-          <div class="status-text">
-            Please sign in to access portfolio analytics, macro monitoring,
-            derivatives tools, volatility surface analysis, and risk dashboards.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+inject_home_css()
 
-    st.markdown("")
+if callable(terminal_ribbon):
+    try:
+        terminal_ribbon("QUANTDESK PRO · MULTI-ASSET ANALYTICS WORKSPACE")
+    except Exception:
+        pass
 
-    c1, c2, c3 = st.columns([1, 1.2, 1])
-    with c2:
-        if st.button("Sign in", use_container_width=True):
-            st.login()
-
-    st.markdown("")
-    st.caption("Sign in to continue to the protected pages.")
-    st.stop()
+st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
 
 render_hero()
 st.markdown("")
@@ -500,8 +485,5 @@ st.markdown("")
 render_feature_cards()
 st.markdown("")
 render_quick_actions()
-st.markdown("")
-render_user_panel(user_name, user_email, user_id)
-
 st.markdown("")
 st.caption("QuantDesk Pro is a project workspace for portfolio analytics, macro monitoring, derivatives, and risk workflows.")
