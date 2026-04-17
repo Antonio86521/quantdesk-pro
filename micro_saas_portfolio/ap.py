@@ -9,7 +9,6 @@ import streamlit as st
 import pandas as pd
 
 from utils import apply_theme
-from auth import require_login
 
 # Optional helpers from your project
 try:
@@ -48,8 +47,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 apply_theme()
-
-require_login()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
