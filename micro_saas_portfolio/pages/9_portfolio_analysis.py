@@ -22,6 +22,8 @@ from analytics import (
     parametric_var,
     historical_var,
     cvar,
+    compute_alpha_beta,
+    tracking_stats,
 )
 
 # ─────────────────────────────────────────────
@@ -235,6 +237,11 @@ risk_free_rate = st.sidebar.number_input(
     step=0.005
 )
 
+benchmark_ticker = st.sidebar.text_input(
+    "Benchmark Ticker",
+    value="SPY"
+).strip().upper()
+
 
 # ─────────────────────────────────────────────
 # LOAD MARKET DATA
@@ -270,6 +277,25 @@ if pos_df.empty:
 
 price_df = price_df[pos_df["ticker"].tolist()].copy()
 
+# ─────────────────────────────────────────────
+# LOAD BENCHMARK DATA
+# ─────────────────────────────────────────────
+benchmark_prices = pd.Series(dtype=float)
+
+if benchmark_ticker:
+    try:
+        benchmark_prices = load_close_series(
+            benchmark_ticker,
+            period=lookback,
+            source="auto"
+        )
+        if benchmark_prices is None:
+            benchmark_prices = pd.Series(dtype=float)
+        else:
+            benchmark_prices = pd.Series(benchmark_prices).dropna()
+            benchmark_prices.name = benchmark_ticker
+    except Exception:
+        benchmark_prices = pd.Series(dtype=float)
 
 # ─────────────────────────────────────────────
 # COMPUTE WEIGHTS / RETURNS
@@ -295,6 +321,29 @@ if portfolio_returns.empty:
 
 cum_returns = (1 + portfolio_returns).cumprod()
 
+# ─────────────────────────────────────────────
+# BENCHMARK COMPARISON
+# ─────────────────────────────────────────────
+benchmark_returns = pd.Series(dtype=float)
+benchmark_cum_returns = pd.Series(dtype=float)
+
+alpha_annual = np.nan
+beta = np.nan
+r2 = np.nan
+tracking_error = np.nan
+information_ratio = np.nan
+aligned_pb = pd.DataFrame()
+
+if not benchmark_prices.empty:
+    benchmark_returns = benchmark_prices.pct_change().dropna()
+    benchmark_cum_returns = (1 + benchmark_returns).cumprod()
+
+    alpha_annual, beta, r2, aligned_pb = compute_alpha_beta(
+        portfolio_returns,
+        benchmark_returns
+    )
+
+    tracking_error, information_ratio = tracking_stats(aligned_pb)
 
 # ─────────────────────────────────────────────
 # ADVANCED METRICS
@@ -346,6 +395,20 @@ row3[0].metric("Positions", f"{num_positions}")
 row3[1].metric("Unrealized P&L", f"${unrealized_pnl:,.2f}")
 row3[2].metric("Unrealized P&L %", fmt_pct_or_dash(unrealized_pnl_pct))
 
+bench_row = st.columns(5)
+bench_row[0].metric("Benchmark", benchmark_ticker if benchmark_ticker else "—")
+bench_row[1].metric("Alpha", fmt_pct_or_dash(alpha_annual))
+bench_row[2].metric("Beta", fmt_num_or_dash(beta))
+bench_row[3].metric("R²", fmt_num_or_dash(r2))
+bench_row[4].metric("Tracking Error", fmt_pct_or_dash(tracking_error))
+
+bench_row2 = st.columns(2)
+bench_row2[0].metric("Information Ratio", fmt_num_or_dash(information_ratio))
+bench_row2[1].metric(
+    "Benchmark Ann Return",
+    fmt_pct_or_dash(annualized_return(benchmark_returns) if not benchmark_returns.empty else np.nan)
+)
+
 st.divider()
 
 
@@ -396,9 +459,23 @@ st.markdown('<div class="section-title">Performance & Allocation</div>', unsafe_
 col1, col2 = st.columns([1.2, 1])
 
 with col1:
-    st.markdown("### Cumulative Return")
+    st.markdown("### Cumulative Return vs Benchmark")
     fig, ax = plt.subplots(figsize=(9, 4))
-    ax.plot(cum_returns.index, cum_returns.values, linewidth=2)
+
+    ax.plot(cum_returns.index, cum_returns.values, linewidth=2, label="Portfolio")
+
+    if not benchmark_cum_returns.empty:
+        aligned_cum = pd.concat(
+            [cum_returns.rename("Portfolio"), benchmark_cum_returns.rename(benchmark_ticker)],
+            axis=1
+        ).dropna()
+
+        if not aligned_cum.empty:
+            ax.clear()
+            ax.plot(aligned_cum.index, aligned_cum["Portfolio"], linewidth=2, label="Portfolio")
+            ax.plot(aligned_cum.index, aligned_cum[benchmark_ticker], linewidth=2, label=benchmark_ticker)
+            ax.legend()
+
     ax.set_ylabel("Growth of $1")
     ax.set_xlabel("")
     ax.grid(True, alpha=0.2)
@@ -474,6 +551,33 @@ dist_row[0].metric("Skewness", fmt_num_or_dash(sk))
 dist_row[1].metric("Kurtosis", fmt_num_or_dash(kt))
 
 st.divider()
+
+# ─────────────────────────────────────────────
+# BENCHMARK COMPARISON TABLE
+# ─────────────────────────────────────────────
+if not benchmark_returns.empty:
+    st.divider()
+    st.markdown('<div class="section-title">Benchmark Comparison</div>', unsafe_allow_html=True)
+
+    comparison_df = pd.DataFrame({
+        "Metric": [
+            "Annualized Return",
+            "Annualized Volatility",
+            "Max Drawdown",
+        ],
+        "Portfolio": [
+            fmt_pct_or_dash(ann_ret),
+            fmt_pct_or_dash(ann_vol),
+            fmt_pct_or_dash(max_dd),
+        ],
+        benchmark_ticker: [
+            fmt_pct_or_dash(annualized_return(benchmark_returns)),
+            fmt_pct_or_dash(annualized_vol(benchmark_returns)),
+            fmt_pct_or_dash(max_drawdown_from_returns(benchmark_returns)[0]),
+        ]
+    })
+
+    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
 
 
 # ─────────────────────────────────────────────
