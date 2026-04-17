@@ -188,6 +188,8 @@ with action2:
             except Exception as e:
                 st.error(f"Could not delete portfolio: {e}")
 
+st.session_state["analysis_selected_portfolio"] = selected_name
+
 st.page_link(
     "pages/portfolio_analysis.py",
     label="Analyze This Portfolio",
