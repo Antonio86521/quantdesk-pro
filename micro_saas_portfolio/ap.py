@@ -1,8 +1,8 @@
 """
-ap_Pro.py — upgraded QuantDesk Pro home page.
+ap.py — upgraded QuantDesk Pro home page.
 
-Drop-in replacement for the current Streamlit home page.
-Designed to be resilient even if a few optional helper functions differ slightly.
+Public landing page + login entry for the app.
+Protected pages should still use require_login().
 """
 
 import streamlit as st
@@ -48,8 +48,9 @@ st.set_page_config(
 )
 apply_theme()
 
-auth_enabled = _auth_configured()
+auth_enabled = _auth_configured() if callable(_auth_configured) else False
 is_logged_in = bool(getattr(st.user, "is_logged_in", False)) if auth_enabled else True
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper functions
@@ -240,13 +241,12 @@ def inject_home_css():
     )
 
 
-def render_hero(user_name: str | None):
-    name_part = ""
+def render_hero():
     st.markdown(
-        f"""
+        """
         <div class="hero">
             <div class="hero-title">
-                Quant<span class="brand-accent">Desk</span> <span class="brand-accent2">Pro</span>{name_part}
+                Quant<span class="brand-accent">Desk</span> <span class="brand-accent2">Pro</span>
             </div>
             <div class="hero-subtitle">
                 Multi-asset analytics for portfolio monitoring, macro tracking, derivatives workflows,
@@ -317,6 +317,7 @@ def render_top_stats():
 def render_feature_cards():
     st.markdown('<div class="section-title">Core Modules</div>', unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
+
     with c1:
         st.markdown(
             """
@@ -332,6 +333,7 @@ def render_feature_cards():
             """,
             unsafe_allow_html=True,
         )
+
     with c2:
         st.markdown(
             """
@@ -347,6 +349,7 @@ def render_feature_cards():
             """,
             unsafe_allow_html=True,
         )
+
     with c3:
         st.markdown(
             """
@@ -440,21 +443,6 @@ def render_user_panel(user_name: str | None, user_email: str | None, user_id: st
         )
 
 
-def render_not_logged_in():
-    st.markdown(
-        """
-        <div class="status-box" style="margin-top:18px;">
-          <div class="status-title">Authentication required</div>
-          <div class="status-text">
-            Your app is configured to use authentication, but no active session was detected.
-            Use the sign-in flow in the app sidebar or your configured provider.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 # ──────────────────────────────────────────────────────────────────────────────
 # Main page
 # ──────────────────────────────────────────────────────────────────────────────
@@ -470,7 +458,7 @@ user_name = safe_call(get_user_name, None)
 user_email = safe_call(get_user_email, None)
 user_id = safe_call(get_user_id, None)
 
-if callable(create_profile_if_needed) and user_id:
+if callable(create_profile_if_needed) and user_id and is_logged_in:
     try:
         create_profile_if_needed(user_id, user_email, user_name)
     except Exception:
@@ -481,36 +469,6 @@ if is_logged_in and callable(sidebar_user_widget):
         sidebar_user_widget()
     except Exception:
         pass
-
-st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
-
-if not is_logged_in:
-    st.markdown(
-        """
-        <div class="status-box" style="margin-top:18px; max-width:720px;">
-          <div class="status-title">Welcome to QuantDesk Pro</div>
-          <div class="status-text">
-            Please sign in to access portfolio analytics, macro monitoring,
-            derivatives tools, volatility surface analysis, and risk dashboards.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("")
-
-    c1, c2, c3 = st.columns([1, 1.2, 1])
-    with c2:
-        if st.button("Sign in", use_container_width=True):
-            try:
-                st.login()
-            except Exception:
-                st.error("Login is not available from this page yet. In that case, send me your auth.py and I’ll wire it correctly.")
-
-    st.markdown("")
-    st.caption("Sign in to continue to the protected pages.")
-    st.stop()
 
 st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
 
@@ -539,7 +497,7 @@ if auth_enabled and not is_logged_in:
     st.caption("Sign in to continue to the protected pages.")
     st.stop()
 
-render_hero(user_name)
+render_hero()
 st.markdown("")
 render_top_stats()
 st.markdown("")
