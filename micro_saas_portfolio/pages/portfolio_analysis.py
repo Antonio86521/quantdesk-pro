@@ -37,6 +37,54 @@ apply_theme()
 require_login()
 sidebar_user_widget()
 
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 1.2rem;
+        padding-bottom: 2rem;
+        max-width: 1400px;
+    }
+
+    div[data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 14px 16px;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        font-size: 0.88rem;
+    }
+
+    div[data-testid="stMetricValue"] {
+        font-size: 1.75rem;
+    }
+
+    .section-title {
+        font-size: 1.55rem;
+        font-weight: 700;
+        margin-top: 0.2rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .subtle-note {
+        color: rgba(255,255,255,0.65);
+        font-size: 0.9rem;
+        margin-top: -0.35rem;
+        margin-bottom: 1rem;
+    }
+
+    div[data-testid="stDataFrame"] {
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 page_header(
     "Saved Portfolio Analysis",
     "Load a saved portfolio from Supabase and run full analytics."
@@ -73,6 +121,14 @@ def latest_valid_prices(price_df: pd.DataFrame) -> pd.Series:
     return price_df.ffill().iloc[-1]
 
 
+def fmt_pct_or_dash(x):
+    return "—" if pd.isna(x) else f"{x:.2%}"
+
+
+def fmt_num_or_dash(x, decimals=2):
+    return "—" if pd.isna(x) else f"{x:.{decimals}f}"
+
+
 # ─────────────────────────────────────────────
 # LOAD PORTFOLIOS
 # ─────────────────────────────────────────────
@@ -83,19 +139,21 @@ if not portfolios:
     st.stop()
 
 portfolio_map = {p["name"]: p["id"] for p in portfolios}
-
 portfolio_names = list(portfolio_map.keys())
 
 if "selected_saved_portfolio" not in st.session_state:
     st.session_state.selected_saved_portfolio = portfolio_names[0]
 
-selected_name = st.selectbox(
-    "Select Portfolio",
-    options=portfolio_names,
-    index=portfolio_names.index(st.session_state.selected_saved_portfolio)
-    if st.session_state.selected_saved_portfolio in portfolio_map
-    else 0,
-)
+top_left, top_right = st.columns([3, 1])
+
+with top_left:
+    selected_name = st.selectbox(
+        "Select Portfolio",
+        options=portfolio_names,
+        index=portfolio_names.index(st.session_state.selected_saved_portfolio)
+        if st.session_state.selected_saved_portfolio in portfolio_map
+        else 0,
+    )
 
 st.session_state.selected_saved_portfolio = selected_name
 selected_portfolio_id = portfolio_map[selected_name]
@@ -128,7 +186,6 @@ if pos_df.empty:
     st.warning("No valid positions found in this portfolio.")
     st.stop()
 
-# combine duplicate tickers
 pos_df = (
     pos_df.groupby("ticker", as_index=False)
     .agg({
@@ -225,7 +282,6 @@ cum_returns = (1 + portfolio_returns).cumprod()
 # ─────────────────────────────────────────────
 ann_ret = annualized_return(portfolio_returns)
 ann_vol = annualized_vol(portfolio_returns)
-
 sharpe = (ann_ret - risk_free_rate) / ann_vol if ann_vol and not pd.isna(ann_vol) else np.nan
 
 max_dd, drawdown_series = max_drawdown_from_returns(portfolio_returns)
@@ -249,42 +305,35 @@ unrealized_pnl_pct = (unrealized_pnl / portfolio_cost) if portfolio_cost > 0 els
 
 
 # ─────────────────────────────────────────────
-# METRIC CARDS
+# OVERVIEW METRICS
 # ─────────────────────────────────────────────
-c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("Portfolio Value", f"${total_value:,.0f}")
-c2.metric("Ann Return", f"{ann_ret:.2%}")
-c3.metric("Volatility", f"{ann_vol:.2%}")
-c4.metric("Sharpe", f"{sharpe:.2f}")
-c5.metric("Max Drawdown", f"{max_dd:.2%}")
+st.markdown('<div class="section-title">Portfolio Overview</div>', unsafe_allow_html=True)
 
-c6, c7, c8, c9 = st.columns(4)
-c6.metric("Sortino", f"{sortino:.2f}")
-c7.metric("Calmar", f"{calmar:.2f}")
-c8.metric("Omega", f"{omega:.2f}")
-c9.metric("Gain/Pain", f"{gtp:.2f}")
+row1 = st.columns(5)
+row1[0].metric("Portfolio Value", f"${total_value:,.0f}")
+row1[1].metric("Ann Return", fmt_pct_or_dash(ann_ret))
+row1[2].metric("Volatility", fmt_pct_or_dash(ann_vol))
+row1[3].metric("Sharpe", fmt_num_or_dash(sharpe))
+row1[4].metric("Max Drawdown", fmt_pct_or_dash(max_dd))
 
-st.markdown("### Risk Metrics")
-c10, c11, c12 = st.columns(3)
-c10.metric("Parametric VaR (95%)", f"{var_param:.2%}")
-c11.metric("Historical VaR (95%)", f"{var_hist:.2%}")
-c12.metric("CVaR", f"{cvar_val:.2%}")
+row2 = st.columns(4)
+row2[0].metric("Sortino", fmt_num_or_dash(sortino))
+row2[1].metric("Calmar", fmt_num_or_dash(calmar))
+row2[2].metric("Omega", fmt_num_or_dash(omega))
+row2[3].metric("Gain/Pain", fmt_num_or_dash(gtp))
 
-st.markdown("### Return Distribution")
-c13, c14 = st.columns(2)
-c13.metric("Skewness", f"{sk:.2f}")
-c14.metric("Kurtosis", f"{kt:.2f}")
+row3 = st.columns(3)
+row3[0].metric("Positions", f"{num_positions}")
+row3[1].metric("Unrealized P&L", f"${unrealized_pnl:,.2f}")
+row3[2].metric("Unrealized P&L %", fmt_pct_or_dash(unrealized_pnl_pct))
 
-c15, c16, c17 = st.columns(3)
-c15.metric("Positions", f"{num_positions}")
-c16.metric("Unrealized P&L", f"${unrealized_pnl:,.2f}")
-c17.metric("Unrealized P&L %", f"{unrealized_pnl_pct:.2%}")
+st.divider()
 
 
 # ─────────────────────────────────────────────
 # HOLDINGS TABLE
 # ─────────────────────────────────────────────
-st.markdown("### Holdings Overview")
+st.markdown('<div class="section-title">Holdings Overview</div>', unsafe_allow_html=True)
 
 display_df = pos_df.copy()
 display_df["weight"] = display_df["weight"] * 100
@@ -305,53 +354,72 @@ display_df = display_df[[
     "weight": "Weight (%)"
 })
 
+display_df["Shares"] = display_df["Shares"].map(lambda x: f"{x:,.2f}")
+display_df["Avg Buy Price"] = display_df["Avg Buy Price"].map(lambda x: f"${x:,.2f}")
+display_df["Current Price"] = display_df["Current Price"].map(lambda x: f"${x:,.2f}")
+display_df["Market Value"] = display_df["Market Value"].map(lambda x: f"${x:,.2f}")
+display_df["Weight (%)"] = display_df["Weight (%)"].map(lambda x: f"{x:.2f}%")
+
 st.dataframe(
-    display_df.sort_values("Market Value", ascending=False),
+    display_df.sort_values("Ticker"),
     use_container_width=True,
     hide_index=True,
 )
 
+st.divider()
+
 
 # ─────────────────────────────────────────────
-# CHARTS ROW 1
+# PERFORMANCE + ALLOCATION
 # ─────────────────────────────────────────────
-col1, col2 = st.columns(2)
+st.markdown('<div class="section-title">Performance & Allocation</div>', unsafe_allow_html=True)
+
+col1, col2 = st.columns([1.2, 1])
 
 with col1:
     st.markdown("### Cumulative Return")
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(cum_returns.index, cum_returns.values)
+    fig, ax = plt.subplots(figsize=(9, 4))
+    ax.plot(cum_returns.index, cum_returns.values, linewidth=2)
     ax.set_ylabel("Growth of $1")
     ax.set_xlabel("")
-    ax.grid(True, alpha=0.25)
+    ax.grid(True, alpha=0.2)
+    fig.tight_layout()
     st.pyplot(fig, clear_figure=True)
 
 with col2:
     st.markdown("### Allocation")
-    fig, ax = plt.subplots(figsize=(7, 7))
+    fig, ax = plt.subplots(figsize=(6.2, 4.8))
     ax.pie(
         pos_df["market_value"],
         labels=pos_df["ticker"],
         autopct="%1.1f%%",
-        startangle=90
+        startangle=90,
+        pctdistance=0.72,
+        labeldistance=1.05
     )
     ax.axis("equal")
+    fig.tight_layout()
     st.pyplot(fig, clear_figure=True)
 
+st.divider()
+
 
 # ─────────────────────────────────────────────
-# CHARTS ROW 2
+# RISK VISUALS
 # ─────────────────────────────────────────────
+st.markdown('<div class="section-title">Risk Visuals</div>', unsafe_allow_html=True)
+
 col3, col4 = st.columns(2)
 
 with col3:
     st.markdown("### Rolling Volatility (30D)")
     rolling = rolling_vol(portfolio_returns, window=30)
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(rolling.index, rolling.values)
+    fig, ax = plt.subplots(figsize=(9, 4))
+    ax.plot(rolling.index, rolling.values, linewidth=2)
     ax.set_ylabel("Volatility")
     ax.set_xlabel("")
-    ax.grid(True, alpha=0.25)
+    ax.grid(True, alpha=0.2)
+    fig.tight_layout()
     st.pyplot(fig, clear_figure=True)
 
 with col4:
@@ -359,14 +427,34 @@ with col4:
     asset_returns = price_df.pct_change().dropna()
     corr = correlation_matrix(asset_returns)
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    im = ax.imshow(corr.values)
+    fig, ax = plt.subplots(figsize=(7.2, 4.8))
+    im = ax.imshow(corr.values, aspect="auto")
     ax.set_xticks(range(len(corr.columns)))
     ax.set_yticks(range(len(corr.index)))
     ax.set_xticklabels(corr.columns, rotation=45, ha="right")
     ax.set_yticklabels(corr.index)
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
     st.pyplot(fig, clear_figure=True)
+
+st.divider()
+
+
+# ─────────────────────────────────────────────
+# ADVANCED RISK METRICS
+# ─────────────────────────────────────────────
+st.markdown('<div class="section-title">Advanced Risk Metrics</div>', unsafe_allow_html=True)
+
+risk_row = st.columns(3)
+risk_row[0].metric("Parametric VaR (95%)", fmt_pct_or_dash(var_param))
+risk_row[1].metric("Historical VaR (95%)", fmt_pct_or_dash(var_hist))
+risk_row[2].metric("CVaR", fmt_pct_or_dash(cvar_val))
+
+dist_row = st.columns(2)
+dist_row[0].metric("Skewness", fmt_num_or_dash(sk))
+dist_row[1].metric("Kurtosis", fmt_num_or_dash(kt))
+
+st.divider()
 
 
 # ─────────────────────────────────────────────
@@ -374,12 +462,9 @@ with col4:
 # ─────────────────────────────────────────────
 with st.expander("Show Daily Portfolio Returns"):
     dr = portfolio_returns.rename("Portfolio Return").to_frame()
+    dr["Portfolio Return"] = dr["Portfolio Return"].map(lambda x: f"{x:.4%}")
     st.dataframe(dr, use_container_width=True)
 
-
-# ─────────────────────────────────────────────
-# NOTES
-# ─────────────────────────────────────────────
 st.caption(
     f"Analysis based on {lookback} historical prices for available tickers only. "
     f"Risk-free rate used for Sharpe ratio: {risk_free_rate:.2%}."
