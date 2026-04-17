@@ -99,3 +99,4 @@ def sidebar_user_widget() -> None:
         if st.button("Log out", use_container_width=True, key="_logout_btn"):
             st.logout()
 
+
