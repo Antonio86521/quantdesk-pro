@@ -191,7 +191,7 @@ with action2:
 st.session_state["analysis_selected_portfolio"] = selected_name
 
 st.page_link(
-    "pages/portfolio_analysis.py",
+    "pages/9_portfolio_analysis.py",
     label="Analyze This Portfolio",
     icon="📈"
 )
