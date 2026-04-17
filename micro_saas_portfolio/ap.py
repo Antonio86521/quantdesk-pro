@@ -7,6 +7,9 @@ Run with:  streamlit run ap.py
 
 import streamlit as st
 import pandas as pd
+import streamlit as st
+
+st.write("API KEY:", st.secrets["ALPHA_VANTAGE_API_KEY"])
 
 from utils import apply_theme
 from auth import (
