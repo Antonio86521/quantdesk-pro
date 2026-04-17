@@ -493,39 +493,40 @@ def render_market_bar():
         """
 
     st.markdown(
-        f"""
+    f"""
+    <div style="
+        border:1px solid #1f2d45;
+        border-radius:18px;
+        overflow:hidden;
+        background:
+            radial-gradient(circle at top right, rgba(53,194,255,0.06), transparent 30%),
+            linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+        margin-top: 4px;
+        margin-bottom: 10px;
+    ">
         <div style="
-            border:1px solid #1f2d45;
-            border-radius:18px;
-            overflow:hidden;
-            background:
-                radial-gradient(circle at top right, rgba(53,194,255,0.06), transparent 30%),
-                linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
-            margin-top: 4px;
-            margin-bottom: 10px;
+            padding:9px 14px;
+            border-bottom:1px solid #1f2d45;
+            color:#7f8ea3;
+            font-size:10px;
+            font-weight:800;
+            letter-spacing:0.16em;
+            text-transform:uppercase;
         ">
-            <div style="
-                padding:9px 14px;
-                border-bottom:1px solid #1f2d45;
-                color:#7f8ea3;
-                font-size:10px;
-                font-weight:800;
-                letter-spacing:0.16em;
-                text-transform:uppercase;
-            ">
-                Live Market Snapshot
-            </div>
-            <div style="
-                display:flex;
-                flex-wrap:wrap;
-                align-items:stretch;
-            ">
-                {blocks}
-            </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            Live Market Snapshot
+        </div>
+        <div style="
+            display:flex;
+            flex-wrap:wrap;
+            align-items:stretch;
+        ">
+            {blocks}
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
