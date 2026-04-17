@@ -68,3 +68,10 @@ def update_position(position_id, shares, buy_price):
         "buy_price": buy_price
     }).eq("id", position_id).execute()
     return res.data
+
+def update_position(position_id, shares, buy_price):
+    res = supabase.table("portfolio_positions").update({
+        "shares": shares,
+        "buy_price": buy_price
+    }).eq("id", position_id).execute()
+    return res.data
