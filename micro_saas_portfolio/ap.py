@@ -250,7 +250,7 @@ with left:
         (
             "📐",
             "Derivatives",
-            "pages/3__Derivatives.py",
+            "pages/3_Derivatives.py",
             [
                 "Black-Scholes, Binomial, Monte Carlo",
                 "Greeks and ITM probability",
@@ -272,7 +272,7 @@ with left:
         (
             "🎲",
             "Monte Carlo & Strategy Lab",
-            "pages/5_Monte_Carlo__Strategy_Lab.py",
+            "pages/5_Monte_Carlo_Strategy_Lab.py",
             [
                 "GBM path simulation",
                 "MC vs BS convergence",
