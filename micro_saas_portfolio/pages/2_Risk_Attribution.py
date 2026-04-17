@@ -16,8 +16,6 @@ from analytics import (
 
 st.set_page_config(page_title="Risk & Attribution", layout="wide", page_icon="📊")
 apply_theme()
-require_login()
-sidebar_user_widget()
 page_header("Risk & Attribution", "Rolling Metrics · VaR · Stress Test · Factor Analysis")
 
 def _set_risk_analysis_clicked():
