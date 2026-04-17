@@ -304,7 +304,7 @@ if custom_input.strip():
             active_labels.append(sym)
 
 with st.spinner("Loading cross-asset market data…"):
-    prices = load_macro_prices(active_labels, period=period, source="auto")
+    prices = load_macro_prices(active_labels, period=period)
 
 if prices.empty:
     st.error("No macro data could be loaded.")
