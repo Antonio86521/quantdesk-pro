@@ -17,13 +17,13 @@ except Exception:
     terminal_ribbon = None
 
 try:
-    from auth import (
-        _auth_configured,
-        get_user_name,
-        get_user_email,
-        get_user_id,
-        sidebar_user_widget,
-    )
+   from auth import (
+    _auth_configured,
+    get_user_name,
+    get_user_email,
+    get_user_id,
+    sidebar_user_widget,
+)
 except Exception:
     _auth_configured = None
     get_user_name = None
@@ -47,10 +47,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 apply_theme()
-
-auth_enabled = _auth_configured() if callable(_auth_configured) else False
-is_logged_in = bool(getattr(st.user, "is_logged_in", False)) if auth_enabled else True
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper functions
