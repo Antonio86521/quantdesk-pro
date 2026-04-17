@@ -523,11 +523,9 @@ def render_market_bar():
         ">
             {blocks}
         </div>
-    </div>
     """,
     unsafe_allow_html=True,
 )
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Main page
