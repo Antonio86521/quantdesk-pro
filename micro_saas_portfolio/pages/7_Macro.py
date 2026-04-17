@@ -168,7 +168,7 @@ def load_macro_prices(labels, period="1y") -> pd.DataFrame:
     for label in labels:
         ticker = UNIVERSE.get(label, label)
         try:
-            s = load_close_series(ticker, period=period)
+            s = load_close_series(ticker, period=period, source="auto")
 
             if s is None:
                 continue
