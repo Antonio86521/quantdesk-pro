@@ -23,6 +23,9 @@ require_login()
 sidebar_user_widget()
 page_header("Portfolio Analytics", "Performance · Attribution · Technicals")
 
+def _set_analyze_portfolio_clicked():
+    st.session_state["analyze_portfolio_clicked"] = True
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Portfolio Inputs")
 tickers_input    = st.sidebar.text_input("Tickers (comma-separated)", "AAPL,MSFT,SPY")
@@ -31,9 +34,9 @@ buy_prices_input = st.sidebar.text_input("Buy prices (comma-separated)", "180,35
 period           = st.sidebar.selectbox("Period", ["3mo", "6mo", "1y", "2y", "5y"], index=2)
 risk_free_rate   = st.sidebar.number_input("Risk-free rate (%)", 0.0, 15.0, 2.0, 0.1)
 benchmark_ticker = st.sidebar.selectbox("Benchmark", ["SPY", "QQQ", "DIA", "IWM"])
-run_page         = st.sidebar.button("Analyze Portfolio", use_container_width=True)
+run_page         = st.sidebar.button("Analyze Portfolio", use_container_width=True, on_click=_set_analyze_portfolio_clicked)
 
-if not run_page:
+if not st.session_state.get("analyze_portfolio_clicked", False):
     st.info("Fill in the sidebar and click **Analyze Portfolio** to begin.")
     st.stop()
 
