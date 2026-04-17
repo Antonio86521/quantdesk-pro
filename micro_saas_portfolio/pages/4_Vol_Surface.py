@@ -14,6 +14,9 @@ require_login()
 sidebar_user_widget()
 page_header("Volatility Surface", "Smile · Term Structure · Heatmap · 3D Surface")
 
+def _set_load_vol_clicked():
+    st.session_state["load_vol_clicked"] = True
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Inputs")
 smile_ticker    = st.sidebar.text_input("Ticker", "AAPL")
@@ -22,9 +25,9 @@ min_vol         = st.sidebar.number_input("Min volume",        0, 10000, 1,  1)
 moneyness_band  = st.sidebar.slider("Moneyness band (±%)", 5, 60, 25, 5)
 max_expiries    = st.sidebar.slider("Max expiries to load", 2, 8, 4, 1)
 option_side     = st.sidebar.selectbox("Option side", ["calls", "puts"])
-load_btn        = st.sidebar.button("Load Vol Data", use_container_width=True)
+load_btn        = st.sidebar.button("Load Vol Data", use_container_width=True, on_click=_set_load_vol_clicked)
 
-if not load_btn:
+if not st.session_state.get("load_vol_clicked", False):
     st.info("Enter a ticker in the sidebar and click **Load Vol Data**.")
     st.stop()
 
@@ -238,4 +241,3 @@ if exps:
         ax5.set_title(f"{ticker} — Put vs Call IV Skew ({exp0})")
         ax5.legend(); ax5.grid(True, alpha=0.3)
         st.pyplot(fig5); plt.close()
-
