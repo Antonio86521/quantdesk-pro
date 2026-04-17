@@ -48,6 +48,12 @@ st.set_page_config(
 )
 apply_theme()
 
+from auth import login_screen
+
+if not st.user.is_logged_in:
+    login_screen()
+    st.stop()
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper functions
