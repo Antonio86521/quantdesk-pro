@@ -35,9 +35,6 @@ st.set_page_config(
 
 apply_theme()
 
-# ─────────────────────────────────────────────
-# INLINE LOGIN HANDLING
-# ─────────────────────────────────────────────
 if not user or not user.get("is_logged_in"):
 
     st.markdown("""
