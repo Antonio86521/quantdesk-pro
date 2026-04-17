@@ -58,7 +58,7 @@ div[data-testid="stDataFrame"] {
 
 page_header(
     "Portfolio Manager",
-    "Create portfolios, add positions, and manage saved holdings."
+    "Create portfolios, add positions, edit holdings, and jump straight to analysis."
 )
 
 user = st.user
@@ -70,7 +70,6 @@ if not user_id:
     st.error("User not found. Please log in again.")
     st.stop()
 
-# ensure profile exists before any inserts
 create_profile_if_needed(user_id, user_email, user_name)
 
 
@@ -135,29 +134,15 @@ selected_name = st.selectbox(
     else 0,
 )
 
-positions = get_positions(portfolio_id)
-
-# ─────────────────────────────
-# PORTFOLIO ACTIONS
-# ─────────────────────────────
-... your rename/delete code ...
-
-st.divider()
-
-# 👇 ADD THIS HERE
-st.page_link(
-    "pages/saved_portfolio_analysis.py",
-    label="Analyze This Portfolio",
-    icon="📈"
-)
-
-st.divider()
-
 st.session_state.selected_portfolio_manager = selected_name
 portfolio_id = portfolio_map[selected_name]
 
 positions = get_positions(portfolio_id)
 
+
+# ─────────────────────────────────────────────
+# PORTFOLIO ACTIONS
+# ─────────────────────────────────────────────
 st.markdown('<div class="section-title">Portfolio Actions</div>', unsafe_allow_html=True)
 
 action1, action2 = st.columns(2)
@@ -203,7 +188,14 @@ with action2:
             except Exception as e:
                 st.error(f"Could not delete portfolio: {e}")
 
+st.page_link(
+    "pages/saved_portfolio_analysis.py",
+    label="Analyze This Portfolio",
+    icon="📈"
+)
+
 st.divider()
+
 
 # ─────────────────────────────────────────────
 # PORTFOLIO SUMMARY
