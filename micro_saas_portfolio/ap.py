@@ -413,9 +413,5 @@ st.markdown("")
 render_quick_actions()
 st.markdown("")
 
-c1, c2, c3 = st.columns([1, 1.5, 1])
-with c2:
-    render_future_upgrades()
-
 st.markdown("")
 st.caption("QuantDesk Pro is a project workspace for portfolio analytics, macro monitoring, derivatives, and risk workflows.")
