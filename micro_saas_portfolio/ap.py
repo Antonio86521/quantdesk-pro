@@ -239,7 +239,7 @@ def inject_home_css():
 
 
 def render_hero(user_name: str | None):
-  name_part = f", {user_name.split()[0]}" if user_name else ""
+  name_part = ""
     st.markdown(
         f"""
         <div class="hero">
