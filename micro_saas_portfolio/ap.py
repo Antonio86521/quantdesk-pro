@@ -239,8 +239,8 @@ def inject_home_css():
 
 
 def render_hero(user_name: str | None):
-  name_part = ""
-      st.markdown(
+    name_part = "QuantDesk Pro"
+    st.markdown(
         f"""
         <div class="hero">
             <div class="hero-title">
@@ -499,7 +499,3 @@ else:
 
 st.markdown("")
 st.caption("QuantDesk Pro is a project workspace for portfolio analytics, macro monitoring, derivatives, and risk workflows.")
-
-
-
-
