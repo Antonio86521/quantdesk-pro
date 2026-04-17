@@ -240,7 +240,7 @@ def inject_home_css():
 
 def render_hero(user_name: str | None):
   name_part = ""
-    st.markdown(
+      st.markdown(
         f"""
         <div class="hero">
             <div class="hero-title">
