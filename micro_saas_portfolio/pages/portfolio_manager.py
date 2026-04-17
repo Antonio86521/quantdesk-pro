@@ -9,6 +9,8 @@ from portfolio_service import (
     get_positions,
     add_position,
     delete_position,
+    rename_portfolio,
+    delete_portfolio,
 )
 from database import create_profile_if_needed
 
@@ -137,6 +139,52 @@ portfolio_id = portfolio_map[selected_name]
 
 positions = get_positions(portfolio_id)
 
+st.markdown('<div class="section-title">Portfolio Actions</div>', unsafe_allow_html=True)
+
+action1, action2 = st.columns(2)
+
+with action1:
+    new_portfolio_name = st.text_input(
+        "Rename Portfolio",
+        value=selected_name,
+        key="rename_portfolio_input"
+    )
+
+    if st.button("Rename Portfolio", use_container_width=True):
+        cleaned_name = new_portfolio_name.strip()
+        if not cleaned_name:
+            st.warning("Please enter a valid portfolio name.")
+        else:
+            try:
+                rename_portfolio(portfolio_id, cleaned_name)
+                st.success(f'Portfolio renamed to "{cleaned_name}".')
+                st.session_state.selected_portfolio_manager = cleaned_name
+                st.rerun()
+            except Exception as e:
+                st.error(f"Could not rename portfolio: {e}")
+
+with action2:
+    st.markdown("#### Delete Portfolio")
+    st.warning("This will permanently delete the portfolio and all its positions.")
+
+    confirm_delete = st.checkbox(
+        f'I confirm I want to delete "{selected_name}"',
+        key="confirm_delete_portfolio"
+    )
+
+    if st.button("Delete Portfolio", use_container_width=True):
+        if not confirm_delete:
+            st.warning("Please confirm deletion first.")
+        else:
+            try:
+                delete_portfolio(portfolio_id)
+                st.success(f'Portfolio "{selected_name}" deleted.')
+                st.session_state.pop("selected_portfolio_manager", None)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Could not delete portfolio: {e}")
+
+st.divider()
 
 # ─────────────────────────────────────────────
 # PORTFOLIO SUMMARY
