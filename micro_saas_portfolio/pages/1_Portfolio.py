@@ -63,7 +63,7 @@ if len(tickers) == 0:
 with st.spinner("Loading market data…"):
     prices = pd.DataFrame()
     for t in tickers:
-        s = load_close_series(t, period=period)
+        s = load_close_series(t, period=period, source="auto")
         if s.empty:
             st.error(f"No price data found for **{t}**. Check the ticker symbol.")
             st.stop()
@@ -73,7 +73,7 @@ with st.spinner("Loading market data…"):
         st.error("No aligned price data across the selected tickers.")
         st.stop()
 
-    bench_series = load_close_series(benchmark_ticker, period=period).reindex(prices.index).dropna()
+    bench_series = load_close_series(benchmark_ticker, period=period, source="auto").reindex(prices.index).dropna()
 
 # ── Computations ──────────────────────────────────────────────────────────────
 latest  = prices.iloc[-1]
@@ -333,5 +333,7 @@ for t in tickers:
 # ── Export ────────────────────────────────────────────────────────────────────
 csv = hdf.to_csv(index=False).encode("utf-8")
 st.download_button("⬇ Download Holdings CSV", csv, "holdings_breakdown.csv", "text/csv")
+
+
 
 
