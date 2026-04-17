@@ -211,7 +211,4 @@ def marginal_vol_contribution(weights: np.ndarray, cov_ann: np.ndarray) -> np.nd
     marginal = cov_ann @ weights
     return weights * marginal / np.sqrt(port_var)
 
-        return np.full(len(weights), np.nan)
-    marginal = cov_ann @ weights
-    return weights * marginal / np.sqrt(port_var)
 
