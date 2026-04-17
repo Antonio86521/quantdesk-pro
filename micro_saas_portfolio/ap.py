@@ -510,6 +510,8 @@ st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
 
 render_hero()
 st.markdown("")
+render_market_bar()
+st.markdown("")
 render_top_stats()
 st.markdown("")
 render_feature_cards()
