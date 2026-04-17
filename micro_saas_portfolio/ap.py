@@ -1,8 +1,8 @@
 """
-ap.py — upgraded QuantDesk Pro home page.
+ap.py — public QuantDesk Pro home page.
 
-Public landing page + login entry for the app.
-Protected pages should still use require_login().
+No login required.
+Designed as a clean landing page for the full multi-page app.
 """
 
 import streamlit as st
@@ -10,31 +10,11 @@ import pandas as pd
 
 from utils import apply_theme
 
-# Optional helpers from your project
+# Optional helper from your project
 try:
     from utils import terminal_ribbon
 except Exception:
     terminal_ribbon = None
-
-try:
-   from auth import (
-    _auth_configured,
-    get_user_name,
-    get_user_email,
-    get_user_id,
-    sidebar_user_widget,
-)
-except Exception:
-    _auth_configured = None
-    get_user_name = None
-    get_user_email = None
-    get_user_id = None
-    sidebar_user_widget = None
-
-try:
-    from database import create_profile_if_needed
-except Exception:
-    create_profile_if_needed = None
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -48,18 +28,10 @@ st.set_page_config(
 )
 apply_theme()
 
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper functions
 # ──────────────────────────────────────────────────────────────────────────────
-def safe_call(fn, default=None):
-    try:
-        if callable(fn):
-            return fn()
-    except Exception:
-        return default
-    return default
-
-
 def inject_home_css():
     st.markdown(
         """
@@ -221,11 +193,6 @@ def inject_home_css():
             line-height: 1.7;
         }
 
-        .tiny {
-            color: var(--muted);
-            font-size: 11px;
-        }
-
         .stButton > button {
             border-radius: 12px !important;
             font-weight: 800 !important;
@@ -264,6 +231,7 @@ def render_hero():
 
 def render_top_stats():
     c1, c2, c3, c4 = st.columns(4)
+
     with c1:
         st.markdown(
             """
@@ -275,6 +243,7 @@ def render_top_stats():
             """,
             unsafe_allow_html=True,
         )
+
     with c2:
         st.markdown(
             """
@@ -286,6 +255,7 @@ def render_top_stats():
             """,
             unsafe_allow_html=True,
         )
+
     with c3:
         st.markdown(
             """
@@ -297,6 +267,7 @@ def render_top_stats():
             """,
             unsafe_allow_html=True,
         )
+
     with c4:
         st.markdown(
             """
@@ -402,72 +373,27 @@ def render_quick_actions():
         )
 
 
-def render_user_panel(user_name: str | None, user_email: str | None, user_id: str | None):
-    left, right = st.columns([1.15, 0.85], gap="large")
-
-    with left:
-        st.markdown('<div class="section-title">Session</div>', unsafe_allow_html=True)
-        st.markdown(
-            f"""
-            <div class="status-box">
-              <div class="status-title">Logged in</div>
-              <div class="status-text">
-                <strong>User:</strong> {user_name or "Unknown"}<br>
-                <strong>Email:</strong> {user_email or "Unknown"}<br>
-                <strong>User ID:</strong> {user_id or "Unavailable"}
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with right:
-        st.markdown('<div class="section-title">Build Notes</div>', unsafe_allow_html=True)
-        st.markdown(
-            """
-            <div class="status-box">
-              <div class="status-title">Future upgrades</div>
-              <div class="status-text">
-                1. Saved user portfolios<br>
-                2. Pro dashboard / landing page cards<br>
-                3. Better onboarding text<br>
-                4. Public deployment + custom domain
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+def render_future_upgrades():
+    st.markdown('<div class="section-title">Future Upgrades</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="status-box">
+          <div class="status-title">Roadmap</div>
+          <div class="status-text">
+            1. Saved user portfolios<br>
+            2. Pro dashboard / landing page cards<br>
+            3. Better onboarding text<br>
+            4. Public deployment + custom domain
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Main page
 # ──────────────────────────────────────────────────────────────────────────────
-inject_home_css()
-
-if callable(terminal_ribbon):
-    try:
-        terminal_ribbon("QUANTDESK PRO · MULTI-ASSET ANALYTICS WORKSPACE")
-    except Exception:
-        pass
-
-user_name = safe_call(get_user_name, None)
-user_email = safe_call(get_user_email, None)
-user_id = safe_call(get_user_id, None)
-
-if callable(create_profile_if_needed) and user_id and is_logged_in:
-    try:
-        create_profile_if_needed(user_id, user_email, user_name)
-    except Exception:
-        pass
-
-if is_logged_in and callable(sidebar_user_widget):
-    try:
-        sidebar_user_widget()
-    except Exception:
-        pass
-
-st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
-
 inject_home_css()
 
 if callable(terminal_ribbon):
@@ -485,5 +411,24 @@ st.markdown("")
 render_feature_cards()
 st.markdown("")
 render_quick_actions()
+st.markdown("")
+
+left, right = st.columns([1.15, 0.85], gap="large")
+with left:
+    st.markdown(
+        """
+        <div class="status-box">
+          <div class="status-title">Open Access</div>
+          <div class="status-text">
+            This version of QuantDesk Pro is publicly accessible so users can explore the analytics,
+            macro monitoring, derivatives workflows, and risk dashboards without account friction.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with right:
+    render_future_upgrades()
+
 st.markdown("")
 st.caption("QuantDesk Pro is a project workspace for portfolio analytics, macro monitoring, derivatives, and risk workflows.")
