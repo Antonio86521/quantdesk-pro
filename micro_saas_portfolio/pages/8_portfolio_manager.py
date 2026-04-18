@@ -26,6 +26,7 @@ st.set_page_config(
 )
 
 apply_theme()
+apply_responsive_layout()
 
 # ─────────────────────────────────────────────
 # INLINE LOGIN HANDLING
