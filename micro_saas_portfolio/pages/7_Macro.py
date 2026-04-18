@@ -19,6 +19,7 @@ from utils import (
     TEXT,
     YELLOW,
     apply_theme,
+    apply_responsive_layout,  
 )
 from data_loader import load_close_series
 from analytics import annualized_return, annualized_vol, correlation_matrix, rolling_vol
