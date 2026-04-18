@@ -1,113 +1,558 @@
-"""ap.py — QuantDesk Pro dashboard shell."""
+"""
+ap.py — public QuantDesk Pro home page.
 
-import datetime as dt
+No login required.
+Designed as a clean landing page for the full multi-page app.
+"""
+
 import streamlit as st
+import pandas as pd
 from data_loader import load_close_series
-from utils import apply_theme, apply_responsive_layout, terminal_ribbon
 
-st.set_page_config(page_title="QuantDesk Pro", layout="wide", page_icon="📊", initial_sidebar_state="expanded")
+from utils import apply_theme
+
+# Optional helper from your project
+try:
+    from utils import terminal_ribbon
+except Exception:
+    terminal_ribbon = None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Page config
+# ──────────────────────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="QuantDesk Pro",
+    layout="wide",
+    page_icon="📊",
+    initial_sidebar_state="expanded",
+)
 apply_theme()
-apply_responsive_layout()
 
-st.markdown("""
-<style>
-.home-shell {padding-top: 0.05rem;}
-.topbar {display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid #17304d; background:linear-gradient(180deg,#06101c 0%, #07111f 100%); padding:10px 14px; margin-bottom:14px;}
-.topbar-left {display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
-.brand {color:#35c2ff; font-weight:900; font-size:12px; letter-spacing:0.16em; text-transform:uppercase;}
-.crumb {color:#7f8ea3; font-size:12px; border-left:1px solid #17304d; padding-left:14px;}
-.topbar-right {display:flex; align-items:center; gap:10px;}
-.status-dot {width:7px; height:7px; border-radius:50%; background:#00d27a; display:inline-block; box-shadow:0 0 12px rgba(0,210,122,.4);}
-.status-text {color:#7f8ea3; font-size:10px; letter-spacing:.16em; text-transform:uppercase;}
-.pill-mini {border:1px solid #17304d; color:#d6deeb; border-radius:8px; padding:4px 7px; font-size:10px; font-weight:800;}
-.hero-shell {border:1px solid #17304d; border-radius:16px; padding:18px 22px; margin-bottom:14px; background: radial-gradient(circle at top right, rgba(53,194,255,.09), transparent 24%), linear-gradient(180deg,#07111f 0%, #081527 100%);} 
-.eyebrow {color:#35c2ff; font-size:10px; font-weight:800; letter-spacing:0.24em; text-transform:uppercase; margin-bottom:10px;}
-.hero-title {color:#f6fbff; font-size:20px; font-weight:900; line-height:1.1; margin-bottom:8px;}
-.hero-sub {color:#7f8ea3; font-size:13px;}
-.pill-chip {border:1px solid #17304d; color:#7f8ea3; border-radius:999px; padding:7px 12px; font-size:11px; background:#07111f; display:block; text-align:center; text-decoration:none;}
-.pill-chip.active {color:#35c2ff; border-color:#35c2ff;}
-.home-card {border:1px solid #17304d; border-radius:14px; background:linear-gradient(180deg,#07111f 0%, #081426 100%); padding:14px 16px; height:100%; min-height:174px;}
-.kpi-label {color:#7f8ea3; font-size:10px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:10px;}
-.kpi-value {color:#f6fbff; font-size:18px; font-weight:900; margin-bottom:6px; font-family:'Space Mono', monospace;}
-.kpi-note-good {color:#00d27a; font-size:12px; font-weight:700;}
-.kpi-note {color:#7f8ea3; font-size:12px;}
-.sparkbar {display:flex; align-items:flex-end; gap:3px; height:38px; margin-top:14px;}
-.sparkbar span {display:block; flex:1; border-radius:2px 2px 0 0; background:#124d55;}
-.sparkbar.red span {background:#4a2235;}
-.table-shell {border:1px solid #17304d; border-radius:12px; overflow:hidden; background:linear-gradient(180deg,#07111f 0%, #081426 100%);} 
-.table-head, .table-row {display:grid; grid-template-columns: 1.4fr 0.8fr 0.7fr 0.6fr; align-items:center;}
-.table-head {padding:10px 16px; border-bottom:1px solid #17304d; color:#7f8ea3; font-size:10px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase;}
-.table-row {padding:14px 16px; border-bottom:1px solid rgba(23,48,77,.8); color:#f6fbff; font-size:13px; font-weight:700;}
-.table-row:last-child {border-bottom:none;}
-.t-positive {color:#00f08b;}
-.t-negative {color:#ff4d6d;}
-.signal {display:inline-block; padding:3px 8px; border-radius:999px; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; border:1px solid #17304d;}
-.signal.good {color:#00f08b; background:rgba(0,210,122,.12);}
-.signal.bad {color:#ff4d6d; background:rgba(255,92,92,.12);}
-.signal.neutral {color:#7f8ea3; background:rgba(127,142,163,.12);}
-.footerbar {display:flex; justify-content:space-between; gap:10px; color:#5f7593; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; padding:14px 4px 0 4px;}
-.link-reset a {text-decoration:none !important;}
-@media (max-width: 768px) {.topbar {padding:9px 10px;} .hero-title {font-size:18px;} .table-head, .table-row {grid-template-columns: 1.2fr 0.8fr 0.7fr 0.8fr; font-size:11px;} .footerbar {flex-direction:column;}}
-</style>
-""", unsafe_allow_html=True)
 
-def nav_html(path: str, label: str, active: bool = False):
-    cls = "pill-chip active" if active else "pill-chip"
-    st.markdown(f'<div class="link-reset"><a href="{path}" target="_self" class="{cls}">{label}</a></div>', unsafe_allow_html=True)
+# ──────────────────────────────────────────────────────────────────────────────
+# Helper functions
+# ──────────────────────────────────────────────────────────────────────────────
+def inject_home_css():
+    st.markdown(
+        """
+        <style>
+        :root {
+            --bg: #0a0e1a;
+            --surface: #0f172a;
+            --surface-2: #111827;
+            --border: #1f2d45;
+            --text: #e5eefb;
+            --muted: #7f8ea3;
+            --accent: #35c2ff;
+            --accent2: #7c3aed;
+            --green: #00e676;
+            --red: #ff4d6d;
+            --yellow: #ffd166;
+        }
 
-hour = dt.datetime.now().hour
-if hour < 12:
-    greet = "Good morning — markets are open"
-elif hour < 18:
-    greet = "Good afternoon — markets are open"
-else:
-    greet = "Good evening — after-hours dashboard"
+        .home-wrap { padding-top: 0.2rem; }
 
-st.markdown('<div class="home-shell">', unsafe_allow_html=True)
-st.markdown("""<div class="topbar"><div class="topbar-left"><div class="brand">QuantDesk Pro</div><div class="crumb">Dashboard</div></div><div class="topbar-right"><span class="status-dot"></span><span class="status-text">Live</span><span class="pill-mini">Pro</span><span class="pill-mini">...</span></div></div>""", unsafe_allow_html=True)
-st.markdown(f"""<div class="hero-shell"><div class="eyebrow">Market Intelligence Terminal</div><div class="hero-title">{greet}</div><div class="hero-sub">7 analytical modules · Real-time data · Portfolio sync</div></div>""", unsafe_allow_html=True)
+        .hero {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 28px 28px 24px 28px;
+            background:
+                radial-gradient(circle at top right, rgba(53,194,255,0.12), transparent 26%),
+                radial-gradient(circle at bottom left, rgba(124,58,237,0.12), transparent 22%),
+                linear-gradient(180deg, #0b1220 0%, #0d1526 100%);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.28);
+        }
 
-symbols = [("SPY","SPY"),("QQQ","QQQ"),("VIX","^VIX"),("BTC","BTC-USD"),("DXY","DX-Y.NYB")]
-items=[]
-for label, ticker in symbols:
-    try:
-        s = load_close_series(ticker, period="5d", source="auto")
-        if s is None or len(s) < 2:
+        .hero-title {
+            font-size: 42px;
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.03em;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .hero-subtitle {
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 820px;
+            margin-bottom: 18px;
+        }
+
+        .brand-accent { color: var(--accent); }
+        .brand-accent2 { color: #a78bfa; }
+
+        .pill-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0 20px 0;
+        }
+
+        .pill {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 11px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text);
+            background: rgba(255,255,255,0.02);
+            font-weight: 800;
+        }
+
+        .grid-note {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 15px 16px;
+            background: linear-gradient(180deg, #0c1322 0%, #0f172a 100%);
+            height: 100%;
+        }
+
+        .grid-note-label {
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .grid-note-value {
+            color: var(--text);
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+
+        .grid-note-desc {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .section-title {
+            color: var(--text);
+            font-size: 14px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-weight: 900;
+            margin: 6px 0 12px 0;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px 16px 14px 16px;
+            background: linear-gradient(180deg, #0c1322 0%, #0f172a 100%);
+            min-height: 170px;
+        }
+
+        .card-title {
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .card-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .bullet {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.8;
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .status-box {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            background: linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+        }
+
+        .status-title {
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .status-text {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .stButton > button {
+            border-radius: 12px !important;
+            font-weight: 800 !important;
+            border: 1px solid var(--border) !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_hero():
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="hero-title">
+                Quant<span class="brand-accent">Desk</span> <span class="brand-accent2">Pro</span>
+            </div>
+            <div class="hero-subtitle">
+                Multi-asset analytics for portfolio monitoring, macro tracking, derivatives workflows,
+                volatility analysis, risk attribution, and scenario testing — all in one terminal-style workspace.
+            </div>
+            <div class="pill-row">
+                <div class="pill">Portfolio Analytics</div>
+                <div class="pill">Macro Monitor</div>
+                <div class="pill">Risk & Attribution</div>
+                <div class="pill">Derivatives</div>
+                <div class="pill">Vol Surface</div>
+                <div class="pill">Monte Carlo</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_top_stats():
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Workspace</div>
+              <div class="grid-note-value">Multi-Page</div>
+              <div class="grid-note-desc">Dedicated tools for portfolio, macro, derivatives, vol surface, and simulation workflows.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c2:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Data Stack</div>
+              <div class="grid-note-value">Hybrid</div>
+              <div class="grid-note-desc">Yahoo Finance with Alpha Vantage fallback for stronger reliability across pages.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c3:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Use Cases</div>
+              <div class="grid-note-value">6 Core</div>
+              <div class="grid-note-desc">Monitoring, screening, risk, options, macro, and simulation in a single interface.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c4:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Mode</div>
+              <div class="grid-note-value">Research</div>
+              <div class="grid-note-desc">Built for learning, presenting projects, and demonstrating real finance workflow skills.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_feature_cards():
+    st.markdown('<div class="section-title">Core Modules</div>', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.markdown(
+            """
+            <div class="card">
+              <div class="card-title">Portfolio Analytics</div>
+              <div class="card-subtitle">Track performance, P&amp;L, risk-adjusted returns, technicals, and benchmark-relative metrics.</div>
+              <ul class="bullet">
+                <li>Performance and attribution</li>
+                <li>VaR, CVaR, drawdown, alpha, beta</li>
+                <li>Technicals and news integration</li>
+              </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c2:
+        st.markdown(
+            """
+            <div class="card">
+              <div class="card-title">Macro & Risk</div>
+              <div class="card-subtitle">Monitor rates, FX, commodities, equities, crypto, and cross-asset regime conditions.</div>
+              <ul class="bullet">
+                <li>FX heatmap and inflation proxy</li>
+                <li>Rate trend and curve logic</li>
+                <li>Cross-asset correlation and baskets</li>
+              </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c3:
+        st.markdown(
+            """
+            <div class="card">
+              <div class="card-title">Derivatives Lab</div>
+              <div class="card-subtitle">Price options, inspect chains, analyze smiles and surfaces, and test structured payoffs.</div>
+              <ul class="bullet">
+                <li>Black-Scholes, binomial, Monte Carlo</li>
+                <li>Volatility surface and term structure</li>
+                <li>Strategy payoff visualizations</li>
+              </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_quick_actions():
+    st.markdown('<div class="section-title">Quick Start</div>', unsafe_allow_html=True)
+
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.markdown(
+            """
+            <div class="status-box">
+              <div class="status-title">Start with Portfolio</div>
+              <div class="status-text">Input a few tickers, shares, and buy prices to generate a clean performance and risk view.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c2:
+        st.markdown(
+            """
+            <div class="status-box">
+              <div class="status-title">Check Macro Conditions</div>
+              <div class="status-text">Use the Macro page to scan rates, FX, commodities, equities, and inflation-sensitive assets.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c3:
+        st.markdown(
+            """
+            <div class="status-box">
+              <div class="status-title">Run an Options Workflow</div>
+              <div class="status-text">Open Derivatives or Vol Surface to test pricing logic, smiles, and live chain structure.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_future_upgrades():
+    st.markdown('<div class="section-title">Future Upgrades</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="status-box">
+          <div class="status-title">Roadmap</div>
+          <div class="status-text">
+            1. Saved user portfolios<br>
+            2. Pro dashboard / landing page cards<br>
+            3. Better onboarding text<br>
+            4. Public deployment + custom domain
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+@st.cache_data(ttl=600)
+def load_market_bar_data():
+    tickers = {
+        "S&P 500": "^GSPC",
+        "Nasdaq": "^NDX",
+        "DXY": "DX-Y.NYB",
+        "VIX": "^VIX",
+        "Gold": "GC=F",
+        "WTI": "CL=F",
+        "EUR/USD": "EURUSD=X",
+        "BTC": "BTC-USD",
+        "US 10Y": "^TNX",
+    }
+
+    rows = []
+    for label, ticker in tickers.items():
+        try:
+            s = load_close_series(ticker, period="1mo", source="auto")
+            if s is None or s.empty or len(s) < 2:
+                continue
+
+            last = float(s.iloc[-1])
+            prev = float(s.iloc[-2])
+            chg = ((last / prev) - 1) * 100
+
+            if label == "US 10Y":
+                value = f"{last/10:.2f}%"
+            elif abs(last) >= 1000:
+                value = f"{last:,.0f}"
+            else:
+                value = f"{last:,.2f}"
+
+            rows.append({
+                "label": label,
+                "value": value,
+                "chg": chg,
+            })
+        except Exception:
             continue
-        price = float(s.iloc[-1]); prev = float(s.iloc[-2]); change = (price-prev)/prev
-        price_txt = f"{price:,.0f}" if label == "BTC" else f"{price:,.2f}"
-        items.append((label, price_txt, f"{change:+.2%}"))
+
+    return rows
+
+
+def render_market_bar():
+    data = load_market_bar_data()
+    if not data:
+        return
+
+    blocks = ""
+    for item in data:
+        chg = float(item["chg"])
+        is_up = chg >= 0
+        color = "#00e676" if is_up else "#ff4d6d"
+        glow = "rgba(0,230,118,0.16)" if is_up else "rgba(255,77,109,0.16)"
+        sign = "+" if is_up else ""
+
+        blocks += f"""
+        <div style="
+            padding: 12px 16px;
+            min-width: 132px;
+            border-right: 1px solid #1f2d45;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0.00) 100%);
+        ">
+            <div style="
+                color:#7f8ea3;
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:0.14em;
+                text-transform:uppercase;
+            ">
+                {item["label"]}
+            </div>
+            <div style="
+                color:#e5eefb;
+                font-size:15px;
+                font-weight:900;
+                line-height:1.1;
+            ">
+                {item["value"]}
+            </div>
+            <div style="
+                display:inline-flex;
+                align-items:center;
+                width:fit-content;
+                padding:3px 8px;
+                border-radius:999px;
+                font-size:11px;
+                font-weight:800;
+                color:{color};
+                background:{glow};
+                border:1px solid {color}22;
+            ">
+                {sign}{chg:.2f}%
+            </div>
+        </div>
+        """
+
+    st.markdown(
+        f"""
+        <div style="
+            border:1px solid #1f2d45;
+            border-radius:18px;
+            overflow:hidden;
+            background:
+                radial-gradient(circle at top right, rgba(53,194,255,0.06), transparent 30%),
+                linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+            margin-top: 4px;
+            margin-bottom: 10px;
+        ">
+            <div style="
+                padding:9px 14px;
+                border-bottom:1px solid #1f2d45;
+                color:#7f8ea3;
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:0.16em;
+                text-transform:uppercase;
+            ">
+                Live Market Snapshot
+            </div>
+            <div style="
+                display:flex;
+                flex-wrap:wrap;
+                align-items:stretch;
+            ">
+                {blocks}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Main page
+# ──────────────────────────────────────────────────────────────────────────────
+inject_home_css()
+
+if callable(terminal_ribbon):
+    try:
+        terminal_ribbon("QUANTDESK PRO · MULTI-ASSET ANALYTICS WORKSPACE")
     except Exception:
         pass
-if items:
-    terminal_ribbon(items)
 
-nav_cols = st.columns([0.85, 1.1, 1.1, 0.9, 0.85, 0.9, 0.72, 0.62])
-navs = [
-    ("/", "Overview", True),
-    ("pages/1_Portfolio.py", "Portfolio Analytics", False),
-    ("pages/2_Risk_Attribution.py", "Risk & Attribution", False),
-    ("pages/3__Derivatives.py", "Derivatives", False),
-    ("pages/4_Vol_Surface.py", "Vol Surface", False),
-    ("pages/5_Monte_Carlo__Strategy_Lab.py", "Monte Carlo", False),
-    ("pages/6_Screener.py", "Screener", False),
-    ("pages/7_Macro.py", "Macro", False),
-]
-for col, (path, label, active) in zip(nav_cols, navs):
-    with col:
-        nav_html(path, label, active)
+st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
 
-k1,k2,k3 = st.columns(3)
-with k1:
-    st.markdown("""<div class="home-card"><div class="kpi-label">Portfolio Value</div><div class="kpi-value">$142,840</div><div class="kpi-note">+$3,241 today · <span class="kpi-note-good">+2.32%</span></div><div class="sparkbar"><span style="height:22px"></span><span style="height:25px"></span><span style="height:24px"></span><span style="height:16px;background:#55243a"></span><span style="height:28px"></span><span style="height:31px"></span><span style="height:36px"></span></div></div>""", unsafe_allow_html=True)
-with k2:
-    st.markdown("""<div class="home-card"><div class="kpi-label">Sharpe Ratio</div><div class="kpi-value">1.84</div><div class="kpi-note-good">Above benchmark · 0.62 alpha</div><div class="sparkbar"><span style="height:14px"></span><span style="height:17px"></span><span style="height:23px"></span><span style="height:24px"></span><span style="height:26px"></span><span style="height:30px"></span><span style="height:34px"></span></div></div>""", unsafe_allow_html=True)
-with k3:
-    st.markdown("""<div class="home-card"><div class="kpi-label">VaR 95%</div><div class="kpi-value">-1.42%</div><div class="kpi-note">Daily · Historical method</div><div class="sparkbar red"><span style="height:24px"></span><span style="height:17px"></span><span style="height:27px"></span><span style="height:18px"></span><span style="height:31px"></span><span style="height:19px"></span><span style="height:26px"></span></div></div>""", unsafe_allow_html=True)
+render_hero()
+st.markdown("")
+render_market_bar()
+st.markdown("")
+render_top_stats()
+st.markdown("")
+render_feature_cards()
+st.markdown("")
+render_quick_actions()
+st.markdown("")
 
-st.markdown("""<div class="table-shell"><div class="table-head"><div>Ticker</div><div>Price</div><div>Return</div><div>Signal</div></div><div class="table-row"><div>AAPL</div><div>$212.49</div><div class="t-positive">+18.4%</div><div><span class="signal good">Uptrend</span></div></div><div class="table-row"><div>MSFT</div><div>$384.21</div><div class="t-positive">+12.1%</div><div><span class="signal good">Uptrend</span></div></div><div class="table-row"><div>NVDA</div><div>$108.77</div><div class="t-negative">-8.3%</div><div><span class="signal bad">Oversold</span></div></div><div class="table-row"><div>SPY</div><div>$538.42</div><div class="t-positive">+9.7%</div><div><span class="signal neutral">Neutral</span></div></div></div>""", unsafe_allow_html=True)
-
-st.markdown('<div class="footerbar"><div>QuantDesk Pro · v2.0</div><div>Data: yfinance · Alpha Vantage</div></div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("")
+st.caption("QuantDesk Pro is a project workspace for portfolio analytics, macro monitoring, derivatives, and risk workflows.")
 
 
