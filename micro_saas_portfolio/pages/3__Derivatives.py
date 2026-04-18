@@ -6,7 +6,7 @@ import matplotlib.colors as mcolors
 from mpl_toolkits.mplot3d import Axes3D  # noqa
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from data_loader import load_option_expiries, load_option_chain, load_spot_price
 from options_models import (
     black_scholes_with_greeks, bs_price_only,
