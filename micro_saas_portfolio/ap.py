@@ -23,28 +23,28 @@ st.markdown(
     """
     <style>
     .home-shell {
-        max-width: 1080px;
-        margin: 0 auto;
-    }
+    max-width: 1000px;
+    margin: 0 auto;
+}
 
     .topbar-box {
-        border: 1px solid #143458;
-        background: linear-gradient(90deg, #071320 0%, #08182b 100%);
-        padding: 12px 16px;
-        min-height: 52px;
-        display: flex;
-        align-items: center;
-        border-radius: 0;
-    }
+    border: 1px solid #143458;
+    background: linear-gradient(90deg, #06111d 0%, #08182b 100%);
+    padding: 10px 14px;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    border-radius: 0;
+}
 
     .topbar-brand {
-        color: #35c2ff;
-        font-size: 13px;
-        font-weight: 900;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        margin-right: 14px;
-    }
+    color: #35c2ff;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-right: 12px;
+}
 
     .topbar-divider {
         width: 1px;
@@ -56,10 +56,10 @@ st.markdown(
     }
 
     .topbar-page {
-        color: #7f8ea3;
-        font-size: 13px;
-        vertical-align: middle;
-    }
+    color: #7f8ea3;
+    font-size: 12px;
+    vertical-align: middle;
+}
 
     .live-wrap {
         display: flex;
@@ -85,25 +85,25 @@ st.markdown(
     }
 
     .top-pill {
-        border: 1px solid #143458;
-        border-radius: 10px;
-        padding: 4px 9px;
-        color: #d6deeb;
-        font-size: 11px;
-        font-weight: 700;
-        background: #08182b;
-        display: inline-block;
-    }
+    border: 1px solid #143458;
+    border-radius: 10px;
+    padding: 3px 8px;
+    color: #d6deeb;
+    font-size: 10px;
+    font-weight: 700;
+    background: #08182b;
+    display: inline-block;
+}
 
     .hero {
-        border: 1px solid #143458;
-        border-radius: 18px;
-        padding: 18px 22px;
-        background:
-          radial-gradient(circle at top right, rgba(53,194,255,0.10), transparent 28%),
-          linear-gradient(90deg, #08121f 0%, #0b2036 100%);
-        margin-bottom: 14px;
-    }
+    border: 1px solid #143458;
+    border-radius: 18px;
+    padding: 16px 20px;
+    background:
+      radial-gradient(circle at top right, rgba(53,194,255,0.08), transparent 26%),
+      linear-gradient(90deg, #07121f 0%, #0b233b 100%);
+    margin-bottom: 12px;
+}
 
     .hero-kicker {
         color: #35c2ff;
@@ -115,25 +115,25 @@ st.markdown(
     }
 
     .hero-title {
-        color: #ffffff;
-        font-size: 20px;
-        font-weight: 800;
-        line-height: 1.15;
-        margin-bottom: 8px;
-    }
+    color: #ffffff;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 7px;
+}
 
-    .hero-sub {
-        color: #7f8ea3;
-        font-size: 13px;
-    }
+   .hero-sub {
+    color: #7f8ea3;
+    font-size: 12px;
+}
 
     .market-strip {
-        border: 1px solid #143458;
-        border-radius: 14px;
-        overflow: hidden;
-        background: linear-gradient(90deg, #08121f 0%, #0a1830 100%);
-        margin-bottom: 14px;
-    }
+    border: 1px solid #143458;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(90deg, #07121f 0%, #091a31 100%);
+    margin-bottom: 12px;
+}
 
     .market-grid {
         display: grid;
@@ -141,10 +141,10 @@ st.markdown(
     }
 
     .market-cell {
-        padding: 12px 16px;
-        border-right: 1px solid #143458;
-        min-height: 74px;
-    }
+    padding: 11px 14px;
+    border-right: 1px solid #143458;
+    min-height: 68px;
+}
 
     .market-cell:last-child {
         border-right: none;
@@ -160,11 +160,11 @@ st.markdown(
     }
 
     .market-value {
-        color: #ffffff;
-        font-size: 15px;
-        font-weight: 900;
-        margin-bottom: 8px;
-    }
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 7px;
+}
 
     .market-delta {
         display: inline-block;
@@ -175,12 +175,12 @@ st.markdown(
     }
 
     .kpi-card {
-        border: 1px solid #143458;
-        border-radius: 16px;
-        background: linear-gradient(180deg, #071320 0%, #09192b 100%);
-        padding: 16px 16px 14px 16px;
-        min-height: 170px;
-    }
+    border: 1px solid #143458;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #071320 0%, #09192b 100%);
+    padding: 14px 15px 12px 15px;
+    min-height: 156px;
+}
 
     .kpi-kicker {
         color: #7fa3d6;
@@ -192,29 +192,29 @@ st.markdown(
     }
 
     .kpi-value {
-        color: #ffffff;
-        font-size: 18px;
-        font-weight: 900;
-        margin-bottom: 8px;
-    }
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 900;
+    margin-bottom: 7px;
+}
 
-    .kpi-sub {
-        color: #7f8ea3;
-        font-size: 12px;
-        margin-bottom: 16px;
-    }
+   .kpi-sub {
+    color: #7f8ea3;
+    font-size: 11px;
+    margin-bottom: 14px;
+}
 
     .kpi-sub.green {
         color: #00d27a;
     }
 
     .sparkbar-wrap {
-        display: flex;
-        align-items: flex-end;
-        gap: 4px;
-        height: 54px;
-        margin-top: 10px;
-    }
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 42px;
+    margin-top: 8px;
+}
 
     .sparkbar {
         flex: 1;
@@ -222,12 +222,12 @@ st.markdown(
     }
 
     .table-shell {
-        border: 1px solid #143458;
-        border-radius: 14px;
-        overflow: hidden;
-        background: linear-gradient(180deg, #071320 0%, #08182b 100%);
-        margin-top: 4px;
-    }
+    border: 1px solid #143458;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #071320 0%, #08182b 100%);
+    margin-top: 2px;
+}
 
     .table-header,
     .table-row {
@@ -237,30 +237,30 @@ st.markdown(
     }
 
     .table-header {
-        padding: 12px 16px;
-        border-bottom: 1px solid #143458;
-        color: #7fa3d6;
-        font-size: 9px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-    }
+    padding: 10px 14px;
+    border-bottom: 1px solid #143458;
+    color: #7fa3d6;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
 
     .table-row {
-        padding: 16px;
-        border-bottom: 1px solid rgba(20,52,88,0.85);
-    }
+    padding: 14px;
+    border-bottom: 1px solid rgba(20,52,88,0.75);
+}
 
     .table-row:last-child {
         border-bottom: none;
     }
 
-    .ticker-name,
-    .price-text {
-        color: #ffffff;
-        font-weight: 800;
-        font-size: 13px;
-    }
+   .ticker-name,
+.price-text {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 12px;
+}
 
     .return-pos {
         color: #00ff9a;
@@ -317,36 +317,37 @@ st.markdown(
         margin: 0 !important;
     }
 
-    div[data-testid="stPageLink"] a {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        min-height: 38px !important;
-        border-radius: 999px !important;
-        border: 1px solid #143458 !important;
-        background: linear-gradient(180deg, #071320 0%, #09182a 100%) !important;
-        color: #35c2ff !important;
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        text-decoration: none !important;
-        padding: 0 14px !important;
-        white-space: nowrap !important;
-    }
+   div[data-testid="stPageLink"] a {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 34px !important;
+    border-radius: 999px !important;
+    border: 1px solid #164066 !important;
+    background: linear-gradient(180deg, #071320 0%, #08182a 100%) !important;
+    color: #35c2ff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    padding: 0 12px !important;
+    white-space: nowrap !important;
+}
 
-    div[data-testid="stPageLink"] a:hover {
-        border-color: #35c2ff !important;
-        background: #0b1d33 !important;
-    }
+div[data-testid="stPageLink"] a:hover {
+    border-color: #35c2ff !important;
+    background: #0a1d33 !important;
+    box-shadow: 0 0 0 1px rgba(53,194,255,0.12) inset !important;
+}
 
     div[data-testid="stPopover"] button {
-        min-height: 38px !important;
-        border-radius: 10px !important;
-        border: 1px solid #143458 !important;
-        background: #08182b !important;
-        color: #d6deeb !important;
-        font-weight: 800 !important;
-        padding: 0 12px !important;
-    }
+    min-height: 34px !important;
+    border-radius: 10px !important;
+    border: 1px solid #143458 !important;
+    background: #08182b !important;
+    color: #d6deeb !important;
+    font-weight: 800 !important;
+    padding: 0 10px !important;
+}
 
     @media (max-width: 900px) {
         .market-grid {
@@ -517,9 +518,9 @@ nav_cols = st.columns(8)
 with nav_cols[0]:
     st.page_link("ap.py", label="Overview")
 with nav_cols[1]:
-    st.page_link("pages/1_Portfolio.py", label="Portfolio Analytics")
+    st.page_link("pages/1_Portfolio.py", label="Portfolio")
 with nav_cols[2]:
-    st.page_link("pages/2_Risk_Attribution.py", label="Risk & Attribution")
+    st.page_link("pages/2_Risk_Attribution.py", label="Risk")
 with nav_cols[3]:
     st.page_link("pages/3__Derivatives.py", label="Derivatives")
 with nav_cols[4]:
