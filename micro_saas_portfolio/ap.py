@@ -16,57 +16,51 @@ apply_theme()
 apply_responsive_layout()
 
 
-# ─────────────────────────────────────────────
-# PAGE CSS
-# ─────────────────────────────────────────────
 st.markdown(
     """
     <style>
     .home-shell {
-    max-width: 1000px;
-    margin: 0 auto;
-}
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .block-container {
+        padding-top: 0.8rem !important;
+        padding-bottom: 1.2rem !important;
+    }
 
     .topbar-box {
-    border: 1px solid #143458;
-    background: linear-gradient(90deg, #06111d 0%, #08182b 100%);
-    padding: 10px 14px;
-    min-height: 46px;
-    display: flex;
-    align-items: center;
-    border-radius: 0;
-}
+        border: 1px solid #143458;
+        background: linear-gradient(90deg, #06111d 0%, #08182b 100%);
+        padding: 10px 14px;
+        min-height: 46px;
+        display: flex;
+        align-items: center;
+        border-radius: 0;
+    }
 
     .topbar-brand {
-    color: #35c2ff;
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    margin-right: 12px;
-}
+        color: #35c2ff;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-right: 12px;
+    }
 
     .topbar-divider {
         width: 1px;
         height: 18px;
         background: #143458;
-        margin-right: 14px;
+        margin-right: 12px;
         display: inline-block;
         vertical-align: middle;
     }
 
     .topbar-page {
-    color: #7f8ea3;
-    font-size: 12px;
-    vertical-align: middle;
-}
-
-    .live-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        height: 52px;
+        color: #7f8ea3;
+        font-size: 12px;
+        vertical-align: middle;
     }
 
     .live-dot {
@@ -80,30 +74,31 @@ st.markdown(
     .live-label {
         color: #d6deeb;
         font-size: 11px;
+        font-weight: 800;
         letter-spacing: 0.12em;
         text-transform: uppercase;
     }
 
     .top-pill {
-    border: 1px solid #143458;
-    border-radius: 10px;
-    padding: 3px 8px;
-    color: #d6deeb;
-    font-size: 10px;
-    font-weight: 700;
-    background: #08182b;
-    display: inline-block;
-}
+        border: 1px solid #143458;
+        border-radius: 10px;
+        padding: 3px 8px;
+        color: #d6deeb;
+        font-size: 10px;
+        font-weight: 700;
+        background: #08182b;
+        display: inline-block;
+    }
 
     .hero {
-    border: 1px solid #143458;
-    border-radius: 18px;
-    padding: 16px 20px;
-    background:
-      radial-gradient(circle at top right, rgba(53,194,255,0.08), transparent 26%),
-      linear-gradient(90deg, #07121f 0%, #0b233b 100%);
-    margin-bottom: 12px;
-}
+        border: 1px solid #143458;
+        border-radius: 18px;
+        padding: 16px 20px;
+        background:
+          radial-gradient(circle at top right, rgba(53,194,255,0.08), transparent 26%),
+          linear-gradient(90deg, #07121f 0%, #0b233b 100%);
+        margin-bottom: 12px;
+    }
 
     .hero-kicker {
         color: #35c2ff;
@@ -115,25 +110,25 @@ st.markdown(
     }
 
     .hero-title {
-    color: #ffffff;
-    font-size: 19px;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 7px;
-}
+        color: #ffffff;
+        font-size: 19px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 7px;
+    }
 
-   .hero-sub {
-    color: #7f8ea3;
-    font-size: 12px;
-}
+    .hero-sub {
+        color: #7f8ea3;
+        font-size: 12px;
+    }
 
     .market-strip {
-    border: 1px solid #143458;
-    border-radius: 14px;
-    overflow: hidden;
-    background: linear-gradient(90deg, #07121f 0%, #091a31 100%);
-    margin-bottom: 12px;
-}
+        border: 1px solid #143458;
+        border-radius: 14px;
+        overflow: hidden;
+        background: linear-gradient(90deg, #07121f 0%, #091a31 100%);
+        margin-bottom: 12px;
+    }
 
     .market-grid {
         display: grid;
@@ -141,10 +136,10 @@ st.markdown(
     }
 
     .market-cell {
-    padding: 11px 14px;
-    border-right: 1px solid #143458;
-    min-height: 68px;
-}
+        padding: 10px 12px;
+        border-right: 1px solid #143458;
+        min-height: 64px;
+    }
 
     .market-cell:last-child {
         border-right: none;
@@ -152,19 +147,19 @@ st.markdown(
 
     .market-label {
         color: #7f8ea3;
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.16em;
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
-        margin-bottom: 7px;
+        margin-bottom: 6px;
     }
 
     .market-value {
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 900;
-    margin-bottom: 7px;
-}
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
 
     .market-delta {
         display: inline-block;
@@ -175,12 +170,12 @@ st.markdown(
     }
 
     .kpi-card {
-    border: 1px solid #143458;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #071320 0%, #09192b 100%);
-    padding: 14px 15px 12px 15px;
-    min-height: 156px;
-}
+        border: 1px solid #143458;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #071320 0%, #09192b 100%);
+        padding: 13px 14px 11px 14px;
+        min-height: 150px;
+    }
 
     .kpi-kicker {
         color: #7fa3d6;
@@ -192,29 +187,29 @@ st.markdown(
     }
 
     .kpi-value {
-    color: #ffffff;
-    font-size: 17px;
-    font-weight: 900;
-    margin-bottom: 7px;
-}
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
 
-   .kpi-sub {
-    color: #7f8ea3;
-    font-size: 11px;
-    margin-bottom: 14px;
-}
+    .kpi-sub {
+        color: #7f8ea3;
+        font-size: 11px;
+        margin-bottom: 14px;
+    }
 
     .kpi-sub.green {
         color: #00d27a;
     }
 
     .sparkbar-wrap {
-    display: flex;
-    align-items: flex-end;
-    gap: 4px;
-    height: 42px;
-    margin-top: 8px;
-}
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 38px;
+        margin-top: 6px;
+    }
 
     .sparkbar {
         flex: 1;
@@ -222,12 +217,12 @@ st.markdown(
     }
 
     .table-shell {
-    border: 1px solid #143458;
-    border-radius: 14px;
-    overflow: hidden;
-    background: linear-gradient(180deg, #071320 0%, #08182b 100%);
-    margin-top: 2px;
-}
+        border: 1px solid #143458;
+        border-radius: 14px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #071320 0%, #08182b 100%);
+        margin-top: 2px;
+    }
 
     .table-header,
     .table-row {
@@ -237,41 +232,41 @@ st.markdown(
     }
 
     .table-header {
-    padding: 10px 14px;
-    border-bottom: 1px solid #143458;
-    color: #7fa3d6;
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-}
+        padding: 10px 14px;
+        border-bottom: 1px solid #143458;
+        color: #7fa3d6;
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
 
     .table-row {
-    padding: 14px;
-    border-bottom: 1px solid rgba(20,52,88,0.75);
-}
+        padding: 13px 14px;
+        border-bottom: 1px solid rgba(20,52,88,0.65);
+    }
 
     .table-row:last-child {
         border-bottom: none;
     }
 
-   .ticker-name,
-.price-text {
-    color: #ffffff;
-    font-weight: 800;
-    font-size: 12px;
-}
+    .ticker-name,
+    .price-text {
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 12px;
+    }
 
     .return-pos {
         color: #00ff9a;
         font-weight: 900;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .return-neg {
         color: #ff4d6d;
         font-weight: 900;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .signal-pill {
@@ -317,37 +312,38 @@ st.markdown(
         margin: 0 !important;
     }
 
-   div[data-testid="stPageLink"] a {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    min-height: 34px !important;
-    border-radius: 999px !important;
-    border: 1px solid #164066 !important;
-    background: linear-gradient(180deg, #071320 0%, #08182a 100%) !important;
-    color: #35c2ff !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    text-decoration: none !important;
-    padding: 0 12px !important;
-    white-space: nowrap !important;
-}
+    div[data-testid="stPageLink"] a {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 34px !important;
+        border-radius: 999px !important;
+        border: 1px solid #1c4b78 !important;
+        background: linear-gradient(180deg, #061525 0%, #08192d 100%) !important;
+        color: #6ecbff !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.04em !important;
+        text-decoration: none !important;
+        padding: 0 14px !important;
+        white-space: nowrap !important;
+    }
 
-div[data-testid="stPageLink"] a:hover {
-    border-color: #35c2ff !important;
-    background: #0a1d33 !important;
-    box-shadow: 0 0 0 1px rgba(53,194,255,0.12) inset !important;
-}
+    div[data-testid="stPageLink"] a:hover {
+        border-color: #35c2ff !important;
+        background: #0b213a !important;
+        color: #a8e4ff !important;
+    }
 
     div[data-testid="stPopover"] button {
-    min-height: 34px !important;
-    border-radius: 10px !important;
-    border: 1px solid #143458 !important;
-    background: #08182b !important;
-    color: #d6deeb !important;
-    font-weight: 800 !important;
-    padding: 0 10px !important;
-}
+        min-height: 34px !important;
+        border-radius: 10px !important;
+        border: 1px solid #143458 !important;
+        background: #08182b !important;
+        color: #d6deeb !important;
+        font-weight: 800 !important;
+        padding: 0 10px !important;
+    }
 
     @media (max-width: 900px) {
         .market-grid {
@@ -365,9 +361,6 @@ div[data-testid="stPageLink"] a:hover {
 )
 
 
-# ─────────────────────────────────────────────
-# HELPERS
-# ─────────────────────────────────────────────
 @st.cache_data(ttl=600)
 def load_market_bar_data():
     tickers = {
@@ -445,16 +438,12 @@ def sparkbars(values, positive=True):
     return out
 
 
-# ─────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────
 hour = datetime.datetime.now().hour
 greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
 
 st.markdown('<div class="home-shell">', unsafe_allow_html=True)
 
-# top row
-top_left, top_live, top_pro, top_menu = st.columns([10, 1, 1, 1])
+top_left, top_right = st.columns([10, 3])
 
 with top_left:
     st.markdown(
@@ -468,35 +457,26 @@ with top_left:
         unsafe_allow_html=True,
     )
 
-with top_live:
-    st.markdown(
-        """
-        <div class="live-wrap">
-            <span class="live-dot"></span>
-            <span class="live-label">Live</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+with top_right:
+    right_a, right_b = st.columns([3, 1])
+    with right_a:
+        st.markdown(
+            """
+            <div class="topbar-box" style="justify-content:flex-end; gap:10px;">
+                <span class="live-dot"></span>
+                <span class="live-label">LIVE</span>
+                <span class="top-pill">Pro</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with right_b:
+        with st.popover("⋯"):
+            st.page_link("pages/8_portfolio_manager.py", label="Portfolio Manager")
+            st.page_link("pages/9_portfolio_analysis.py", label="Saved Analysis")
+            st.page_link("pages/6_Screener.py", label="Screener")
+            st.page_link("pages/7_Macro.py", label="Macro")
 
-with top_pro:
-    st.markdown(
-        """
-        <div class="live-wrap">
-            <span class="top-pill">Pro</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with top_menu:
-    with st.popover("⋯"):
-        st.page_link("pages/8_portfolio_manager.py", label="Portfolio Manager")
-        st.page_link("pages/9_portfolio_analysis.py", label="Saved Portfolio Analysis")
-        st.page_link("pages/6_Screener.py", label="Screener")
-        st.page_link("pages/7_Macro.py", label="Macro")
-
-# hero
 st.markdown(
     f"""
     <div class="hero">
@@ -508,15 +488,13 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# market strip
 market_html = market_strip_html()
 if market_html:
     st.html(market_html)
 
-# nav pills
 nav_cols = st.columns(8)
 with nav_cols[0]:
-    st.page_link("ap.py", label="Overview")
+    st.page_link("ap.py", label="Home")
 with nav_cols[1]:
     st.page_link("pages/1_Portfolio.py", label="Portfolio")
 with nav_cols[2]:
@@ -532,7 +510,6 @@ with nav_cols[6]:
 with nav_cols[7]:
     st.page_link("pages/7_Macro.py", label="Macro")
 
-# kpi cards
 k1, k2, k3 = st.columns(3)
 
 with k1:
@@ -574,7 +551,6 @@ with k3:
         unsafe_allow_html=True,
     )
 
-# table
 table_rows = [
     ("AAPL", "$212.49", "+18.4%", "UPTREND", "up"),
     ("MSFT", "$384.21", "+12.1%", "UPTREND", "up"),
