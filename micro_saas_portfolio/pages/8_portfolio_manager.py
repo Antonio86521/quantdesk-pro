@@ -26,7 +26,6 @@ st.set_page_config(
 )
 
 apply_theme()
-require_login()
 sidebar_user_widget()
 
 st.markdown("""
