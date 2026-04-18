@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, page_header
+from utils import apply_theme, page_header, apply_responsive_layout
 from portfolio_service import get_portfolios, get_positions
 from data_loader import load_close_series
 from analytics import (
