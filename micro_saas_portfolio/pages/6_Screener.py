@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from data_loader import load_close_series, load_price_history
 from analytics import (
     annualized_return, annualized_vol, rsi, sma,
