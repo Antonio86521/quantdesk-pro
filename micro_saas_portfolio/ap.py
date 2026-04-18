@@ -408,7 +408,7 @@ def market_strip_html():
     if not data:
         return ""
 
-    cells = ""
+    cells = []
     for item in data:
         chg = float(item["chg"])
         positive = chg >= 0
@@ -416,21 +416,23 @@ def market_strip_html():
         bg = "rgba(0,210,122,0.14)" if positive else "rgba(255,92,92,0.14)"
         sign = "+" if positive else ""
 
-        cells += f"""
-        <div class="market-cell">
-            <div class="market-label">{item["label"]}</div>
-            <div class="market-value">{item["value"]}</div>
-            <div class="market-delta" style="color:{color}; background:{bg};">{sign}{chg:.2f}%</div>
-        </div>
-        """
+        cells.append(
+            f'<div class="market-cell">'
+            f'<div class="market-label">{item["label"]}</div>'
+            f'<div class="market-value">{item["value"]}</div>'
+            f'<div class="market-delta" style="color:{color}; background:{bg};">{sign}{chg:.2f}%</div>'
+            f'</div>'
+        )
 
-    return f"""
-    <div class="market-strip">
-        <div class="market-grid">
-            {cells}
-        </div>
-    </div>
-    """
+    cells_html = "".join(cells)
+
+    return (
+        '<div class="market-strip">'
+        '<div class="market-grid">'
+        f'{cells_html}'
+        '</div>'
+        '</div>'
+    )
 
 
 def sparkbars(values, positive=True):
@@ -508,7 +510,7 @@ st.markdown(
 # market strip
 market_html = market_strip_html()
 if market_html:
-    st.markdown(market_html, unsafe_allow_html=True)
+    st.html(market_html)
 
 # nav pills
 nav_cols = st.columns(8)
