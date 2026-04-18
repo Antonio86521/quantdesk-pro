@@ -314,6 +314,79 @@ def apply_theme():
         "axes.titlesize":   11,
     })
 
+def apply_responsive_layout():
+    import streamlit as st
+
+    st.markdown("""
+    <style>
+      @media (max-width: 768px) {
+
+        .block-container {
+          padding-left: 0.7rem !important;
+          padding-right: 0.7rem !important;
+          padding-top: 0.7rem !important;
+          padding-bottom: 1rem !important;
+          max-width: 100% !important;
+        }
+
+        h1 {
+          font-size: 1.65rem !important;
+          line-height: 1.2 !important;
+        }
+
+        h2 {
+          font-size: 1.3rem !important;
+          line-height: 1.25 !important;
+        }
+
+        h3 {
+          font-size: 1.05rem !important;
+          line-height: 1.25 !important;
+        }
+
+        .stButton > button,
+        .stDownloadButton > button {
+          width: 100% !important;
+          min-height: 44px !important;
+          border-radius: 10px !important;
+        }
+
+        div[data-baseweb="select"] > div,
+        .stTextInput input,
+        .stNumberInput input,
+        textarea {
+          font-size: 16px !important;
+        }
+
+        [data-testid="stDataFrame"] {
+          overflow-x: auto !important;
+        }
+
+        [data-testid="metric-container"] {
+          padding: 8px 10px !important;
+        }
+
+        [data-testid="metric-container"] [data-testid="stMetricValue"] {
+          font-size: 16px !important;
+        }
+
+        [data-testid="metric-container"] label {
+          font-size: 9px !important;
+        }
+
+        [data-testid="stSidebar"] {
+          min-width: 260px !important;
+        }
+
+        .terminal-ribbon-item {
+          min-width: 100% !important;
+          border-right: none !important;
+          border-bottom: 1px solid #1b2638 !important;
+        }
+      }
+    </style>
+    """, unsafe_allow_html=True)
+
 def page_header(title: str, subtitle: str = ""):
     import streamlit as st
 
@@ -425,76 +498,4 @@ def terminal_ribbon(items):
 
     st.markdown(html, unsafe_allow_html=True)
 
-def apply_responsive_layout():
-    import streamlit as st
-
-    st.markdown("""
-    <style>
-
-    /* ===== BASE ===== */
-    .block-container {
-        max-width: 1400px;
-        padding-top: 1.2rem;
-        padding-bottom: 2rem;
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }
-
-    /* Metric cards */
-    div[data-testid="stMetric"] {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 16px;
-        padding: 14px 16px;
-    }
-
-    /* Tables */
-    div[data-testid="stDataFrame"] {
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    /* ===== MOBILE ===== */
-    @media (max-width: 768px) {
-
-        .block-container {
-            padding-left: 0.7rem !important;
-            padding-right: 0.7rem !important;
-            padding-top: 0.7rem !important;
-        }
-
-        /* Smaller headers */
-        h1 { font-size: 1.6rem !important; }
-        h2 { font-size: 1.3rem !important; }
-        h3 { font-size: 1.05rem !important; }
-
-        /* Buttons full width */
-        .stButton > button {
-            width: 100% !important;
-            min-height: 44px !important;
-            border-radius: 12px !important;
-        }
-
-        /* Inputs full width */
-        .stSelectbox, .stTextInput, .stNumberInput {
-            width: 100% !important;
-        }
-
-        /* Tables scroll */
-        div[data-testid="stDataFrame"] {
-            overflow-x: auto !important;
-        }
-
-        /* Metrics tighter */
-        div[data-testid="stMetricValue"] {
-            font-size: 1.2rem !important;
-        }
-
-        div[data-testid="stMetricLabel"] {
-            font-size: 0.8rem !important;
-        }
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
 
