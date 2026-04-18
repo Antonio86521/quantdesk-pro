@@ -425,3 +425,76 @@ def terminal_ribbon(items):
 
     st.markdown(html, unsafe_allow_html=True)
 
+def apply_responsive_layout():
+    import streamlit as st
+
+    st.markdown("""
+    <style>
+
+    /* ===== BASE ===== */
+    .block-container {
+        max-width: 1400px;
+        padding-top: 1.2rem;
+        padding-bottom: 2rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    /* Metric cards */
+    div[data-testid="stMetric"] {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 14px 16px;
+    }
+
+    /* Tables */
+    div[data-testid="stDataFrame"] {
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 768px) {
+
+        .block-container {
+            padding-left: 0.7rem !important;
+            padding-right: 0.7rem !important;
+            padding-top: 0.7rem !important;
+        }
+
+        /* Smaller headers */
+        h1 { font-size: 1.6rem !important; }
+        h2 { font-size: 1.3rem !important; }
+        h3 { font-size: 1.05rem !important; }
+
+        /* Buttons full width */
+        .stButton > button {
+            width: 100% !important;
+            min-height: 44px !important;
+            border-radius: 12px !important;
+        }
+
+        /* Inputs full width */
+        .stSelectbox, .stTextInput, .stNumberInput {
+            width: 100% !important;
+        }
+
+        /* Tables scroll */
+        div[data-testid="stDataFrame"] {
+            overflow-x: auto !important;
+        }
+
+        /* Metrics tighter */
+        div[data-testid="stMetricValue"] {
+            font-size: 1.2rem !important;
+        }
+
+        div[data-testid="stMetricLabel"] {
+            font-size: 0.8rem !important;
+        }
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
