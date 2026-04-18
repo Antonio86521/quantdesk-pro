@@ -82,7 +82,7 @@ for label, ticker in symbols:
 if items:
     terminal_ribbon(items)
 
-nav_cols = st.columns([0.9, 1.15, 1.15, 0.95, 0.9, 0.95, 0.8, 0.7])
+nav_cols = st.columns([0.85, 1.1, 1.1, 0.9, 0.85, 0.9, 0.72, 0.62])
 navs = [
     ("/", "Overview", True),
     ("pages/1_Portfolio.py", "Portfolio Analytics", False),
