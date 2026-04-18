@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from auth import sidebar_user_widget
-from utils import apply_theme, page_header
+from utils import apply_theme, page_header, apply_responsive_layout
 from portfolio_service import (
     create_portfolio,
     get_portfolios,
