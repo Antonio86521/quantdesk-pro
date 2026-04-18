@@ -51,9 +51,9 @@ def apply_theme():
       }
       [data-testid="stSidebarNav"] ul { padding-top: 0; }
       [data-testid="stSidebarNav"] li div { border-radius: 10px; }
-      [data-testid="stSidebarNav"] a { color: var(--muted) !important; font-size: 12px; font-weight: 700; border-radius: 10px; padding: 0.58rem 0.7rem; margin-bottom: 0.14rem; }
+      [data-testid="stSidebarNav"] a { color: var(--text) !important; font-size: 11px; font-weight: 700; border-radius: 12px; padding: 0.72rem 0.85rem; margin-bottom: 0.18rem; background: transparent; }
       [data-testid="stSidebarNav"] a:hover { background-color: #0b1a2a; color: var(--text) !important; }
-      [data-testid="stSidebarNav"] a[aria-current="page"] { background: linear-gradient(180deg, #0b1d2f 0%, #0a1827 100%); color: var(--accent) !important; border-left: 2px solid var(--accent); }
+      [data-testid="stSidebarNav"] a[aria-current="page"] { background: linear-gradient(180deg, #0b1d2f 0%, #0a1827 100%); color: #f6fbff !important; border-left: 2px solid var(--accent); box-shadow: inset 0 0 0 1px rgba(53,194,255,.12); }
       [data-testid="metric-container"], div[data-testid="stMetric"] { background: linear-gradient(180deg, #07111f 0%, #081526 100%); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; box-shadow: none; }
       [data-testid="metric-container"] label, div[data-testid="stMetricLabel"] { color: var(--muted) !important; font-size: 10px !important; letter-spacing: 0.16em; text-transform: uppercase; }
       [data-testid="metric-container"] [data-testid="stMetricValue"], div[data-testid="stMetricValue"] { color: var(--text) !important; font-size: 21px !important; font-weight: 800; font-family: 'Space Mono', monospace !important; }
@@ -144,7 +144,7 @@ def terminal_panel(title: str, subtitle: str = ""):
 
 
 def terminal_ribbon(items):
-    blocks = ""
+    parts = []
     for label, value, delta in items:
         delta_str = str(delta)
         if delta_str.startswith("+"):
@@ -156,17 +156,14 @@ def terminal_ribbon(items):
         else:
             color = MUTED
             bg = "transparent"
-        blocks += f"""
-        <div class="terminal-ribbon-item">
-          <span class="terminal-ribbon-label">{label}</span>
-          <span class="terminal-ribbon-value">{value}</span>
-          <span class="terminal-ribbon-delta" style="color:{color}; background:{bg}; padding:2px 8px; border-radius:999px; display:inline-block;">{delta}</span>
-        </div>
-        """
-    html = textwrap.dedent(f"""
-    <div class="terminal-ribbon">{blocks}</div>
-    """).strip()
+
+        parts.append(
+            f'<div class="terminal-ribbon-item">'
+            f'<span class="terminal-ribbon-label">{label}</span>'
+            f'<span class="terminal-ribbon-value">{value}</span>'
+            f'<span class="terminal-ribbon-delta" style="color:{color};background:{bg};padding:2px 8px;border-radius:999px;display:inline-block;">{delta}</span>'
+            f'</div>'
+        )
+
+    html = '<div class="terminal-ribbon">' + ''.join(parts) + '</div>'
     st.markdown(html, unsafe_allow_html=True)
-
-
-
