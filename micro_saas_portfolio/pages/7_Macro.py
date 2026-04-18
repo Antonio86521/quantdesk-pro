@@ -26,6 +26,7 @@ from analytics import annualized_return, annualized_vol, correlation_matrix, rol
 
 st.set_page_config(page_title="Macro Dashboard Pro", layout="wide", page_icon="🌍")
 apply_theme()
+apply_responsive_layout()
 
 st.markdown(
     f"""
