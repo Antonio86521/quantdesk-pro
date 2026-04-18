@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from options_models import monte_carlo_paths, bs_price_only, monte_carlo_option_price
 from strategies import (
     payoff_long_call, payoff_short_call,
