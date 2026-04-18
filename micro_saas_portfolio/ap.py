@@ -1,14 +1,25 @@
 """
-ap.py — QuantDesk Pro home page.
-Place this file at the ROOT of your project (same level as the pages/ folder).
+ap.py — refreshed QuantDesk Pro home page.
+
 No login required.
+Designed as a dashboard-style landing page for the full multi-page app.
 """
 
+import datetime as dt
 import streamlit as st
+
 from data_loader import load_close_series
 from utils import apply_theme, apply_responsive_layout
 
-# ── Page config ───────────────────────────────────────────────────────────────
+try:
+    from auth import _auth_configured, get_user_name
+except Exception:
+    def _auth_configured():
+        return False
+    def get_user_name():
+        return "User"
+
+
 st.set_page_config(
     page_title="QuantDesk Pro",
     layout="wide",
@@ -19,434 +30,324 @@ apply_theme()
 apply_responsive_layout()
 
 
-# ── Extra home-page CSS ───────────────────────────────────────────────────────
-st.markdown(
-    """
-    <style>
-    .hero-wrap {
-        position: relative;
-        overflow: hidden;
-        border: 1px solid #1a2840;
-        border-radius: 14px;
-        padding: 32px 36px 28px 36px;
-        background:
-            radial-gradient(circle at top right,  rgba(0,212,255,0.07) 0%, transparent 40%),
-            radial-gradient(circle at bottom left, rgba(124,92,252,0.07) 0%, transparent 40%),
-            linear-gradient(180deg, #0a1120 0%, #0d1628 100%);
-        margin-bottom: 20px;
+def inject_home_css():
+    st.markdown(
+        """
+        <style>
+        .home-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .hero-shell {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #1f2d45;
+            border-radius: 22px;
+            padding: 26px 28px;
+            background:
+                radial-gradient(circle at top right, rgba(53,194,255,0.12), transparent 26%),
+                radial-gradient(circle at bottom left, rgba(124,58,237,0.12), transparent 22%),
+                linear-gradient(180deg, #0b1220 0%, #0d1526 100%);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.28);
+        }
+
+        .hero-kicker {
+            color: #35c2ff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.03em;
+            color: #e5eefb;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            color: #7f8ea3;
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 820px;
+            margin-bottom: 0;
+        }
+
+        .market-bar {
+            border: 1px solid #1f2d45;
+            border-radius: 18px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(53,194,255,0.06), transparent 30%),
+                linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+        }
+
+        .market-bar-head {
+            padding: 9px 14px;
+            border-bottom: 1px solid #1f2d45;
+            color: #7f8ea3;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .module-card {
+            border: 1px solid #1f2d45;
+            border-radius: 18px;
+            padding: 16px;
+            background: linear-gradient(180deg, #0c1322 0%, #0f172a 100%);
+            height: 100%;
+        }
+
+        .module-kicker {
+            color: #7f8ea3;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .module-title {
+            color: #e5eefb;
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .module-desc {
+            color: #7f8ea3;
+            font-size: 12px;
+            line-height: 1.65;
+            margin-bottom: 12px;
+        }
+
+        .module-tag {
+            display: inline-block;
+            margin: 0 6px 6px 0;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #d6deeb;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #1b2638;
+        }
+
+        .link-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-card {
+            border: 1px solid #1f2d45;
+            border-radius: 18px;
+            padding: 16px;
+            background: linear-gradient(180deg, #0c1322 0%, #0f172a 100%);
+            min-height: 130px;
+        }
+
+        .status-title {
+            color: #e5eefb;
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .status-text {
+            color: #7f8ea3;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 768px) {
+            .hero-shell { padding: 20px 18px; }
+            .hero-title { font-size: 30px; }
+            .module-card, .status-card { min-height: unset; }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+@st.cache_data(ttl=600)
+def load_market_bar_data():
+    tickers = {
+        "SPY": "SPY",
+        "QQQ": "QQQ",
+        "VIX": "^VIX",
+        "BTC": "BTC-USD",
+        "DXY": "DX-Y.NYB",
+        "US 10Y": "^TNX",
     }
 
-    .hero-eyebrow {
-        font-family: 'Space Mono', monospace;
-        font-size: 10px;
-        color: #00d4ff;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-    }
-
-    .hero-title {
-        font-family: 'DM Sans', sans-serif;
-        font-size: 38px;
-        font-weight: 600;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        color: #e2eaf5;
-        margin-bottom: 10px;
-    }
-
-    .hero-title span.c1 { color: #00d4ff; }
-    .hero-title span.c2 { color: #7c5cfc; }
-
-    .hero-sub {
-        font-family: 'DM Sans', sans-serif;
-        color: #5a7a9a;
-        font-size: 14px;
-        line-height: 1.7;
-        max-width: 700px;
-        margin-bottom: 20px;
-        font-weight: 300;
-    }
-
-    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
-
-    .pill {
-        border: 1px solid #1a2840;
-        border-radius: 999px;
-        padding: 5px 12px;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 11px;
-        font-weight: 500;
-        color: #5a7a9a;
-        background: rgba(255,255,255,0.02);
-    }
-
-    /* Market bar */
-    .mbar-wrap {
-        border: 1px solid #1a2840;
-        border-radius: 10px;
-        overflow: hidden;
-        background: linear-gradient(180deg, #0a1120 0%, #0d1628 100%);
-        margin-bottom: 20px;
-    }
-
-    .mbar-header {
-        padding: 8px 16px;
-        border-bottom: 1px solid #1a2840;
-        font-family: 'Space Mono', monospace;
-        font-size: 9px;
-        color: #5a7a9a;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .mbar-body { display: flex; flex-wrap: wrap; }
-
-    .mbar-item {
-        padding: 10px 16px;
-        border-right: 1px solid #1a2840;
-        min-width: 120px;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-
-    .mbar-label {
-        font-family: 'Space Mono', monospace;
-        font-size: 9px;
-        color: #5a7a9a;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-    }
-
-    .mbar-value {
-        font-family: 'Space Mono', monospace;
-        font-size: 15px;
-        font-weight: 700;
-        color: #e2eaf5;
-    }
-
-    .mbar-chg {
-        font-family: 'Space Mono', monospace;
-        font-size: 10px;
-        font-weight: 700;
-        padding: 2px 7px;
-        border-radius: 999px;
-        width: fit-content;
-    }
-
-    .mbar-up   { color: #00e5a0; background: rgba(0,229,160,0.10); border: 1px solid rgba(0,229,160,0.2); }
-    .mbar-down { color: #ff4560; background: rgba(255,69,96,0.10);  border: 1px solid rgba(255,69,96,0.2); }
-
-    /* Module cards */
-    .module-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin-bottom: 20px;
-    }
-
-    .module-card {
-        border: 1px solid #1a2840;
-        border-radius: 10px;
-        padding: 18px 18px 14px 18px;
-        background: linear-gradient(180deg, #0a1120 0%, #0d1628 100%);
-        transition: border-color 0.18s, background 0.18s;
-        cursor: default;
-    }
-
-    .module-card:hover {
-        border-color: rgba(0,212,255,0.35);
-        background: linear-gradient(180deg, #0c1628 0%, #0f1a34 100%);
-    }
-
-    .module-icon {
-        font-size: 20px;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .module-name {
-        font-family: 'DM Sans', sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        color: #e2eaf5;
-        margin-bottom: 5px;
-    }
-
-    .module-desc {
-        font-family: 'DM Sans', sans-serif;
-        font-size: 12px;
-        color: #5a7a9a;
-        line-height: 1.6;
-        font-weight: 300;
-    }
-
-    .module-tag {
-        display: inline-block;
-        margin-top: 10px;
-        font-family: 'Space Mono', monospace;
-        font-size: 9px;
-        color: #5a7a9a;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        border: 1px solid #1a2840;
-        padding: 2px 8px;
-        border-radius: 4px;
-    }
-
-    .module-tag-pro {
-        color: #7c5cfc;
-        border-color: rgba(124,92,252,0.3);
-        background: rgba(124,92,252,0.06);
-    }
-
-    /* Section divider */
-    .section-label {
-        font-family: 'Space Mono', monospace;
-        font-size: 9px;
-        color: #5a7a9a;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        margin: 20px 0 12px 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .section-label::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: #1a2840;
-    }
-
-    /* Footer */
-    .home-footer {
-        font-family: 'Space Mono', monospace;
-        font-size: 9px;
-        color: #5a7a9a;
-        letter-spacing: 0.12em;
-        padding-top: 14px;
-        border-top: 1px solid #1a2840;
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-    }
-
-    @media (max-width: 768px) {
-        .module-grid { grid-template-columns: 1fr 1fr !important; }
-        .hero-title  { font-size: 28px !important; }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-# ── Market bar data ───────────────────────────────────────────────────────────
-@st.cache_data(ttl=300)
-def load_market_bar():
-    universe = {
-        "S&P 500":  "^GSPC",
-        "Nasdaq":   "^NDX",
-        "VIX":      "^VIX",
-        "Gold":     "GC=F",
-        "WTI":      "CL=F",
-        "EUR/USD":  "EURUSD=X",
-        "BTC":      "BTC-USD",
-        "US 10Y":   "^TNX",
-        "DXY":      "DX-Y.NYB",
-    }
     rows = []
-    for label, sym in universe.items():
+    for label, ticker in tickers.items():
         try:
-            s = load_close_series(sym, period="5d", source="auto")
-            if s is None or len(s) < 2:
+            s = load_close_series(ticker, period="1mo", source="auto")
+            if s is None or s.empty or len(s) < 2:
                 continue
             last = float(s.iloc[-1])
             prev = float(s.iloc[-2])
-            chg  = (last / prev - 1) * 100
+            chg = ((last / prev) - 1) * 100
             if label == "US 10Y":
-                display = f"{last/10:.2f}%"
+                value = f"{last/10:.2f}%"
             elif abs(last) >= 1000:
-                display = f"{last:,.0f}"
+                value = f"{last:,.0f}"
             else:
-                display = f"{last:,.2f}"
-            rows.append({"label": label, "value": display, "chg": chg})
+                value = f"{last:,.2f}"
+            rows.append((label, value, f"{chg:+.2f}%"))
         except Exception:
             continue
     return rows
 
 
-def render_market_bar(data: list):
-    if not data:
-        st.caption("Market data unavailable — check your API keys.")
-        return
-
-    items_html = ""
-    for d in data:
-        chg   = d["chg"]
-        cls   = "mbar-up" if chg >= 0 else "mbar-down"
-        sign  = "+" if chg >= 0 else ""
-        items_html += f"""
-        <div class="mbar-item">
-          <span class="mbar-label">{d['label']}</span>
-          <span class="mbar-value">{d['value']}</span>
-          <span class="mbar-chg {cls}">{sign}{chg:.2f}%</span>
-        </div>
-        """
-
+def render_hero():
+    hour = dt.datetime.now().hour
+    greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
+    user_name = get_user_name() if _auth_configured() else "Guest"
+    subtitle = (
+        "Track portfolios, scan macro conditions, inspect derivatives, and run simulation workflows "
+        "from a single dashboard-style workspace."
+    )
     st.markdown(
         f"""
-        <div class="mbar-wrap">
-          <div class="mbar-header">
-            <span class="qdp-live-dot"></span>
-            LIVE MARKET SNAPSHOT
-          </div>
-          <div class="mbar-body">{items_html}</div>
+        <div class="hero-shell">
+            <div class="hero-kicker">Market Intelligence Terminal</div>
+            <div class="hero-title">{greeting} — welcome to QuantDesk Pro</div>
+            <div class="hero-subtitle">{subtitle}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    if _auth_configured() and user_name:
+        st.caption(f"Signed in as {user_name}.")
+
+
+def render_market_bar():
+    rows = load_market_bar_data()
+    if not rows:
+        return
+    blocks = ""
+    for label, value, delta in rows:
+        up = str(delta).startswith("+")
+        color = "#00e676" if up else "#ff4d6d"
+        glow = "rgba(0,230,118,0.16)" if up else "rgba(255,77,109,0.16)"
+        blocks += f"""
+        <div style="padding:12px 16px; min-width:132px; border-right:1px solid #1f2d45; display:flex; flex-direction:column; gap:3px;">
+            <div style="color:#7f8ea3; font-size:10px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">{label}</div>
+            <div style="color:#e5eefb; font-size:15px; font-weight:900; line-height:1.1;">{value}</div>
+            <div style="display:inline-flex; align-items:center; width:fit-content; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:800; color:{color}; background:{glow}; border:1px solid {color}22;">{delta}</div>
+        </div>
+        """
+    st.markdown(
+        f"""
+        <div class="market-bar">
+            <div class="market-bar-head">Live Market Snapshot</div>
+            <div style="display:flex; flex-wrap:wrap; align-items:stretch;">{blocks}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-# ── Module definitions ────────────────────────────────────────────────────────
-MODULES = [
-    {
-        "icon": "📈",
-        "name": "Portfolio Analytics",
-        "desc": "Track performance, P&L, risk-adjusted returns, technicals, and benchmark attribution.",
-        "tag":  "FREE",
-        "pro":  False,
-    },
-    {
-        "icon": "📊",
-        "name": "Risk & Attribution",
-        "desc": "Rolling VaR, CVaR, beta, stress tests, per-asset vol contribution.",
-        "tag":  "FREE",
-        "pro":  False,
-    },
-    {
-        "icon": "⚙️",
-        "name": "Derivatives Lab",
-        "desc": "Black-Scholes, binomial trees, Monte Carlo pricing, Greeks and payoff diagrams.",
-        "tag":  "FREE",
-        "pro":  False,
-    },
-    {
-        "icon": "🌊",
-        "name": "Vol Surface",
-        "desc": "Live implied vol smile, ATM term structure, 3D surface and put/call skew.",
-        "tag":  "FREE",
-        "pro":  False,
-    },
-    {
-        "icon": "🎲",
-        "name": "Monte Carlo Lab",
-        "desc": "GBM path simulation, strategy back-testing, scenario distribution analysis.",
-        "tag":  "FREE",
-        "pro":  False,
-    },
-    {
-        "icon": "🔍",
-        "name": "Screener",
-        "desc": "Multi-ticker snapshot with RSI signals, momentum, Sharpe, volume ratios.",
-        "tag":  "FREE",
-        "pro":  False,
-    },
-    {
-        "icon": "🌐",
-        "name": "Macro Monitor",
-        "desc": "Rates, FX heatmaps, commodities, cross-asset correlation and regime tracking.",
-        "tag":  "FREE",
-        "pro":  False,
-    },
-    {
-        "icon": "💼",
-        "name": "Portfolio Manager",
-        "desc": "Save portfolios to your account, add positions, edit holdings and sync across sessions.",
-        "tag":  "PRO",
-        "pro":  True,
-    },
-    {
-        "icon": "🔬",
-        "name": "Saved Analysis",
-        "desc": "Load any saved portfolio and run full analytics instantly — no re-entry needed.",
-        "tag":  "PRO",
-        "pro":  True,
-    },
-]
+def module_link(label: str, path: str, description: str):
+    try:
+        st.page_link(path, label=label, icon="→")
+    except Exception:
+        st.markdown(f"**{label}** — {description}")
 
 
 def render_modules():
-    cards_html = ""
-    for m in MODULES:
-        tag_cls  = "module-tag-pro" if m["pro"] else ""
-        cards_html += f"""
-        <div class="module-card">
-          <span class="module-icon">{m['icon']}</span>
-          <div class="module-name">{m['name']}</div>
-          <div class="module-desc">{m['desc']}</div>
-          <span class="module-tag {tag_cls}">{m['tag']}</span>
-        </div>
-        """
+    st.markdown('<div class="section-kicker">Core Modules</div>', unsafe_allow_html=True)
+    modules = [
+        {
+            "title": "Portfolio Analytics",
+            "desc": "Performance, drawdown, benchmark analysis, and technical overlays for custom baskets.",
+            "tags": ["Returns", "Risk", "Technicals"],
+            "links": [
+                ("Open Portfolio", "pages/1_Portfolio.py", "Portfolio analytics workspace"),
+                ("Open Saved Analysis", "pages/9_portfolio_analysis.py", "Saved portfolio analytics"),
+            ],
+        },
+        {
+            "title": "Risk & Macro",
+            "desc": "Cross-asset monitoring, rolling risk views, rate regime checks, and macro dashboarding.",
+            "tags": ["Rolling Risk", "Cross-Asset", "Macro"],
+            "links": [
+                ("Open Risk & Attribution", "pages/2_Risk_Attribution.py", "Risk analytics page"),
+                ("Open Macro Dashboard", "pages/7_Macro.py", "Macro dashboard page"),
+                ("Open Screener", "pages/6_Screener.py", "Screener and watchlist"),
+            ],
+        },
+        {
+            "title": "Derivatives Lab",
+            "desc": "Option pricing, vol surfaces, Monte Carlo simulation, and payoff strategy testing.",
+            "tags": ["Options", "Vol Surface", "Monte Carlo"],
+            "links": [
+                ("Open Derivatives", "pages/3__Derivatives.py", "Derivatives page"),
+                ("Open Vol Surface", "pages/4_Vol_Surface.py", "Vol surface page"),
+                ("Open Strategy Lab", "pages/5_Monte_Carlo__Strategy_Lab.py", "Monte Carlo and strategy lab"),
+            ],
+        },
+    ]
+    cols = st.columns(3)
+    for col, module in zip(cols, modules):
+        with col:
+            st.markdown(
+                f"""
+                <div class="module-card">
+                    <div class="module-kicker">Workspace</div>
+                    <div class="module-title">{module['title']}</div>
+                    <div class="module-desc">{module['desc']}</div>
+                    <div>{''.join(f'<span class="module-tag">{tag}</span>' for tag in module['tags'])}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.markdown('<div class="link-stack">', unsafe_allow_html=True)
+            for label, path, desc in module["links"]:
+                module_link(label, path, desc)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown(
-        f'<div class="module-grid">{cards_html}</div>',
-        unsafe_allow_html=True,
-    )
+
+def render_status_cards():
+    st.markdown('<div class="section-kicker">Quick Start</div>', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    cards = [
+        ("Build a portfolio", "Input a few tickers, shares, and buy prices to generate a clean analytics view."),
+        ("Manage saved holdings", "Create persistent portfolios and jump directly into saved portfolio analysis."),
+        ("Scan macro conditions", "Use the macro and screener pages to check context before running a trade view."),
+    ]
+    for col, (title, text) in zip((c1, c2, c3), cards):
+        with col:
+            st.markdown(
+                f"""
+                <div class="status-card">
+                    <div class="status-title">{title}</div>
+                    <div class="status-text">{text}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 
-# ── Page render ───────────────────────────────────────────────────────────────
-
-# Hero
-st.markdown(
-    """
-    <div class="hero-wrap">
-      <div class="hero-eyebrow">Market Intelligence Terminal</div>
-      <div class="hero-title">
-        Quant<span class="c1">Desk</span> <span class="c2">Pro</span>
-      </div>
-      <div class="hero-sub">
-        Professional-grade analytics for portfolio monitoring, macro research,
-        derivatives pricing, volatility analysis, and risk attribution —
-        all in one terminal-style workspace.
-      </div>
-      <div class="pill-row">
-        <div class="pill">9 modules</div>
-        <div class="pill">Real-time data</div>
-        <div class="pill">yFinance + Alpha Vantage</div>
-        <div class="pill">Supabase persistence</div>
-        <div class="pill">No code required</div>
-      </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Live market bar
-with st.spinner("Loading market data…"):
-    market_data = load_market_bar()
-render_market_bar(market_data)
-
-# Module grid
-st.markdown(
-    '<div class="section-label">Modules</div>',
-    unsafe_allow_html=True,
-)
+inject_home_css()
+st.markdown('<div class="home-shell">', unsafe_allow_html=True)
+render_hero()
+render_market_bar()
 render_modules()
+render_status_cards()
+st.markdown('</div>', unsafe_allow_html=True)
+st.caption("Data sources depend on available provider coverage on each page. Live values use the current data loader configuration.")
 
-# Footer
-st.markdown(
-    """
-    <div class="home-footer">
-      <span>QUANTDESK PRO · v2.0</span>
-      <span>Data: yFinance · Alpha Vantage &nbsp;|&nbsp; Storage: Supabase</span>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
