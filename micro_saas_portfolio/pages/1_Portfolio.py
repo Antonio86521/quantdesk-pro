@@ -19,6 +19,7 @@ from analytics import (
 
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 apply_theme()
+apply_responsive_layout()
 page_header("Portfolio Analytics", "Performance · Attribution · Technicals")
 
 def _set_analyze_portfolio_clicked():
