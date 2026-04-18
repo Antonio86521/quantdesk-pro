@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from auth import require_login, sidebar_user_widget
+from auth import sidebar_user_widget
 from utils import apply_theme, page_header
 from portfolio_service import (
     create_portfolio,
@@ -26,6 +26,27 @@ st.set_page_config(
 )
 
 apply_theme()
+
+# ─────────────────────────────────────────────
+# INLINE LOGIN HANDLING
+# ─────────────────────────────────────────────
+user = st.user
+
+if not user or not user.get("is_logged_in"):
+
+    st.markdown("## 🔐 Login Required")
+    st.markdown("Sign in to create, edit, and manage your saved portfolios.")
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.markdown("### Sign in to continue")
+
+        if st.button("Continue with Google"):
+            st.login()
+
+    st.stop()
+
 sidebar_user_widget()
 
 st.markdown("""
