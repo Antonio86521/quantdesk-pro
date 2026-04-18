@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW
+from utils import apply_theme, page_header, apply_responsive_layout
 from data_loader import load_close_series, load_price_history, load_news
 from analytics import (
     annualized_return, annualized_vol, max_drawdown_from_returns,
