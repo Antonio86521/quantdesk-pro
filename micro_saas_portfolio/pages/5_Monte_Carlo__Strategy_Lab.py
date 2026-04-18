@@ -19,6 +19,7 @@ from strategies import (
 
 st.set_page_config(page_title="Monte Carlo & Strategy Lab", layout="wide", page_icon="📊")
 apply_theme()
+apply_responsive_layout()
 page_header("Monte Carlo & Strategy Lab", "GBM Simulation · Option Pricing · Payoff Diagrams")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
