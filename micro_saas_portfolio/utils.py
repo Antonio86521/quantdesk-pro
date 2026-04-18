@@ -59,7 +59,90 @@ def apply_theme():
       [data-testid="metric-container"], div[data-testid="stMetric"] { background: linear-gradient(180deg, #07111f 0%, #081526 100%); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; box-shadow: none; }
       [data-testid="metric-container"] label, div[data-testid="stMetricLabel"] { color: var(--muted) !important; font-size: 10px !important; letter-spacing: 0.16em; text-transform: uppercase; }
       [data-testid="metric-container"] [data-testid="stMetricValue"], div[data-testid="stMetricValue"] { color: var(--text) !important; font-size: 21px !important; font-weight: 800; font-family: 'Space Mono', monospace !important; }
-@@ -144,7 +144,7 @@
+      [data-testid="metric-container"] [data-testid="stMetricDelta"], div[data-testid="stMetricDelta"] { font-size: 11px !important; }
+      .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+      .stTabs [data-baseweb="tab"] { background: #07111f; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; padding: 8px 14px; }
+      .stTabs [aria-selected="true"] { color: var(--accent) !important; background: #08192a !important; border-color: var(--accent) !important; }
+      .stButton > button, .stDownloadButton > button { background: linear-gradient(180deg, #091321 0%, #07111d 100%); border: 1px solid var(--border); color: var(--text); font-weight: 700; font-size: 12px; letter-spacing: 0.02em; border-radius: 999px; padding: 0.58rem 1rem; transition: all 0.18s ease; }
+      .stButton > button:hover, .stDownloadButton > button:hover { border-color: var(--accent); color: var(--accent); background: #091a2b; }
+      .stTextInput input, .stNumberInput input, textarea { background: #07111f !important; border: 1px solid var(--border) !important; color: var(--text) !important; border-radius: 10px !important; font-size: 13px !important; }
+      div[data-baseweb="select"] > div { background: #07111f !important; border: 1px solid var(--border) !important; color: var(--text) !important; border-radius: 10px !important; font-size: 13px !important; }
+      [data-testid="stDataFrame"] { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+      table { font-size: 12px !important; }
+      h1, h2, h3, h4 { color: var(--text); letter-spacing: -0.02em; }
+      hr { border-color: var(--border); }
+      .stAlert { border-radius: 10px; border: 1px solid var(--border); }
+      #MainMenu, footer { visibility: hidden; }
+      .terminal-panel { background: linear-gradient(180deg, #07111f 0%, #091629 100%); border: 1px solid var(--border); border-radius: 18px; padding: 18px 18px; margin-bottom: 14px; }
+      .terminal-panel-title { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; margin-bottom: 8px; }
+      .terminal-panel-subtitle { color: var(--muted); font-size: 12px; }
+      .terminal-ribbon { display: flex; flex-wrap: nowrap; gap: 0; background: linear-gradient(180deg, #07111f 0%, #081426 100%); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+      .terminal-ribbon-item { padding: 10px 16px; border-right: 1px solid var(--border); min-width: 118px; }
+      .terminal-ribbon-label { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; display:block; margin-bottom: 5px; }
+      .terminal-ribbon-value { color: var(--text); font-size: 13px; font-weight: 800; display:block; margin-bottom: 5px; font-family: 'Space Mono', monospace !important; }
+      .terminal-ribbon-delta { font-size: 11px; font-weight: 700; }
+      .terminal-badge { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--border); }
+    </style>
+    """, unsafe_allow_html=True)
+    plt.rcParams.update({
+        "figure.facecolor": BG, "axes.facecolor": SURFACE, "axes.edgecolor": BORDER, "axes.labelcolor": "#9fb0c7",
+        "xtick.color": MUTED, "ytick.color": MUTED, "text.color": TEXT, "grid.color": BORDER, "grid.linewidth": 0.55,
+        "lines.linewidth": 1.7, "legend.facecolor": SURFACE, "legend.edgecolor": BORDER, "legend.labelcolor": TEXT,
+        "figure.dpi": 110, "axes.titleweight": "bold", "axes.titlesize": 11,
+    })
+
+
+def apply_responsive_layout():
+    st.markdown("""
+    <style>
+      @media (max-width: 768px) {
+        .block-container { padding-left: 0.7rem !important; padding-right: 0.7rem !important; padding-top: 0.6rem !important; padding-bottom: 0.8rem !important; max-width: 100% !important; }
+        h1 { font-size: 1.6rem !important; line-height: 1.18 !important; }
+        h2 { font-size: 1.28rem !important; }
+        h3 { font-size: 1.04rem !important; }
+        .stButton > button, .stDownloadButton > button { width: 100% !important; min-height: 44px !important; }
+        div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input, textarea { font-size: 16px !important; }
+        [data-testid="stDataFrame"] { overflow-x: auto !important; }
+        [data-testid="metric-container"], div[data-testid="stMetric"] { padding: 10px 12px !important; }
+        [data-testid="metric-container"] [data-testid="stMetricValue"], div[data-testid="stMetricValue"] { font-size: 17px !important; }
+        section[data-testid="stSidebar"] { min-width: 250px !important; }
+        .terminal-ribbon { flex-wrap: wrap !important; }
+        .terminal-ribbon-item { min-width: 50% !important; border-right: 1px solid #17304d !important; border-bottom: 1px solid #17304d !important; }
+      }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def page_header(title: str, subtitle: str = ""):
+    st.markdown(f"""
+        <div style="padding: 8px 0 14px 0; margin-top: 2px; margin-bottom: 18px; border-bottom: 1px solid #17304d;">
+            <div style="font-size: 32px; font-weight: 900; letter-spacing: -0.02em; color: #e7f0fd; line-height: 1.05; margin-bottom: 6px;">{title}</div>
+            <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #7f8ea3;">{subtitle}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+def metric_row(data: dict):
+    cols = st.columns(len(data))
+    for col, (label, value) in zip(cols, data.items()):
+        col.metric(label, value)
+
+
+def color_pnl(val):
+    try:
+        return GREEN if float(str(val).replace("$", "").replace("%", "").replace(",", "")) >= 0 else RED
+    except Exception:
+        return TEXT
+
+
+def terminal_panel(title: str, subtitle: str = ""):
+    html = textwrap.dedent(f"""
+    <div class="terminal-panel">
+      <div class="terminal-panel-title">{title}</div>
+      {"" if not subtitle else f'<div class="terminal-panel-subtitle">{subtitle}</div>'}
+    </div>
+    """).strip()
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def terminal_ribbon(items):
@@ -68,7 +151,11 @@ def terminal_ribbon(items):
     for label, value, delta in items:
         delta_str = str(delta)
         if delta_str.startswith("+"):
-@@ -156,17 +156,14 @@
+            color = GREEN
+            bg = "rgba(0,210,122,0.14)"
+        elif delta_str.startswith("-"):
+            color = RED
+            bg = "rgba(255,92,92,0.14)"
         else:
             color = MUTED
             bg = "transparent"
