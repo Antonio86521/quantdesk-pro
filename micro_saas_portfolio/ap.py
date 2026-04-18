@@ -1,350 +1,407 @@
-import datetime
+"""
+ap.py — public QuantDesk Pro home page.
+
+No login required.
+Designed as a clean landing page for the full multi-page app.
+"""
+
 import streamlit as st
 import pandas as pd
-
 from data_loader import load_close_series
-from utils import apply_theme, apply_responsive_layout
 
+from utils import apply_theme
+
+# Optional helper from your project
+try:
+    from utils import terminal_ribbon
+except Exception:
+    terminal_ribbon = None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Page config
+# ──────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="QuantDesk Pro",
     layout="wide",
     page_icon="📊",
     initial_sidebar_state="expanded",
 )
-
 apply_theme()
-apply_responsive_layout()
 
 
-# ─────────────────────────────────────────────
-# PAGE CSS
-# ─────────────────────────────────────────────
-st.markdown("""
-<style>
-.home-shell {
-    max-width: 1080px;
-    margin: 0 auto;
-}
+# ──────────────────────────────────────────────────────────────────────────────
+# Helper functions
+# ──────────────────────────────────────────────────────────────────────────────
+def inject_home_css():
+    st.markdown(
+        """
+        <style>
+        :root {
+            --bg: #0a0e1a;
+            --surface: #0f172a;
+            --surface-2: #111827;
+            --border: #1f2d45;
+            --text: #e5eefb;
+            --muted: #7f8ea3;
+            --accent: #35c2ff;
+            --accent2: #7c3aed;
+            --green: #00e676;
+            --red: #ff4d6d;
+            --yellow: #ffd166;
+        }
 
-.topbar {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    border:1px solid #143458;
-    background: linear-gradient(90deg, #071320 0%, #08182b 100%);
-    border-radius: 0;
-    padding: 12px 16px;
-    margin-bottom: 14px;
-}
+        .home-wrap { padding-top: 0.2rem; }
 
-.topbar-left {
-    display:flex;
-    align-items:center;
-    gap:14px;
-}
+        .hero {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 28px 28px 24px 28px;
+            background:
+                radial-gradient(circle at top right, rgba(53,194,255,0.12), transparent 26%),
+                radial-gradient(circle at bottom left, rgba(124,58,237,0.12), transparent 22%),
+                linear-gradient(180deg, #0b1220 0%, #0d1526 100%);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.28);
+        }
 
-.topbar-brand {
-    color:#35c2ff;
-    font-size:13px;
-    font-weight:900;
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-}
+        .hero-title {
+            font-size: 42px;
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.03em;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
 
-.topbar-divider {
-    width:1px;
-    height:18px;
-    background:#143458;
-}
+        .hero-subtitle {
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 820px;
+            margin-bottom: 18px;
+        }
 
-.topbar-page {
-    color:#7f8ea3;
-    font-size:13px;
-}
+        .brand-accent { color: var(--accent); }
+        .brand-accent2 { color: #a78bfa; }
 
-.topbar-right {
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
+        .pill-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0 20px 0;
+        }
 
-.live-dot {
-    width:8px;
-    height:8px;
-    border-radius:999px;
-    background:#00d27a;
-    display:inline-block;
-}
+        .pill {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 11px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text);
+            background: rgba(255,255,255,0.02);
+            font-weight: 800;
+        }
 
-.live-label {
-    color:#d6deeb;
-    font-size:11px;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-}
+        .grid-note {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 15px 16px;
+            background: linear-gradient(180deg, #0c1322 0%, #0f172a 100%);
+            height: 100%;
+        }
 
-.top-pill {
-    border:1px solid #143458;
-    border-radius:10px;
-    padding:4px 9px;
-    color:#d6deeb;
-    font-size:11px;
-    font-weight:700;
-    background:#08182b;
-}
+        .grid-note-label {
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
 
-.hero {
-    border:1px solid #143458;
-    border-radius:18px;
-    padding:18px 22px;
-    background:
-      radial-gradient(circle at top right, rgba(53,194,255,0.10), transparent 28%),
-      linear-gradient(90deg, #08121f 0%, #0b2036 100%);
-    margin-bottom: 14px;
-}
+        .grid-note-value {
+            color: var(--text);
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
 
-.hero-kicker {
-    color:#35c2ff;
-    font-size:10px;
-    font-weight:900;
-    letter-spacing:0.2em;
-    text-transform:uppercase;
-    margin-bottom:10px;
-}
+        .grid-note-desc {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
 
-.hero-title {
-    color:#ffffff;
-    font-size:20px;
-    font-weight:800;
-    line-height:1.15;
-    margin-bottom:8px;
-}
+        .section-title {
+            color: var(--text);
+            font-size: 14px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-weight: 900;
+            margin: 6px 0 12px 0;
+        }
 
-.hero-sub {
-    color:#7f8ea3;
-    font-size:13px;
-}
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px 16px 14px 16px;
+            background: linear-gradient(180deg, #0c1322 0%, #0f172a 100%);
+            min-height: 170px;
+        }
 
-.market-strip {
-    border:1px solid #143458;
-    border-radius:14px;
-    overflow:hidden;
-    background: linear-gradient(90deg, #08121f 0%, #0a1830 100%);
-    margin-bottom: 14px;
-}
+        .card-title {
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
 
-.market-grid {
-    display:grid;
-    grid-template-columns: repeat(6, 1fr);
-}
+        .card-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
 
-.market-cell {
-    padding: 12px 16px;
-    border-right:1px solid #143458;
-    min-height: 74px;
-}
+        .bullet {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.8;
+            margin: 0;
+            padding-left: 18px;
+        }
 
-.market-cell:last-child {
-    border-right:none;
-}
+        .status-box {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            background: linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+        }
 
-.market-label {
-    color:#7f8ea3;
-    font-size:9px;
-    font-weight:800;
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-    margin-bottom:7px;
-}
+        .status-title {
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
 
-.market-value {
-    color:#ffffff;
-    font-size:15px;
-    font-weight:900;
-    margin-bottom:8px;
-}
+        .status-text {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
 
-.market-delta {
-    display:inline-block;
-    padding:3px 8px;
-    border-radius:999px;
-    font-size:11px;
-    font-weight:800;
-}
-
-.nav-row {
-    margin-bottom: 14px;
-}
-
-div[data-testid="stPageLink"] a {
-    display:flex !important;
-    justify-content:center !important;
-    align-items:center !important;
-    min-height:38px !important;
-    border-radius:999px !important;
-    border:1px solid #143458 !important;
-    background: linear-gradient(180deg, #071320 0%, #09182a 100%) !important;
-    color:#35c2ff !important;
-    font-size:12px !important;
-    font-weight:700 !important;
-    text-decoration:none !important;
-    padding:0 14px !important;
-    white-space:nowrap !important;
-}
-
-div[data-testid="stPageLink"] a:hover {
-    border-color:#35c2ff !important;
-    background:#0b1d33 !important;
-}
-
-.kpi-card {
-    border:1px solid #143458;
-    border-radius:16px;
-    background: linear-gradient(180deg, #071320 0%, #09192b 100%);
-    padding:16px 16px 14px 16px;
-    min-height: 170px;
-}
-
-.kpi-kicker {
-    color:#7fa3d6;
-    font-size:9px;
-    font-weight:900;
-    letter-spacing:0.18em;
-    text-transform:uppercase;
-    margin-bottom:14px;
-}
-
-.kpi-value {
-    color:#ffffff;
-    font-size:18px;
-    font-weight:900;
-    margin-bottom:8px;
-}
-
-.kpi-sub {
-    color:#7f8ea3;
-    font-size:12px;
-    margin-bottom:16px;
-}
-
-.kpi-sub.green { color:#00d27a; }
-
-.sparkbar-wrap {
-    display:flex;
-    align-items:flex-end;
-    gap:4px;
-    height:54px;
-    margin-top:10px;
-}
-
-.sparkbar {
-    flex:1;
-    border-radius:0;
-}
-
-.table-shell {
-    border:1px solid #143458;
-    border-radius:14px;
-    overflow:hidden;
-    background: linear-gradient(180deg, #071320 0%, #08182b 100%);
-    margin-top: 4px;
-}
-
-.table-header,
-.table-row {
-    display:grid;
-    grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr;
-    align-items:center;
-}
-
-.table-header {
-    padding: 12px 16px;
-    border-bottom:1px solid #143458;
-    color:#7fa3d6;
-    font-size:9px;
-    font-weight:900;
-    letter-spacing:0.18em;
-    text-transform:uppercase;
-}
-
-.table-row {
-    padding: 16px;
-    border-bottom:1px solid rgba(20,52,88,0.85);
-}
-
-.table-row:last-child {
-    border-bottom:none;
-}
-
-.ticker-name,
-.price-text {
-    color:#ffffff;
-    font-weight:800;
-    font-size:13px;
-}
-
-.return-pos {
-    color:#00ff9a;
-    font-weight:900;
-    font-size:13px;
-}
-
-.return-neg {
-    color:#ff4d6d;
-    font-weight:900;
-    font-size:13px;
-}
-
-.signal-pill {
-    display:inline-block;
-    padding:4px 10px;
-    border-radius:999px;
-    font-size:10px;
-    font-weight:900;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    width:fit-content;
-}
-
-.signal-up { color:#00ff9a; background:rgba(0,210,122,0.12); border:1px solid rgba(0,210,122,0.18); }
-.signal-down { color:#ff4d6d; background:rgba(255,92,92,0.12); border:1px solid rgba(255,92,92,0.18); }
-.signal-neutral { color:#7fa3d6; background:rgba(127,163,214,0.12); border:1px solid rgba(127,163,214,0.18); }
-
-.footer-row {
-    display:flex;
-    justify-content:space-between;
-    color:#7f8ea3;
-    font-size:10px;
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-    margin-top: 14px;
-}
-
-@media (max-width: 900px) {
-    .market-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .table-header,
-    .table-row {
-        grid-template-columns: 1.2fr 1fr 0.8fr 0.9fr;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
+        .stButton > button {
+            border-radius: 12px !important;
+            font-weight: 800 !important;
+            border: 1px solid var(--border) !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
-# ─────────────────────────────────────────────
-# HELPERS
-# ─────────────────────────────────────────────
+def render_hero():
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="hero-title">
+                Quant<span class="brand-accent">Desk</span> <span class="brand-accent2">Pro</span>
+            </div>
+            <div class="hero-subtitle">
+                Multi-asset analytics for portfolio monitoring, macro tracking, derivatives workflows,
+                volatility analysis, risk attribution, and scenario testing — all in one terminal-style workspace.
+            </div>
+            <div class="pill-row">
+                <div class="pill">Portfolio Analytics</div>
+                <div class="pill">Macro Monitor</div>
+                <div class="pill">Risk & Attribution</div>
+                <div class="pill">Derivatives</div>
+                <div class="pill">Vol Surface</div>
+                <div class="pill">Monte Carlo</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_top_stats():
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Workspace</div>
+              <div class="grid-note-value">Multi-Page</div>
+              <div class="grid-note-desc">Dedicated tools for portfolio, macro, derivatives, vol surface, and simulation workflows.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c2:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Data Stack</div>
+              <div class="grid-note-value">Hybrid</div>
+              <div class="grid-note-desc">Yahoo Finance with Alpha Vantage fallback for stronger reliability across pages.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c3:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Use Cases</div>
+              <div class="grid-note-value">6 Core</div>
+              <div class="grid-note-desc">Monitoring, screening, risk, options, macro, and simulation in a single interface.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c4:
+        st.markdown(
+            """
+            <div class="grid-note">
+              <div class="grid-note-label">Mode</div>
+              <div class="grid-note-value">Research</div>
+              <div class="grid-note-desc">Built for learning, presenting projects, and demonstrating real finance workflow skills.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_feature_cards():
+    st.markdown('<div class="section-title">Core Modules</div>', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.markdown(
+            """
+            <div class="card">
+              <div class="card-title">Portfolio Analytics</div>
+              <div class="card-subtitle">Track performance, P&amp;L, risk-adjusted returns, technicals, and benchmark-relative metrics.</div>
+              <ul class="bullet">
+                <li>Performance and attribution</li>
+                <li>VaR, CVaR, drawdown, alpha, beta</li>
+                <li>Technicals and news integration</li>
+              </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c2:
+        st.markdown(
+            """
+            <div class="card">
+              <div class="card-title">Macro & Risk</div>
+              <div class="card-subtitle">Monitor rates, FX, commodities, equities, crypto, and cross-asset regime conditions.</div>
+              <ul class="bullet">
+                <li>FX heatmap and inflation proxy</li>
+                <li>Rate trend and curve logic</li>
+                <li>Cross-asset correlation and baskets</li>
+              </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c3:
+        st.markdown(
+            """
+            <div class="card">
+              <div class="card-title">Derivatives Lab</div>
+              <div class="card-subtitle">Price options, inspect chains, analyze smiles and surfaces, and test structured payoffs.</div>
+              <ul class="bullet">
+                <li>Black-Scholes, binomial, Monte Carlo</li>
+                <li>Volatility surface and term structure</li>
+                <li>Strategy payoff visualizations</li>
+              </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_quick_actions():
+    st.markdown('<div class="section-title">Quick Start</div>', unsafe_allow_html=True)
+
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.markdown(
+            """
+            <div class="status-box">
+              <div class="status-title">Start with Portfolio</div>
+              <div class="status-text">Input a few tickers, shares, and buy prices to generate a clean performance and risk view.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c2:
+        st.markdown(
+            """
+            <div class="status-box">
+              <div class="status-title">Check Macro Conditions</div>
+              <div class="status-text">Use the Macro page to scan rates, FX, commodities, equities, and inflation-sensitive assets.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with c3:
+        st.markdown(
+            """
+            <div class="status-box">
+              <div class="status-title">Run an Options Workflow</div>
+              <div class="status-text">Open Derivatives or Vol Surface to test pricing logic, smiles, and live chain structure.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_future_upgrades():
+    st.markdown('<div class="section-title">Future Upgrades</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="status-box">
+          <div class="status-title">Roadmap</div>
+          <div class="status-text">
+            1. Saved user portfolios<br>
+            2. Pro dashboard / landing page cards<br>
+            3. Better onboarding text<br>
+            4. Public deployment + custom domain
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 @st.cache_data(ttl=600)
 def load_market_bar_data():
     tickers = {
-        "SPY": "SPY",
-        "QQQ": "QQQ",
-        "VIX": "^VIX",
-        "BTC": "BTC-USD",
+        "S&P 500": "^GSPC",
+        "Nasdaq": "^NDX",
         "DXY": "DX-Y.NYB",
+        "VIX": "^VIX",
+        "Gold": "GC=F",
+        "WTI": "CL=F",
+        "EUR/USD": "EURUSD=X",
+        "BTC": "BTC-USD",
         "US 10Y": "^TNX",
     }
 
@@ -366,182 +423,134 @@ def load_market_bar_data():
             else:
                 value = f"{last:,.2f}"
 
-            rows.append({"label": label, "value": value, "chg": chg})
+            rows.append({
+                "label": label,
+                "value": value,
+                "chg": chg,
+            })
         except Exception:
             continue
 
     return rows
 
 
-def market_strip_html():
+def render_market_bar():
     data = load_market_bar_data()
     if not data:
-        return ""
+        return
 
-    cells = ""
+    blocks = ""
     for item in data:
         chg = float(item["chg"])
-        positive = chg >= 0
-        color = "#00d27a" if positive else "#ff5c5c"
-        bg = "rgba(0,210,122,0.14)" if positive else "rgba(255,92,92,0.14)"
-        sign = "+" if positive else ""
+        is_up = chg >= 0
+        color = "#00e676" if is_up else "#ff4d6d"
+        glow = "rgba(0,230,118,0.16)" if is_up else "rgba(255,77,109,0.16)"
+        sign = "+" if is_up else ""
 
-        cells += f"""
-        <div class="market-cell">
-            <div class="market-label">{item["label"]}</div>
-            <div class="market-value">{item["value"]}</div>
-            <div class="market-delta" style="color:{color}; background:{bg};">{sign}{chg:.2f}%</div>
+        blocks += f"""
+        <div style="
+            padding: 12px 16px;
+            min-width: 132px;
+            border-right: 1px solid #1f2d45;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0.00) 100%);
+        ">
+            <div style="
+                color:#7f8ea3;
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:0.14em;
+                text-transform:uppercase;
+            ">
+                {item["label"]}
+            </div>
+            <div style="
+                color:#e5eefb;
+                font-size:15px;
+                font-weight:900;
+                line-height:1.1;
+            ">
+                {item["value"]}
+            </div>
+            <div style="
+                display:inline-flex;
+                align-items:center;
+                width:fit-content;
+                padding:3px 8px;
+                border-radius:999px;
+                font-size:11px;
+                font-weight:800;
+                color:{color};
+                background:{glow};
+                border:1px solid {color}22;
+            ">
+                {sign}{chg:.2f}%
+            </div>
         </div>
         """
 
-    return f"""
-    <div class="market-strip">
-        <div class="market-grid">
-            {cells}
+    st.markdown(
+        f"""
+        <div style="
+            border:1px solid #1f2d45;
+            border-radius:18px;
+            overflow:hidden;
+            background:
+                radial-gradient(circle at top right, rgba(53,194,255,0.06), transparent 30%),
+                linear-gradient(180deg, #0b1220 0%, #0e1627 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+            margin-top: 4px;
+            margin-bottom: 10px;
+        ">
+            <div style="
+                padding:9px 14px;
+                border-bottom:1px solid #1f2d45;
+                color:#7f8ea3;
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:0.16em;
+                text-transform:uppercase;
+            ">
+                Live Market Snapshot
+            </div>
+            <div style="
+                display:flex;
+                flex-wrap:wrap;
+                align-items:stretch;
+            ">
+                {blocks}
+            </div>
         </div>
-    </div>
-    """
+        """,
+        unsafe_allow_html=True,
+    )
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Main page
+# ──────────────────────────────────────────────────────────────────────────────
+inject_home_css()
 
-def sparkbars(values, positive=True):
-    color = "rgba(39, 150, 155, 0.55)" if positive else "rgba(120, 44, 74, 0.65)"
-    out = '<div class="sparkbar-wrap">'
-    for v in values:
-        out += f'<div class="sparkbar" style="height:{v}px; background:{color};"></div>'
-    out += '</div>'
-    return out
+if callable(terminal_ribbon):
+    try:
+        terminal_ribbon("QUANTDESK PRO · MULTI-ASSET ANALYTICS WORKSPACE")
+    except Exception:
+        pass
 
+st.markdown('<div class="home-wrap">', unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────
-hour = datetime.datetime.now().hour
-greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
+render_hero()
+st.markdown("")
+render_market_bar()
+st.markdown("")
+render_top_stats()
+st.markdown("")
+render_feature_cards()
+st.markdown("")
+render_quick_actions()
+st.markdown("")
 
-st.markdown('<div class="home-shell">', unsafe_allow_html=True)
-
-# top bar
-top1, top2, top3 = st.columns([10, 1, 1])
-with top1:
-    st.markdown("""
-    <div class="topbar">
-        <div class="topbar-left">
-            <div class="topbar-brand">QuantDesk Pro</div>
-            <div class="topbar-divider"></div>
-            <div class="topbar-page">Dashboard</div>
-        </div>
-        <div class="topbar-right">
-            <span class="live-dot"></span>
-            <span class="live-label">Live</span>
-            <span class="top-pill">Pro</span>
-            <span class="top-pill">•••</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# hero
-st.markdown(f"""
-<div class="hero">
-    <div class="hero-kicker">Market Intelligence Terminal</div>
-    <div class="hero-title">{greeting} — markets are open</div>
-    <div class="hero-sub">7 analytical modules · Real-time data · Portfolio sync</div>
-</div>
-""", unsafe_allow_html=True)
-
-# market strip
-st.markdown(market_strip_html(), unsafe_allow_html=True)
-
-# nav pills
-st.markdown('<div class="nav-row">', unsafe_allow_html=True)
-nav_cols = st.columns(8)
-with nav_cols[0]:
-    st.page_link("ap.py", label="Overview")
-with nav_cols[1]:
-    st.page_link("pages/1_Portfolio.py", label="Portfolio Analytics")
-with nav_cols[2]:
-    st.page_link("pages/2_Risk_Attribution.py", label="Risk & Attribution")
-with nav_cols[3]:
-    st.page_link("pages/3__Derivatives.py", label="Derivatives")
-with nav_cols[4]:
-    st.page_link("pages/4_Vol_Surface.py", label="Vol Surface")
-with nav_cols[5]:
-    st.page_link("pages/5_Monte_Carlo__Strategy_Lab.py", label="Monte Carlo")
-with nav_cols[6]:
-    st.page_link("pages/6_Screener.py", label="Screener")
-with nav_cols[7]:
-    st.page_link("pages/7_Macro.py", label="Macro")
-
-# kpi cards
-k1, k2, k3 = st.columns(3)
-
-with k1:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-kicker">Portfolio Value</div>
-        <div class="kpi-value">$142,840</div>
-        <div class="kpi-sub">+$3,241 today · <span style="color:#00ff9a; font-weight:800;">+2.32%</span></div>
-        {sparkbars([22, 26, 25, 16, 29, 31, 36], positive=True)}
-    </div>
-    """, unsafe_allow_html=True)
-
-with k2:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-kicker">Sharpe Ratio</div>
-        <div class="kpi-value">1.84</div>
-        <div class="kpi-sub green">Above benchmark · 0.62 alpha</div>
-        {sparkbars([14, 18, 24, 25, 27, 31, 35], positive=True)}
-    </div>
-    """, unsafe_allow_html=True)
-
-with k3:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-kicker">VaR 95%</div>
-        <div class="kpi-value">-1.42%</div>
-        <div class="kpi-sub">Daily · Historical method</div>
-        {sparkbars([24, 18, 28, 20, 31, 21, 26], positive=False)}
-    </div>
-    """, unsafe_allow_html=True)
-
-# table
-table_rows = [
-    ("AAPL", "$212.49", "+18.4%", "UPTREND", "up"),
-    ("MSFT", "$384.21", "+12.1%", "UPTREND", "up"),
-    ("NVDA", "$108.77", "-8.3%", "OVERSOLD", "down"),
-    ("SPY", "$538.42", "+9.7%", "NEUTRAL", "neutral"),
-]
-
-rows_html = ""
-for t, p, r, s, cls in table_rows:
-    return_cls = "return-pos" if r.startswith("+") else "return-neg"
-    signal_cls = "signal-up" if cls == "up" else "signal-down" if cls == "down" else "signal-neutral"
-    rows_html += f"""
-    <div class="table-row">
-        <div class="ticker-name">{t}</div>
-        <div class="price-text">{p}</div>
-        <div class="{return_cls}">{r}</div>
-        <div><span class="signal-pill {signal_cls}">{s}</span></div>
-    </div>
-    """
-
-st.markdown(f"""
-<div class="table-shell">
-    <div class="table-header">
-        <div>Ticker</div>
-        <div>Price</div>
-        <div>Return</div>
-        <div>Signal</div>
-    </div>
-    {rows_html}
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div class="footer-row">
-    <div>QuantDesk Pro · v2.0</div>
-    <div>Data: yfinance · Alpha Vantage</div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("")
+st.caption("QuantDesk Pro is a project workspace for portfolio analytics, macro monitoring, derivatives, and risk workflows.")
