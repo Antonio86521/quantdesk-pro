@@ -1,9 +1,23 @@
-import datetime
+"""
+ap.py — QuantDesk Pro home page.
+
+Entry point for the Streamlit multi-page app.
+Run with:  streamlit run ap.py
+"""
+
 import streamlit as st
+import pandas as pd
 
+from utils import apply_theme, terminal_ribbon
+from auth import (
+    _auth_configured,
+    get_user_name,
+    get_user_email,
+    get_user_id,
+    sidebar_user_widget,
+)
+from database import create_profile_if_needed
 from data_loader import load_close_series
-from utils import apply_theme, apply_responsive_layout
-
 
 st.set_page_config(
     page_title="QuantDesk Pro",
@@ -11,589 +25,407 @@ st.set_page_config(
     page_icon="📊",
     initial_sidebar_state="expanded",
 )
-
 apply_theme()
-apply_responsive_layout()
 
 
-st.markdown(
-    """
-    <style>
-    .home-shell {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-    .block-container {
-        padding-top: 0.8rem !important;
-        padding-bottom: 1.2rem !important;
-    }
+def build_ribbon_item(label: str, ticker: str):
+    s = load_close_series(ticker, period="5d")
+    if s.empty or len(s) < 2:
+        return (label, "N/A", "—")
 
-    .topbar-box {
-        border: 1px solid #143458;
-        background: linear-gradient(90deg, #06111d 0%, #08182b 100%);
-        padding: 10px 14px;
-        min-height: 46px;
-        display: flex;
-        align-items: center;
-        border-radius: 0;
-    }
+    last = float(s.iloc[-1])
+    prev = float(s.iloc[-2])
+    chg = ((last / prev) - 1) * 100 if prev != 0 else 0.0
 
-    .topbar-brand {
-        color: #35c2ff;
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-right: 12px;
-    }
+    if abs(last) >= 1000:
+        value = f"{last:,.0f}"
+    elif abs(last) >= 100:
+        value = f"{last:,.2f}"
+    else:
+        value = f"{last:.2f}"
 
-    .topbar-divider {
-        width: 1px;
-        height: 18px;
-        background: #143458;
-        margin-right: 12px;
-        display: inline-block;
-        vertical-align: middle;
-    }
+    delta = f"{chg:+.2f}%"
+    return (label, value, delta)
 
-    .topbar-page {
-        color: #7f8ea3;
-        font-size: 12px;
-        vertical-align: middle;
-    }
 
-    .live-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: #00d27a;
-        display: inline-block;
-    }
-
-    .live-label {
-        color: #d6deeb;
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .top-pill {
-        border: 1px solid #143458;
-        border-radius: 10px;
-        padding: 3px 8px;
-        color: #d6deeb;
-        font-size: 10px;
-        font-weight: 700;
-        background: #08182b;
-        display: inline-block;
-    }
-
-    .hero {
-        border: 1px solid #143458;
-        border-radius: 18px;
-        padding: 16px 20px;
-        background:
-          radial-gradient(circle at top right, rgba(53,194,255,0.08), transparent 26%),
-          linear-gradient(90deg, #07121f 0%, #0b233b 100%);
-        margin-bottom: 12px;
-    }
-
-    .hero-kicker {
-        color: #35c2ff;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-    }
-
-    .hero-title {
-        color: #ffffff;
-        font-size: 19px;
-        font-weight: 800;
-        line-height: 1.1;
-        margin-bottom: 7px;
-    }
-
-    .hero-sub {
-        color: #7f8ea3;
-        font-size: 12px;
-    }
-
-    .market-strip {
-        border: 1px solid #143458;
-        border-radius: 14px;
-        overflow: hidden;
-        background: linear-gradient(90deg, #07121f 0%, #091a31 100%);
-        margin-bottom: 12px;
-    }
-
-    .market-grid {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-    }
-
-    .market-cell {
-        padding: 10px 12px;
-        border-right: 1px solid #143458;
-        min-height: 64px;
-    }
-
-    .market-cell:last-child {
-        border-right: none;
-    }
-
-    .market-label {
-        color: #7f8ea3;
-        font-size: 8px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-bottom: 6px;
-    }
-
-    .market-value {
-        color: #ffffff;
-        font-size: 13px;
-        font-weight: 900;
-        margin-bottom: 6px;
-    }
-
-    .market-delta {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 800;
-    }
-
-    .kpi-card {
-        border: 1px solid #143458;
-        border-radius: 14px;
-        background: linear-gradient(180deg, #071320 0%, #09192b 100%);
-        padding: 13px 14px 11px 14px;
-        min-height: 150px;
-    }
-
-    .kpi-kicker {
-        color: #7fa3d6;
-        font-size: 9px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-bottom: 14px;
-    }
-
-    .kpi-value {
-        color: #ffffff;
-        font-size: 16px;
-        font-weight: 900;
-        margin-bottom: 6px;
-    }
-
-    .kpi-sub {
-        color: #7f8ea3;
-        font-size: 11px;
-        margin-bottom: 14px;
-    }
-
-    .kpi-sub.green {
-        color: #00d27a;
-    }
-
-    .sparkbar-wrap {
-        display: flex;
-        align-items: flex-end;
-        gap: 3px;
-        height: 38px;
-        margin-top: 6px;
-    }
-
-    .sparkbar {
-        flex: 1;
-        border-radius: 0;
-    }
-
-    .table-shell {
-        border: 1px solid #143458;
-        border-radius: 14px;
-        overflow: hidden;
-        background: linear-gradient(180deg, #071320 0%, #08182b 100%);
-        margin-top: 2px;
-    }
-
-    .table-header,
-    .table-row {
-        display: grid;
-        grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr;
-        align-items: center;
-    }
-
-    .table-header {
-        padding: 10px 14px;
-        border-bottom: 1px solid #143458;
-        color: #7fa3d6;
-        font-size: 8px;
-        font-weight: 900;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-    }
-
-    .table-row {
-        padding: 13px 14px;
-        border-bottom: 1px solid rgba(20,52,88,0.65);
-    }
-
-    .table-row:last-child {
-        border-bottom: none;
-    }
-
-    .ticker-name,
-    .price-text {
-        color: #ffffff;
-        font-weight: 800;
-        font-size: 12px;
-    }
-
-    .return-pos {
-        color: #00ff9a;
-        font-weight: 900;
-        font-size: 12px;
-    }
-
-    .return-neg {
-        color: #ff4d6d;
-        font-weight: 900;
-        font-size: 12px;
-    }
-
-    .signal-pill {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        width: fit-content;
-    }
-
-    .signal-up {
-        color: #00ff9a;
-        background: rgba(0,210,122,0.12);
-        border: 1px solid rgba(0,210,122,0.18);
-    }
-
-    .signal-down {
-        color: #ff4d6d;
-        background: rgba(255,92,92,0.12);
-        border: 1px solid rgba(255,92,92,0.18);
-    }
-
-    .signal-neutral {
-        color: #7fa3d6;
-        background: rgba(127,163,214,0.12);
-        border: 1px solid rgba(127,163,214,0.18);
-    }
-
-    .footer-row {
-        display: flex;
-        justify-content: space-between;
-        color: #7f8ea3;
-        font-size: 10px;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        margin-top: 14px;
-    }
-
-    div[data-testid="stPageLink"] {
-        margin: 0 !important;
-    }
-
-    div[data-testid="stPageLink"] a {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        height: 34px !important;
-        border-radius: 999px !important;
-        border: 1px solid #1c4b78 !important;
-        background: linear-gradient(180deg, #061525 0%, #08192d 100%) !important;
-        color: #6ecbff !important;
-        font-size: 11px !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.04em !important;
-        text-decoration: none !important;
-        padding: 0 14px !important;
-        white-space: nowrap !important;
-    }
-
-    div[data-testid="stPageLink"] a:hover {
-        border-color: #35c2ff !important;
-        background: #0b213a !important;
-        color: #a8e4ff !important;
-    }
-
-    div[data-testid="stPopover"] button {
-        min-height: 34px !important;
-        border-radius: 10px !important;
-        border: 1px solid #143458 !important;
-        background: #08182b !important;
-        color: #d6deeb !important;
-        font-weight: 800 !important;
-        padding: 0 10px !important;
-    }
-
-    @media (max-width: 900px) {
-        .market-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .table-header,
-        .table-row {
-            grid-template-columns: 1.2fr 1fr 0.8fr 0.9fr;
-        }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-@st.cache_data(ttl=600)
-def load_market_bar_data():
-    tickers = {
-        "SPY": "SPY",
-        "QQQ": "QQQ",
-        "VIX": "^VIX",
-        "BTC": "BTC-USD",
-        "DXY": "DX-Y.NYB",
-        "US 10Y": "^TNX",
-    }
-
-    rows = []
-    for label, ticker in tickers.items():
-        try:
-            s = load_close_series(ticker, period="1mo", source="auto")
-            if s is None or s.empty or len(s) < 2:
-                continue
-
-            last = float(s.iloc[-1])
-            prev = float(s.iloc[-2])
-            chg = ((last / prev) - 1) * 100
-
-            if label == "US 10Y":
-                value = f"{last/10:.2f}%"
-            elif abs(last) >= 1000:
-                value = f"{last:,.0f}"
-            else:
-                value = f"{last:,.2f}"
-
-            rows.append({"label": label, "value": value, "chg": chg})
-        except Exception:
-            continue
-
-    return rows
-
-
-def market_strip_html():
-    data = load_market_bar_data()
-    if not data:
-        return ""
-
-    cells = []
-    for item in data:
-        chg = float(item["chg"])
-        positive = chg >= 0
-        color = "#00d27a" if positive else "#ff5c5c"
-        bg = "rgba(0,210,122,0.14)" if positive else "rgba(255,92,92,0.14)"
-        sign = "+" if positive else ""
-
-        cells.append(
-            f'<div class="market-cell">'
-            f'<div class="market-label">{item["label"]}</div>'
-            f'<div class="market-value">{item["value"]}</div>'
-            f'<div class="market-delta" style="color:{color}; background:{bg};">{sign}{chg:.2f}%</div>'
-            f'</div>'
-        )
-
-    cells_html = "".join(cells)
-
-    return (
-        '<div class="market-strip">'
-        '<div class="market-grid">'
-        f'{cells_html}'
-        '</div>'
-        '</div>'
-    )
-
-
-def sparkbars(values, positive=True):
-    color = "rgba(39, 150, 155, 0.55)" if positive else "rgba(120, 44, 74, 0.65)"
-    out = '<div class="sparkbar-wrap">'
-    for v in values:
-        out += f'<div class="sparkbar" style="height:{v}px; background:{color};"></div>'
-    out += "</div>"
-    return out
-
-
-hour = datetime.datetime.now().hour
-greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
-
-st.markdown('<div class="home-shell">', unsafe_allow_html=True)
-
-top_left, top_right = st.columns([10, 3])
-
-with top_left:
+def module_card(icon: str, title: str, page_path: str, features: list[str], status: str = "LIVE"):
     st.markdown(
-        """
-        <div class="topbar-box">
-            <span class="topbar-brand">QuantDesk Pro</span>
-            <span class="topbar-divider"></span>
-            <span class="topbar-page">Dashboard</span>
+        f"""
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:14px 14px 10px 14px;
+                    min-height:210px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div>
+              <div style="font-size:20px; line-height:1;">{icon}</div>
+              <div style="color:#d6deeb; font-size:14px; font-weight:800; letter-spacing:0.04em; margin-top:8px;">
+                {title}
+              </div>
+            </div>
+            <div style="display:inline-block; padding:2px 8px; border-radius:999px;
+                        border:1px solid #1b2638; color:#35c2ff; font-size:9px; font-weight:800;
+                        letter-spacing:0.12em; text-transform:uppercase;">
+              {status}
+            </div>
+          </div>
+          <ul style="margin:8px 0 12px 0; padding-left:18px;">
+            {"".join(f'<li style="color:#7f8ea3; font-size:12px; margin:4px 0;">{f}</li>' for f in features)}
+          </ul>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-with top_right:
-    right_a, right_b = st.columns([3, 1])
-    with right_a:
+    if st.button(f"Open {title}", key=f"open_{page_path}", use_container_width=True):
+        st.switch_page(page_path)
+
+
+# ── Login gate ────────────────────────────────────────────────────────────────
+
+if _auth_configured():
+    if not st.user.get("is_logged_in", False):
         st.markdown(
             """
-            <div class="topbar-box" style="justify-content:flex-end; gap:10px;">
-                <span class="live-dot"></span>
-                <span class="live-label">LIVE</span>
-                <span class="top-pill">Pro</span>
+            <div style="padding: 42px 0 10px 0; text-align:center;">
+              <span style="font-size:44px; font-weight:900; letter-spacing:-1px; color:#d6deeb;">
+                Quant<span style="color:#35c2ff;">Desk</span> <span style="color:#4f8cff;">Pro</span>
+              </span>
+            </div>
+            <div style="text-align:center; font-size:12px; color:#7f8ea3; letter-spacing:0.16em;
+                        text-transform:uppercase; margin-bottom:28px;">
+              Multi-Asset Analytics Workstation
             </div>
             """,
             unsafe_allow_html=True,
         )
-    with right_b:
-        with st.popover("⋯"):
-            st.page_link("pages/8_portfolio_manager.py", label="Portfolio Manager")
-            st.page_link("pages/9_portfolio_analysis.py", label="Saved Analysis")
-            st.page_link("pages/6_Screener.py", label="Screener")
-            st.page_link("pages/7_Macro.py", label="Macro")
 
+        col = st.columns([1, 1.6, 1])[1]
+        with col:
+            st.markdown(
+                """
+                <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                            border:1px solid #1b2638; border-radius:10px;
+                            padding:30px 34px; text-align:center;">
+                  <div style="font-size:28px; margin-bottom:10px;">🔐</div>
+                  <div style="color:#d6deeb; font-size:18px; font-weight:800; margin-bottom:10px;">
+                    Secure Access
+                  </div>
+                  <p style="color:#7f8ea3; font-size:14px; line-height:1.8; margin:0 0 20px 0;">
+                    Sign in to access portfolio analytics, derivatives tools, macro dashboards,
+                    volatility surfaces, and saved workspace data.
+                  </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.button(
+                "Sign in with Google",
+                on_click=st.login,
+                kwargs={"provider": "google"},
+                use_container_width=True,
+                key="login_btn",
+            )
+        st.stop()
+
+    user_id = get_user_id()
+    user_email = get_user_email()
+    user_name = get_user_name()
+    if user_id:
+        create_profile_if_needed(user_id, user_email, user_name)
+
+sidebar_user_widget()
+
+
+# ── Header ────────────────────────────────────────────────────────────────────
+
+st.markdown("""
+<div style="
+    padding: 6px 0 14px 0;
+    border-bottom:1px solid #1b2638;
+    margin-bottom:16px;
+">
+  <div style="
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:-0.5px;
+      color:#ffffff;
+  ">
+    Quant<span style="color:#35c2ff;">Desk</span>
+    <span style="color:#4f8cff;">Pro</span>
+  </div>
+
+  <div style="
+      margin-top:6px;
+      color:#7f8ea3;
+      font-size:11px;
+      letter-spacing:0.14em;
+      text-transform:uppercase;
+  ">
+    Multi-Asset Analytics Workstation
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+if _auth_configured():
+    name = get_user_name()
+    st.markdown(
+        f"""
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px;
+                    padding:10px 14px; margin-bottom:12px;">
+          <span style="color:#d6deeb; font-size:13px; font-weight:700;">
+            USER SESSION:
+          </span>
+          <span style="color:#7f8ea3; font-size:13px; margin-left:8px;">
+            {name}
+          </span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# ── Top ribbon ────────────────────────────────────────────────────────────────
+
+with st.spinner("Loading market ribbon…"):
+    ribbon_items = [
+        build_ribbon_item("SPX", "^GSPC"),
+        build_ribbon_item("NDX", "^NDX"),
+        build_ribbon_item("VIX", "^VIX"),
+        build_ribbon_item("US10Y", "^TNX"),
+        build_ribbon_item("DXY", "DX-Y.NYB"),
+        build_ribbon_item("GOLD", "GC=F"),
+        build_ribbon_item("WTI", "CL=F"),
+        build_ribbon_item("BTC", "BTC-USD"),
+        build_ribbon_item("EURUSD", "EURUSD=X"),
+    ]
+terminal_ribbon(ribbon_items)
+
+
+# ── Main layout ───────────────────────────────────────────────────────────────
+
+left, right = st.columns([2.15, 1], gap="large")
+
+with left:
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin-bottom:14px;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            Workspace Launcher
+          </div>
+          <div style="color:#7f8ea3; font-size:11px; margin-top:6px;">
+            Launch analytics modules, risk tools, derivatives screens, and macro monitors.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    modules = [
+        (
+            "📊",
+            "Portfolio Analytics",
+            "pages/1_Portfolio.py",
+            [
+                "P&L, Sharpe, Sortino, Calmar",
+                "Benchmark comparison & alpha/beta",
+                "Technical indicators and holdings view",
+                "Save & load portfolios",
+            ],
+        ),
+        (
+            "⚠️",
+            "Risk & Attribution",
+            "pages/2_Risk_Attribution.py",
+            [
+                "Rolling vol, beta, correlation",
+                "VaR / CVaR and stress testing",
+                "Return distribution and heatmaps",
+                "Volatility contribution analysis",
+            ],
+        ),
+        (
+            "📐",
+            "Derivatives",
+            "pages/3__Derivatives.py",
+            [
+                "Black-Scholes, Binomial, Monte Carlo",
+                "Greeks and ITM probability",
+                "Live option chain",
+                "P&L heatmaps and parity checks",
+            ],
+        ),
+        (
+            "🌊",
+            "Volatility Surface",
+            "pages/4_Vol_Surface.py",
+            [
+                "Smile by expiry",
+                "ATM term structure",
+                "2D IV heatmaps",
+                "3D implied vol surface",
+            ],
+        ),
+        (
+            "🎲",
+            "Monte Carlo & Strategy Lab",
+            "pages/5_Monte_Carlo__Strategy_Lab.py",
+            [
+                "GBM path simulation",
+                "MC vs BS convergence",
+                "Strategy payoff diagrams",
+                "Breakeven and risk summary",
+            ],
+        ),
+        (
+            "🔬",
+            "Screener & Watchlist",
+            "pages/6_Screener.py",
+            [
+                "Multi-ticker snapshot",
+                "RSI and momentum signals",
+                "52-week proximity view",
+                "Volume and volatility filters",
+            ],
+        ),
+        (
+            "🌍",
+            "Macro Dashboard",
+            "pages/7_Macro.py",
+            [
+                "FX, commodities, rates and bonds",
+                "Cross-asset correlation",
+                "Regime analysis",
+                "Yield curve and macro monitor",
+            ],
+        ),
+        (
+            "📂",
+            "Portfolio Manager",
+            "pages/8_portfolio_manager.py",
+            [
+                "Create & rename portfolios",
+                "Add, edit and delete positions",
+                "Real-time cost basis tracking",
+                "One-click jump to analysis",
+            ],
+        ),
+        (
+            "📈",
+            "Portfolio Analysis",
+            "pages/9_portfolio_analysis.py",
+            [
+                "Full analytics on saved portfolios",
+                "Benchmark comparison & alpha/beta",
+                "Drawdown, VaR, rolling vol",
+                "Correlation matrix & return distribution",
+            ],
+        ),
+    ]
+
+    grid_cols = st.columns(3)
+    for i, (icon, title, page_path, features) in enumerate(modules):
+        with grid_cols[i % 3]:
+            module_card(icon, title, page_path, features)
+
+with right:
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            System Status
+          </div>
+          <div style="color:#7f8ea3; font-size:11px; margin-top:6px;">
+            Workspace, routing, and market data health.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    status_df = pd.DataFrame(
+        {
+            "Module": [
+                "Portfolio",
+                "Risk",
+                "Derivatives",
+                "Vol Surface",
+                "Strategy Lab",
+                "Screener",
+                "Macro",
+                "Portfolio Manager",
+                "Portfolio Analysis",
+            ],
+            "Status": ["READY"] * 9,
+        }
+    )
+    st.dataframe(status_df, use_container_width=True, height=282)
+
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin:12px 0;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            Quick Access
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    qa1, qa2 = st.columns(2)
+    with qa1:
+        if st.button("Open Macro", use_container_width=True, key="qa_macro"):
+            st.switch_page("pages/7_Macro.py")
+    with qa2:
+        if st.button("Open Portfolio", use_container_width=True, key="qa_port"):
+            st.switch_page("pages/1_Portfolio.py")
+
+    qb1, qb2 = st.columns(2)
+    with qb1:
+        if st.button("Open Risk", use_container_width=True, key="qa_risk"):
+            st.switch_page("pages/2_Risk_Attribution.py")
+    with qb2:
+        if st.button("Open Vol Surface", use_container_width=True, key="qa_vol"):
+            st.switch_page("pages/4_Vol_Surface.py")
+
+    qc1, qc2 = st.columns(2)
+    with qc1:
+        if st.button("Portfolio Manager", use_container_width=True, key="qa_pm"):
+            st.switch_page("pages/8_portfolio_manager.py")
+    with qc2:
+        if st.button("Portfolio Analysis", use_container_width=True, key="qa_pa"):
+            st.switch_page("pages/9_portfolio_analysis.py")
+
+    st.markdown(
+        """
+        <div style="background:linear-gradient(180deg,#0b1220 0%, #0d1526 100%);
+                    border:1px solid #1b2638; border-radius:8px; padding:12px 14px; margin:12px 0;">
+          <div style="color:#d6deeb; font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;">
+            Desk Notes
+          </div>
+          <div style="color:#7f8ea3; font-size:12px; line-height:1.8; margin-top:8px;">
+            • Use the Macro Dashboard as the flagship terminal page.<br>
+            • Then tighten Portfolio and Risk layouts for a denser desk-style experience.<br>
+            • Later add watchlists, movers, news, and alert panels.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+st.markdown("---")
 st.markdown(
-    f"""
-    <div class="hero">
-        <div class="hero-kicker">Market Intelligence Terminal</div>
-        <div class="hero-title">{greeting} — markets are open</div>
-        <div class="hero-sub">7 analytical modules · Real-time data · Portfolio sync</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-market_html = market_strip_html()
-if market_html:
-    st.html(market_html)
-
-nav_cols = st.columns(8)
-with nav_cols[0]:
-    st.page_link("ap.py", label="Home")
-with nav_cols[1]:
-    st.page_link("pages/1_Portfolio.py", label="Portfolio")
-with nav_cols[2]:
-    st.page_link("pages/2_Risk_Attribution.py", label="Risk")
-with nav_cols[3]:
-    st.page_link("pages/3__Derivatives.py", label="Derivatives")
-with nav_cols[4]:
-    st.page_link("pages/4_Vol_Surface.py", label="Vol Surface")
-with nav_cols[5]:
-    st.page_link("pages/5_Monte_Carlo__Strategy_Lab.py", label="Monte Carlo")
-with nav_cols[6]:
-    st.page_link("pages/6_Screener.py", label="Screener")
-with nav_cols[7]:
-    st.page_link("pages/7_Macro.py", label="Macro")
-
-k1, k2, k3 = st.columns(3)
-
-with k1:
-    st.markdown(
-        f"""
-        <div class="kpi-card">
-            <div class="kpi-kicker">Portfolio Value</div>
-            <div class="kpi-value">$142,840</div>
-            <div class="kpi-sub">+$3,241 today · <span style="color:#00ff9a; font-weight:800;">+2.32%</span></div>
-            {sparkbars([22, 26, 25, 16, 29, 31, 36], positive=True)}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with k2:
-    st.markdown(
-        f"""
-        <div class="kpi-card">
-            <div class="kpi-kicker">Sharpe Ratio</div>
-            <div class="kpi-value">1.84</div>
-            <div class="kpi-sub green">Above benchmark · 0.62 alpha</div>
-            {sparkbars([14, 18, 24, 25, 27, 31, 35], positive=True)}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with k3:
-    st.markdown(
-        f"""
-        <div class="kpi-card">
-            <div class="kpi-kicker">VaR 95%</div>
-            <div class="kpi-value">-1.42%</div>
-            <div class="kpi-sub">Daily · Historical method</div>
-            {sparkbars([24, 18, 28, 20, 31, 21, 26], positive=False)}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-table_rows = [
-    ("AAPL", "$212.49", "+18.4%", "UPTREND", "up"),
-    ("MSFT", "$384.21", "+12.1%", "UPTREND", "up"),
-    ("NVDA", "$108.77", "-8.3%", "OVERSOLD", "down"),
-    ("SPY", "$538.42", "+9.7%", "NEUTRAL", "neutral"),
-]
-
-rows_html = ""
-for ticker, price, ret, signal, cls in table_rows:
-    return_cls = "return-pos" if ret.startswith("+") else "return-neg"
-    signal_cls = "signal-up" if cls == "up" else "signal-down" if cls == "down" else "signal-neutral"
-    rows_html += f"""
-    <div class="table-row">
-        <div class="ticker-name">{ticker}</div>
-        <div class="price-text">{price}</div>
-        <div class="{return_cls}">{ret}</div>
-        <div><span class="signal-pill {signal_cls}">{signal}</span></div>
-    </div>
     """
-
-st.markdown(
-    f"""
-    <div class="table-shell">
-        <div class="table-header">
-            <div>Ticker</div>
-            <div>Price</div>
-            <div>Return</div>
-            <div>Signal</div>
-        </div>
-        {rows_html}
+    <div style="color:#7f8ea3; font-size:11px; text-align:center; letter-spacing:0.10em; text-transform:uppercase;">
+      QuantDesk Pro | Multi-Asset Analytics Workstation | Data via yfinance | For educational and research purposes only
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-st.markdown(
-    """
-    <div class="footer-row">
-        <div>QuantDesk Pro · v2.0</div>
-        <div>Data: yfinance · Alpha Vantage</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.markdown("</div>", unsafe_allow_html=True)
