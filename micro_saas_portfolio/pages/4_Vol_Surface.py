@@ -10,6 +10,7 @@ from data_loader import load_option_expiries, load_option_chain, load_price_hist
 
 st.set_page_config(page_title="Vol Surface", layout="wide", page_icon="📊")
 apply_theme()
+apply_responsive_layout()
 page_header("Volatility Surface", "Smile · Term Structure · Heatmap · 3D Surface")
 
 def _set_load_vol_clicked():
