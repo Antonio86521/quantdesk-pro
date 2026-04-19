@@ -4,7 +4,6 @@ import streamlit as st
 from data_loader import load_close_series
 from utils import apply_theme, apply_responsive_layout
 
-
 st.set_page_config(
     page_title="QuantDesk Pro",
     layout="wide",
@@ -15,289 +14,224 @@ st.set_page_config(
 apply_theme()
 apply_responsive_layout()
 
+# ── Page-level styles ──────────────────────────────────────────────────────────
 st.markdown(
     """
     <style>
-    .home-shell {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    .block-container {
-        padding-top: 0.8rem !important;
-        padding-bottom: 1.2rem !important;
-    }
-    .topbar-box {
-        border: 1px solid #143458;
-        background: linear-gradient(90deg, #06111d 0%, #08182b 100%);
-        padding: 10px 14px;
-        min-height: 46px;
+    .qd-topbar-left {
         display: flex;
         align-items: center;
-        border-radius: 0;
+        gap: 10px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 28px;
     }
-    .topbar-brand {
-        color: #35c2ff;
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-right: 12px;
-    }
-    .topbar-divider {
-        width: 1px;
-        height: 18px;
-        background: #143458;
-        margin-right: 12px;
-        display: inline-block;
-        vertical-align: middle;
-    }
-    .topbar-page {
-        color: #7f8ea3;
-        font-size: 12px;
-        vertical-align: middle;
-    }
-    .live-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: #00d27a;
-        display: inline-block;
-    }
-    .live-label {
-        color: #d6deeb;
+    .qd-logo-mark {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #2563eb;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: 11px;
         font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+        color: #fff;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
     }
-    .top-pill {
-        border: 1px solid #143458;
-        border-radius: 10px;
-        padding: 3px 8px;
-        color: #d6deeb;
-        font-size: 10px;
+    .qd-app-name {
+        font-size: 15px;
         font-weight: 700;
-        background: #08182b;
+        color: #0f172a;
+        letter-spacing: -0.01em;
+    }
+    .qd-sep { color: #cbd5e1; font-size: 13px; }
+    .qd-page-crumb { font-size: 13px; color: #94a3b8; }
+    .qd-live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #10b981;
         display: inline-block;
+        animation: qdpulse 2s ease-in-out infinite;
     }
-    .hero {
-        border: 1px solid #143458;
-        border-radius: 18px;
-        padding: 16px 20px;
-        background:
-          radial-gradient(circle at top right, rgba(53,194,255,0.08), transparent 26%),
-          linear-gradient(90deg, #07121f 0%, #0b233b 100%);
-        margin-bottom: 12px;
+    @keyframes qdpulse {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.35; }
     }
-    .hero-kicker {
-        color: #35c2ff;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-    }
-    .hero-title {
-        color: #ffffff;
-        font-size: 19px;
-        font-weight: 800;
-        line-height: 1.1;
-        margin-bottom: 7px;
-    }
-    .hero-sub {
-        color: #7f8ea3;
+    .qd-status-text {
         font-size: 12px;
+        font-weight: 600;
+        color: #10b981;
+        letter-spacing: 0.04em;
     }
-    .market-strip {
-        border: 1px solid #143458;
-        border-radius: 14px;
-        overflow: hidden;
-        background: linear-gradient(90deg, #07121f 0%, #091a31 100%);
-        margin-bottom: 12px;
+    .qd-plan-pill {
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid #bfdbfe;
     }
-    .market-grid {
+    .qd-market-strip {
         display: grid;
         grid-template-columns: repeat(6, 1fr);
-    }
-    .market-cell {
-        padding: 10px 12px;
-        border-right: 1px solid #143458;
-        min-height: 64px;
-    }
-    .market-cell:last-child {
-        border-right: none;
-    }
-    .market-label {
-        color: #7f8ea3;
-        font-size: 8px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-bottom: 6px;
-    }
-    .market-value {
-        color: #ffffff;
-        font-size: 13px;
-        font-weight: 900;
-        margin-bottom: 6px;
-    }
-    .market-delta {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 800;
-    }
-    .kpi-card {
-        border: 1px solid #143458;
-        border-radius: 14px;
-        background: linear-gradient(180deg, #071320 0%, #09192b 100%);
-        padding: 13px 14px 11px 14px;
-        min-height: 150px;
-    }
-    .kpi-kicker {
-        color: #7fa3d6;
-        font-size: 9px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-bottom: 14px;
-    }
-    .kpi-value {
-        color: #ffffff;
-        font-size: 16px;
-        font-weight: 900;
-        margin-bottom: 6px;
-    }
-    .kpi-sub {
-        color: #7f8ea3;
-        font-size: 11px;
-        margin-bottom: 14px;
-    }
-    .kpi-sub.green { color: #00d27a; }
-    .sparkbar-wrap {
-        display: flex;
-        align-items: flex-end;
-        gap: 3px;
-        height: 38px;
-        margin-top: 6px;
-    }
-    .sparkbar {
-        flex: 1;
-        border-radius: 0;
-    }
-    .table-shell {
-        border: 1px solid #143458;
-        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
         overflow: hidden;
-        background: linear-gradient(180deg, #071320 0%, #08182b 100%);
-        margin-top: 2px;
+        background: #fff;
+        margin-bottom: 28px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-    .table-header,
-    .table-row {
+    .qd-market-cell {
+        padding: 14px 16px;
+        border-right: 1px solid #e2e8f0;
+    }
+    .qd-market-cell:last-child { border-right: none; }
+    .qd-market-ticker {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: #94a3b8;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .qd-market-price {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        font-family: 'DM Mono', monospace;
+        margin-bottom: 4px;
+        letter-spacing: -0.01em;
+    }
+    .qd-market-chg {
+        font-size: 12px;
+        font-weight: 600;
+        font-family: 'DM Mono', monospace;
+    }
+    .qd-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+    .qd-section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.01em;
+    }
+    .qd-section-meta { font-size: 12px; color: #94a3b8; }
+    .qd-table {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .qd-table-head {
         display: grid;
-        grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr;
+        grid-template-columns: 1.8fr 1fr 0.9fr 0.8fr;
+        padding: 10px 18px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .qd-th {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+    .qd-table-row {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr 0.9fr 0.8fr;
+        padding: 13px 18px;
+        border-bottom: 1px solid #f1f5f9;
         align-items: center;
     }
-    .table-header {
-        padding: 10px 14px;
-        border-bottom: 1px solid #143458;
-        color: #7fa3d6;
-        font-size: 8px;
-        font-weight: 900;
-        letter-spacing: 0.2em;
+    .qd-table-row:last-child { border-bottom: none; }
+    .qd-ticker { font-size: 14px; font-weight: 700; color: #0f172a; }
+    .qd-exchange { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+    .qd-price {
+        font-size: 14px;
+        font-weight: 600;
+        font-family: 'DM Mono', monospace;
+        color: #0f172a;
+        letter-spacing: -0.01em;
+    }
+    .qd-chg-pos { font-size: 13px; font-weight: 600; color: #10b981; font-family: 'DM Mono', monospace; }
+    .qd-chg-neg { font-size: 13px; font-weight: 600; color: #ef4444; font-family: 'DM Mono', monospace; }
+    .qd-signal {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
     }
-    .table-row {
-        padding: 13px 14px;
-        border-bottom: 1px solid rgba(20,52,88,0.65);
+    .qd-signal-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
     }
-    .table-row:last-child { border-bottom: none; }
-    .ticker-name,
-    .price-text {
-        color: #ffffff;
-        font-weight: 800;
-        font-size: 12px;
-    }
-    .return-pos {
-        color: #00ff9a;
-        font-weight: 900;
-        font-size: 12px;
-    }
-    .return-neg {
-        color: #ff4d6d;
-        font-weight: 900;
-        font-size: 12px;
-    }
-    .signal-pill {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        width: fit-content;
-    }
-    .signal-up {
-        color: #00ff9a;
-        background: rgba(0,210,122,0.12);
-        border: 1px solid rgba(0,210,122,0.18);
-    }
-    .signal-down {
-        color: #ff4d6d;
-        background: rgba(255,92,92,0.12);
-        border: 1px solid rgba(255,92,92,0.18);
-    }
-    .signal-neutral {
-        color: #7fa3d6;
-        background: rgba(127,163,214,0.12);
-        border: 1px solid rgba(127,163,214,0.18);
-    }
-    .footer-row {
+    .qd-footer {
         display: flex;
         justify-content: space-between;
-        color: #7f8ea3;
-        font-size: 10px;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        margin-top: 14px;
+        align-items: center;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+        margin-top: 36px;
     }
+    .qd-footer-left  { font-size: 12px; color: #94a3b8; font-weight: 500; }
+    .qd-footer-right { font-size: 12px; color: #cbd5e1; }
     div[data-testid="stPageLink"] { margin: 0 !important; }
     div[data-testid="stPageLink"] a {
         display: flex !important;
-        justify-content: center !important;
         align-items: center !important;
-        height: 34px !important;
-        border-radius: 999px !important;
-        border: 1px solid #1c4b78 !important;
-        background: linear-gradient(180deg, #061525 0%, #08192d 100%) !important;
-        color: #6ecbff !important;
-        font-size: 11px !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.04em !important;
+        justify-content: center !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        border: 1px solid transparent !important;
+        color: #64748b !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
         text-decoration: none !important;
-        padding: 0 14px !important;
+        padding: 0 10px !important;
         white-space: nowrap !important;
+        transition: all 0.12s ease !important;
     }
     div[data-testid="stPageLink"] a:hover {
-        border-color: #35c2ff !important;
-        background: #0b213a !important;
-        color: #a8e4ff !important;
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        border-color: #e2e8f0 !important;
     }
     div[data-testid="stPopover"] button {
-        min-height: 34px !important;
-        border-radius: 10px !important;
-        border: 1px solid #143458 !important;
-        background: #08182b !important;
-        color: #d6deeb !important;
-        font-weight: 800 !important;
-        padding: 0 10px !important;
+        min-height: 32px !important;
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #fff !important;
+        color: #475569 !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        padding: 0 12px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    }
+    div[data-testid="stPopover"] button:hover {
+        border-color: #2563eb !important;
+        color: #2563eb !important;
     }
     @media (max-width: 900px) {
-        .market-grid { grid-template-columns: repeat(2, 1fr); }
-        .table-header,
-        .table-row { grid-template-columns: 1.2fr 1fr 0.8fr 0.9fr; }
+        .qd-market-strip { grid-template-columns: repeat(3, 1fr); }
+        .qd-table-head,
+        .qd-table-row   { grid-template-columns: 1.4fr 1fr 0.9fr 0.9fr; }
     }
     </style>
     """,
@@ -305,34 +239,62 @@ st.markdown(
 )
 
 
-# ── Data ──────────────────────────────────────────────────────────────────────
+# ── Data ───────────────────────────────────────────────────────────────────────
 
-@st.cache_data(ttl=600)
-def load_market_bar_data():
+@st.cache_data(ttl=300)
+def load_market_data() -> list:
     tickers = {
-        "SPY":   "SPY",
-        "QQQ":   "QQQ",
-        "VIX":   "^VIX",
-        "BTC":   "BTC-USD",
-        "DXY":   "DX-Y.NYB",
-        "US 10Y": "^TNX",
+        "SPY":  "SPY",
+        "QQQ":  "QQQ",
+        "VIX":  "^VIX",
+        "BTC":  "BTC-USD",
+        "DXY":  "DX-Y.NYB",
+        "10Y":  "^TNX",
     }
     rows = []
     for label, ticker in tickers.items():
         try:
-            s = load_close_series(ticker, period="1mo", source="auto")
+            s = load_close_series(ticker, period="5d", source="auto")
             if s is None or s.empty or len(s) < 2:
                 continue
             last = float(s.iloc[-1])
             prev = float(s.iloc[-2])
-            chg = ((last / prev) - 1) * 100
-            if label == "US 10Y":
-                value = f"{last / 10:.2f}%"
-            elif abs(last) >= 1000:
-                value = f"{last:,.0f}"
+            chg  = ((last / prev) - 1) * 100
+            if label == "10Y":
+                display = f"{last / 10:.2f}%"
+            elif label in ("BTC",) or abs(last) >= 1000:
+                display = f"{last:,.0f}"
             else:
-                value = f"{last:,.2f}"
-            rows.append({"label": label, "value": value, "chg": chg})
+                display = f"{last:,.2f}"
+            rows.append({"label": label, "display": display, "chg": chg})
+        except Exception:
+            continue
+    return rows
+
+
+@st.cache_data(ttl=300)
+def load_watchlist_data() -> list:
+    entries = [
+        ("AAPL", "NASDAQ"),
+        ("MSFT", "NASDAQ"),
+        ("NVDA", "NASDAQ"),
+        ("SPY",  "NYSE"),
+    ]
+    rows = []
+    for ticker, exchange in entries:
+        try:
+            s = load_close_series(ticker, period="5d", source="auto")
+            if s is None or s.empty or len(s) < 2:
+                continue
+            last = float(s.iloc[-1])
+            prev = float(s.iloc[-2])
+            chg  = ((last / prev) - 1) * 100
+            rows.append({
+                "ticker":   ticker,
+                "exchange": exchange,
+                "price":    f"${last:,.2f}",
+                "chg":      chg,
+            })
         except Exception:
             continue
     return rows
@@ -340,185 +302,186 @@ def load_market_bar_data():
 
 # ── HTML helpers ───────────────────────────────────────────────────────────────
 
-def _market_strip_html() -> str:
-    data = load_market_bar_data()
-    if not data:
-        return ""
+def _market_strip_html(data: list) -> str:
     cells = []
     for item in data:
-        chg = float(item["chg"])
-        positive = chg >= 0
-        color = "#00d27a" if positive else "#ff5c5c"
-        bg    = "rgba(0,210,122,0.14)" if positive else "rgba(255,92,92,0.14)"
-        sign  = "+" if positive else ""
+        chg   = float(item["chg"])
+        color = "#10b981" if chg >= 0 else "#ef4444"
+        sign  = "+" if chg >= 0 else ""
         cells.append(
-            f'<div class="market-cell">'
-            f'<div class="market-label">{item["label"]}</div>'
-            f'<div class="market-value">{item["value"]}</div>'
-            f'<div class="market-delta" style="color:{color};background:{bg};">'
-            f'{sign}{chg:.2f}%</div>'
+            f'<div class="qd-market-cell">'
+            f'<div class="qd-market-ticker">{item["label"]}</div>'
+            f'<div class="qd-market-price">{item["display"]}</div>'
+            f'<div class="qd-market-chg" style="color:{color};">{sign}{chg:.2f}%</div>'
             f'</div>'
         )
-    return (
-        '<div class="market-strip"><div class="market-grid">'
-        + "".join(cells)
-        + "</div></div>"
-    )
+    return '<div class="qd-market-strip">' + "".join(cells) + '</div>'
 
 
-def _sparkbars(values: list, positive: bool = True) -> str:
-    color = "rgba(39,150,155,0.55)" if positive else "rgba(120,44,74,0.65)"
-    bars  = "".join(
-        f'<div class="sparkbar" style="height:{v}px;background:{color};"></div>'
-        for v in values
+def _signal(chg: float) -> tuple:
+    if chg > 1.5:
+        return "Strong Buy", "#10b981", "#065f46"
+    if chg > 0:
+        return "Buy",        "#10b981", "#065f46"
+    if chg > -1.5:
+        return "Neutral",    "#f59e0b", "#92400e"
+    return "Caution",        "#ef4444", "#991b1b"
+
+
+def _watchlist_html(rows: list) -> str:
+    if not rows:
+        return (
+            '<div style="padding:24px 18px;color:#94a3b8;font-size:13px;'
+            'border:1px solid #e2e8f0;border-radius:10px;background:#fff;">'
+            'No watchlist data available.</div>'
+        )
+    head = (
+        '<div class="qd-table-head">'
+        '<div class="qd-th">Asset</div>'
+        '<div class="qd-th">Price</div>'
+        '<div class="qd-th">1D Change</div>'
+        '<div class="qd-th">Signal</div>'
+        '</div>'
     )
-    return f'<div class="sparkbar-wrap">{bars}</div>'
+    body = ""
+    for r in rows:
+        chg     = float(r["chg"])
+        chg_cls = "qd-chg-pos" if chg >= 0 else "qd-chg-neg"
+        sign    = "+" if chg >= 0 else ""
+        sig_lbl, dot_color, sig_color = _signal(chg)
+        body += (
+            f'<div class="qd-table-row">'
+            f'<div><div class="qd-ticker">{r["ticker"]}</div>'
+            f'<div class="qd-exchange">{r["exchange"]}</div></div>'
+            f'<div class="qd-price">{r["price"]}</div>'
+            f'<div class="{chg_cls}">{sign}{chg:.2f}%</div>'
+            f'<div class="qd-signal" style="color:{sig_color};">'
+            f'<span class="qd-signal-dot" style="background:{dot_color};"></span>'
+            f'{sig_lbl}</div>'
+            f'</div>'
+        )
+    return '<div class="qd-table">' + head + body + '</div>'
 
 
 # ── Page ───────────────────────────────────────────────────────────────────────
 
-hour     = datetime.datetime.now().hour
+now      = datetime.datetime.now()
+hour     = now.hour
 greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
+date_str = now.strftime("%A, %B %-d")
 
 # ── Top bar ────────────────────────────────────────────────────────────────────
-top_left, top_right = st.columns([10, 3])
+col_left, col_right = st.columns([9, 3])
 
-with top_left:
+with col_left:
     st.markdown(
-        '<div class="topbar-box">'
-        '<span class="topbar-brand">QuantDesk Pro</span>'
-        '<span class="topbar-divider"></span>'
-        '<span class="topbar-page">Dashboard</span>'
+        '<div class="qd-topbar-left">'
+        '<div class="qd-logo-mark">QD</div>'
+        '<span class="qd-app-name">QuantDesk</span>'
+        '<span class="qd-sep">·</span>'
+        '<span class="qd-page-crumb">Dashboard</span>'
         '</div>',
         unsafe_allow_html=True,
     )
 
-with top_right:
-    right_a, right_b = st.columns([3, 1])
-    with right_a:
+with col_right:
+    status_col, menu_col = st.columns([5, 2])
+    with status_col:
         st.markdown(
-            '<div class="topbar-box" style="justify-content:flex-end;gap:10px;">'
-            '<span class="live-dot"></span>'
-            '<span class="live-label">LIVE</span>'
-            '<span class="top-pill">Pro</span>'
+            '<div style="padding-bottom:18px;border-bottom:1px solid #e2e8f0;margin-bottom:28px;'
+            'display:flex;align-items:center;justify-content:flex-end;gap:8px;">'
+            '<span class="qd-live-dot"></span>'
+            '<span class="qd-status-text">Live</span>'
+            '<span class="qd-plan-pill">Pro</span>'
             '</div>',
             unsafe_allow_html=True,
         )
-    with right_b:
-        with st.popover("⋯"):
+    with menu_col:
+        st.markdown(
+            '<div style="padding-bottom:18px;border-bottom:1px solid #e2e8f0;margin-bottom:28px;">',
+            unsafe_allow_html=True,
+        )
+        with st.popover("···"):
             st.page_link("pages/8_portfolio_manager.py", label="Portfolio Manager")
             st.page_link("pages/9_portfolio_analysis.py", label="Saved Analysis")
             st.page_link("pages/6_Screener.py",           label="Screener")
             st.page_link("pages/7_Macro.py",              label="Macro")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# ── Hero banner ────────────────────────────────────────────────────────────────
+# ── Greeting ───────────────────────────────────────────────────────────────────
 st.markdown(
-    f'<div class="hero">'
-    f'<div class="hero-kicker">Market Intelligence Terminal</div>'
-    f'<div class="hero-title">{greeting} — markets are open</div>'
-    f'<div class="hero-sub">7 analytical modules · Real-time data · Portfolio sync</div>'
+    f'<div style="margin-bottom:24px;">'
+    f'<div style="font-size:22px;font-weight:700;color:#0f172a;'
+    f'letter-spacing:-0.02em;margin-bottom:3px;">{greeting}</div>'
+    f'<div style="font-size:13px;color:#94a3b8;">{date_str} · Market overview</div>'
     f'</div>',
     unsafe_allow_html=True,
 )
 
 # ── Market strip ───────────────────────────────────────────────────────────────
-market_html = _market_strip_html()
-if market_html:
-    st.markdown(market_html, unsafe_allow_html=True)
+with st.spinner("Loading market data…"):
+    market_data = load_market_data()
+
+if market_data:
+    st.markdown(_market_strip_html(market_data), unsafe_allow_html=True)
+else:
+    st.warning("Market data unavailable — check your data source connection.")
 
 # ── Navigation ─────────────────────────────────────────────────────────────────
 nav_cols = st.columns(8)
 _nav = [
-    ("ap.py",                                   "Home"),
-    ("pages/1_Portfolio.py",                    "Portfolio"),
-    ("pages/2_Risk_Attribution.py",             "Risk"),
-    ("pages/3__Derivatives.py",                 "Derivatives"),
-    ("pages/4_Vol_Surface.py",                  "Vol Surface"),
-    ("pages/5_Monte_Carlo__Strategy_Lab.py",    "Monte Carlo"),
-    ("pages/6_Screener.py",                     "Screener"),
-    ("pages/7_Macro.py",                        "Macro"),
+    ("ap.py",                                "Home"),
+    ("pages/1_Portfolio.py",                 "Portfolio"),
+    ("pages/2_Risk_Attribution.py",          "Risk"),
+    ("pages/3__Derivatives.py",              "Derivatives"),
+    ("pages/4_Vol_Surface.py",               "Vol Surface"),
+    ("pages/5_Monte_Carlo__Strategy_Lab.py", "Monte Carlo"),
+    ("pages/6_Screener.py",                  "Screener"),
+    ("pages/7_Macro.py",                     "Macro"),
 ]
 for col, (path, label) in zip(nav_cols, _nav):
     with col:
         st.page_link(path, label=label)
 
-# ── KPI cards ──────────────────────────────────────────────────────────────────
-k1, k2, k3 = st.columns(3)
+st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
 
-with k1:
+# ── Live market metrics ────────────────────────────────────────────────────────
+if market_data:
     st.markdown(
-        '<div class="kpi-card">'
-        '<div class="kpi-kicker">Portfolio Value</div>'
-        '<div class="kpi-value">$142,840</div>'
-        '<div class="kpi-sub">+$3,241 today · '
-        '<span style="color:#00ff9a;font-weight:800;">+2.32%</span></div>'
-        + _sparkbars([22, 26, 25, 16, 29, 31, 36], positive=True)
-        + '</div>',
+        '<div style="font-size:11px;font-weight:700;letter-spacing:0.08em;'
+        'text-transform:uppercase;color:#94a3b8;margin-bottom:12px;">Snapshot</div>',
         unsafe_allow_html=True,
     )
+    metric_cols = st.columns(len(market_data))
+    for col, item in zip(metric_cols, market_data):
+        chg  = float(item["chg"])
+        sign = "+" if chg >= 0 else ""
+        col.metric(
+            label=item["label"],
+            value=item["display"],
+            delta=f"{sign}{chg:.2f}%",
+        )
+    st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
 
-with k2:
-    st.markdown(
-        '<div class="kpi-card">'
-        '<div class="kpi-kicker">Sharpe Ratio</div>'
-        '<div class="kpi-value">1.84</div>'
-        '<div class="kpi-sub green">Above benchmark · 0.62 alpha</div>'
-        + _sparkbars([14, 18, 24, 25, 27, 31, 35], positive=True)
-        + '</div>',
-        unsafe_allow_html=True,
-    )
-
-with k3:
-    st.markdown(
-        '<div class="kpi-card">'
-        '<div class="kpi-kicker">VaR 95%</div>'
-        '<div class="kpi-value">-1.42%</div>'
-        '<div class="kpi-sub">Daily · Historical method</div>'
-        + _sparkbars([24, 18, 28, 20, 31, 21, 26], positive=False)
-        + '</div>',
-        unsafe_allow_html=True,
-    )
-
-# ── Watch-list table ───────────────────────────────────────────────────────────
-_table_data = [
-    ("AAPL", "$212.49", "+18.4%", "UPTREND",  "up"),
-    ("MSFT", "$384.21", "+12.1%", "UPTREND",  "up"),
-    ("NVDA", "$108.77", "-8.3%",  "OVERSOLD", "down"),
-    ("SPY",  "$538.42", "+9.7%",  "NEUTRAL",  "neutral"),
-]
-
-rows_html = ""
-for ticker, price, ret, signal, cls in _table_data:
-    return_cls = "return-pos" if ret.startswith("+") else "return-neg"
-    signal_cls = (
-        "signal-up"      if cls == "up"   else
-        "signal-down"    if cls == "down" else
-        "signal-neutral"
-    )
-    rows_html += (
-        f'<div class="table-row">'
-        f'<div class="ticker-name">{ticker}</div>'
-        f'<div class="price-text">{price}</div>'
-        f'<div class="{return_cls}">{ret}</div>'
-        f'<div><span class="signal-pill {signal_cls}">{signal}</span></div>'
-        f'</div>'
-    )
-
+# ── Watchlist ──────────────────────────────────────────────────────────────────
 st.markdown(
-    '<div class="table-shell">'
-    '<div class="table-header">'
-    '<div>Ticker</div><div>Price</div><div>Return</div><div>Signal</div>'
-    '</div>'
-    + rows_html
-    + '</div>',
+    '<div class="qd-section-header">'
+    '<div class="qd-section-title">Watchlist</div>'
+    '<div class="qd-section-meta">1-day performance · Live</div>'
+    '</div>',
     unsafe_allow_html=True,
 )
 
+with st.spinner("Loading watchlist…"):
+    watchlist = load_watchlist_data()
+
+st.markdown(_watchlist_html(watchlist), unsafe_allow_html=True)
+
 # ── Footer ─────────────────────────────────────────────────────────────────────
 st.markdown(
-    '<div class="footer-row">'
-    '<div>QuantDesk Pro · v2.0</div>'
-    '<div>Data: yfinance · Alpha Vantage</div>'
+    '<div class="qd-footer">'
+    '<div class="qd-footer-left">QuantDesk Pro · v2.0</div>'
+    '<div class="qd-footer-right">Data: yfinance · Alpha Vantage</div>'
     '</div>',
     unsafe_allow_html=True,
 )
