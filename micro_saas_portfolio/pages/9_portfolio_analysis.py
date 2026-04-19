@@ -34,6 +34,8 @@ from utils import (
     premium_notice,
     safe_num,
     safe_pct,
+    section_intro,
+    glossary_expander,
 )
 
 st.set_page_config(page_title="Saved Portfolio Analysis", layout="wide", page_icon="📊")
@@ -52,6 +54,7 @@ if not user or not user.get("is_logged_in"):
 
 sidebar_user_widget()
 page_header("Saved Portfolio Analysis", "Benchmark diagnostics · export packs · reporting")
+section_intro("This page analyzes a saved portfolio from the database and compares it against a benchmark using performance, risk, allocation, and reporting views.")
 
 user_id = user.get("sub") if user else None
 if not user_id:
@@ -102,6 +105,7 @@ if default_portfolio not in portfolio_map:
     default_portfolio = portfolio_names[0]
 
 selected_name = st.selectbox("Select Portfolio", options=portfolio_names, index=portfolio_names.index(default_portfolio))
+glossary_expander("How to read the saved analysis metrics", ["Portfolio Value", "Ann. Return", "Ann. Volatility", "Sharpe Ratio", "Sortino", "Calmar", "Max Drawdown", "Tracking Error", "Alpha", "Beta", "R²"])
 st.session_state["analysis_selected_portfolio"] = selected_name
 selected_portfolio_id = portfolio_map[selected_name]
 positions = get_positions(selected_portfolio_id)
@@ -260,6 +264,7 @@ with st.expander("Download portfolio report pack"):
     st.download_button("Download report pack (.zip)", data=zip_bytes, file_name=f"{selected_name.lower().replace(' ', '_')}_report_pack.zip", mime="application/zip")
 
 st.markdown("### Holdings Overview")
+section_intro("The holdings table reconciles saved position sizes with current prices to show current market value, weights, and embedded gains or losses.", title="Holdings explanation")
 display_df = pos_df[["ticker", "shares", "buy_price", "current_price", "market_value", "weight"]].copy()
 display_df.columns = ["Ticker", "Shares", "Avg Buy Price", "Current Price", "Market Value", "Weight"]
 st.dataframe(
@@ -272,6 +277,7 @@ st.divider()
 perf_col, alloc_col = st.columns([1.2, 1])
 with perf_col:
     st.markdown("### Cumulative Return vs Benchmark")
+    section_intro("This chart shows how one dollar would have grown in the portfolio versus the benchmark over the same period.", title="Return path")
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(cum_returns.index, cum_returns.values, linewidth=2, label="Portfolio")
     if not benchmark_cum_returns.empty:
@@ -313,6 +319,7 @@ with corr_col:
 
 st.divider()
 st.markdown("### Benchmark Comparison")
+section_intro("Benchmark comparison is useful for understanding whether returns came from broad market exposure or from portfolio-specific sources such as stock selection and concentration.", title="Relative performance context")
 if benchmark_returns.empty:
     st.info("Enter a valid benchmark ticker to unlock alpha, tracking and capture diagnostics.")
 else:
@@ -340,6 +347,7 @@ else:
 
 st.divider()
 st.markdown("### Advanced Risk Metrics")
+section_intro("These statistics go beyond simple return and volatility to describe drawdown quality, tail risk, asymmetry, and benchmark tracking behavior.", title="Risk interpretation")
 r1, r2c, r3 = st.columns(3)
 r1.metric("Parametric VaR (95%)", safe_pct(var_param))
 r2c.metric("Historical VaR (95%)", safe_pct(var_hist))
@@ -350,6 +358,7 @@ r5.metric("Kurtosis", safe_num(kt))
 
 st.divider()
 st.markdown("### Manager Notes")
+section_intro("Manager notes summarize the portfolio in plain English so the main takeaways are visible without reading every chart and table individually.", title="Narrative summary")
 notes = []
 if not benchmark_returns.empty and information_ratio > 0.4:
     notes.append("Active return efficiency is strong relative to the benchmark.")
@@ -371,3 +380,4 @@ with st.expander("Show Daily Portfolio Returns"):
     st.dataframe(dr, use_container_width=True)
 
 st.caption(f"Analysis based on {lookback} history. Risk-free rate for ratio calculations: {risk_free_rate:.2%}.")
+
