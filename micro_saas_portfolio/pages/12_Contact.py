@@ -23,9 +23,8 @@ if st.button("Send Message", use_container_width=True):
 st.markdown("""
 ### Other links
 
-- Add your LinkedIn
-- Add your GitHub
-- Add a business/support email
+- https://www.linkedin.com/in/antonio-t-9306a8335/
+- atorralbasa@gmail.com
 """)
 
 app_footer()
