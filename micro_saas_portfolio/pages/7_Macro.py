@@ -8,7 +8,8 @@ import streamlit as st
 
 from auth import require_login, sidebar_user_widget
 from utils import (
-    ACCENT,
+    app_footer,
+ACCENT,
     ACCENT2,
     BORDER,
     GREEN,
@@ -19,9 +20,7 @@ from utils import (
     TEXT,
     YELLOW,
     apply_theme,
-    apply_responsive_layout,
-    section_intro,
-    glossary_expander,  
+    apply_responsive_layout,  
 )
 from data_loader import load_close_series
 from analytics import annualized_return, annualized_vol, correlation_matrix, rolling_vol
@@ -30,7 +29,6 @@ from analytics import annualized_return, annualized_vol, correlation_matrix, rol
 st.set_page_config(page_title="Macro Dashboard Pro", layout="wide", page_icon="🌍")
 apply_theme()
 apply_responsive_layout()
-section_intro("The macro dashboard pulls together cross-asset performance, momentum, correlation, backtesting, and regime-style diagnostics. It is designed for macro context and relative comparison, not tick-by-tick trading.")
 
 st.markdown(
     f"""
@@ -499,8 +497,6 @@ with k5:
     metric_block("Market Regime", regime_label, None, regime_color)
 
 
-glossary_expander("How to read the macro dashboard", ["Cross-Asset Monitor", "Momentum Ranking", "Backtest", "Regime"])
-
 tabs = st.tabs([
     "Overview",
     "FX & Commodities",
@@ -752,3 +748,5 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+app_footer()
