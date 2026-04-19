@@ -135,79 +135,6 @@ def apply_responsive_layout():
         unsafe_allow_html=True,
     )
 
-def apply_responsive_layout():
-    st.markdown(
-        """
-        <style>
-        /* Desktop stays untouched above this line */
-
-        @media (max-width: 768px) {
-            .block-container {
-                padding-left: 0.8rem !important;
-                padding-right: 0.8rem !important;
-                padding-top: 0.6rem !important;
-                max-width: 100% !important;
-            }
-
-            h1, h2, h3 {
-                line-height: 1.15 !important;
-            }
-
-            h1 { font-size: 1.6rem !important; }
-            h2 { font-size: 1.25rem !important; }
-            h3 { font-size: 1.05rem !important; }
-
-            p, li, label, div {
-                font-size: 0.92rem !important;
-            }
-
-            div[data-testid="stMetric"] {
-                padding: 10px 12px !important;
-                border-radius: 12px !important;
-            }
-
-            div[data-testid="stMetricValue"] {
-                font-size: 1.25rem !important;
-            }
-
-            div[data-testid="stMetricLabel"] {
-                font-size: 0.75rem !important;
-            }
-
-            button[kind="primary"],
-            button[kind="secondary"] {
-                width: 100% !important;
-                min-height: 44px !important;
-            }
-
-            div[data-testid="stHorizontalBlock"] {
-                gap: 0.6rem !important;
-                flex-wrap: wrap !important;
-            }
-
-            div[data-testid="column"] {
-                min-width: 100% !important;
-                flex: 1 1 100% !important;
-            }
-
-            div[data-testid="stDataFrame"] {
-                overflow-x: auto !important;
-            }
-
-            .hide-mobile {
-                display: none !important;
-            }
-
-            .mobile-stack {
-                display: block !important;
-                width: 100% !important;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
 
 def page_header(title: str, subtitle: str = ""):
     st.markdown(
@@ -343,3 +270,79 @@ def safe_num(value: float, decimals: int = 2) -> str:
     if value is None or pd.isna(value):
         return "—"
     return f"{value:.{decimals}f}"
+
+
+EXPLANATION_TEXT = {
+    "Portfolio Value": "Current market value of all holdings using the latest available prices.",
+    "Invested Capital": "Total amount originally paid for the current positions based on average buy price and shares.",
+    "Unrealized P&L": "Gain or loss that would be realized if the holdings were sold at current market prices.",
+    "Unrealized P&L %": "Unrealized gain or loss as a percentage of invested capital.",
+    "Total Return": "Overall portfolio growth over the selected lookback period, including price appreciation only.",
+    "Ann. Return": "Annualized return converts the observed period return into a yearly rate for easier comparison.",
+    "Annualized Return": "Annualized return converts the observed period return into a yearly rate for easier comparison.",
+    "Ann. Volatility": "Annualized volatility measures how widely returns move around their average. Higher means more variability.",
+    "Sharpe Ratio": "Risk-adjusted return measured as excess return per unit of volatility. Higher is generally better.",
+    "Sortino": "Similar to Sharpe, but only penalizes downside volatility rather than all volatility.",
+    "Calmar": "Annualized return divided by absolute max drawdown. Useful for comparing return versus downside damage.",
+    "Max Drawdown": "Largest peak-to-trough decline over the selected history. It shows historical downside severity.",
+    "Info. Ratio": "Excess return over the benchmark divided by tracking error.",
+    "Alpha": "Return above or below what benchmark exposure alone would explain.",
+    "Alpha (ann.)": "Return above or below what benchmark exposure alone would explain, expressed annually.",
+    "Beta": "Sensitivity to the selected benchmark. A beta of 1.0 means moves broadly in line with the benchmark.",
+    "R²": "Share of portfolio return variation explained by the benchmark or factor model.",
+    "Historical VaR 95%": "Loss threshold that was exceeded on only 5% of historical days in the sample.",
+    "Hist. VaR 95%": "Loss threshold that was exceeded on only 5% of historical days in the sample.",
+    "Parametric VaR 95%": "Model-based loss threshold using mean and volatility assumptions instead of raw historical observations.",
+    "CVaR 95%": "Average loss during the worst 5% of observed days. Often called expected shortfall.",
+    "Tracking Error": "Standard deviation of excess returns versus the benchmark. It measures how tightly the portfolio tracks it.",
+    "Upside Capture": "How much of the benchmark's positive periods the portfolio typically captures.",
+    "Downside Capture": "How much of the benchmark's negative periods the portfolio participates in. Lower is generally better.",
+    "Portfolio Value Card": "Quick summary card for the current portfolio market value and recent move.",
+    "Sharpe Card": "Quick summary of risk-adjusted performance using volatility as the risk measure.",
+    "VaR Card": "Quick estimate of one-day downside risk at the 95% confidence level.",
+    "Live Options Chain": "Lists calls and puts by strike and expiry so you can inspect market prices, bid/ask, activity, and implied volatility.",
+    "Model Comparison": "Compares theoretical prices from Black-Scholes, binomial trees, and Monte Carlo simulation.",
+    "Greeks": "Sensitivity measures that show how option price changes with the stock price, volatility, time decay, and rates.",
+    "Volatility Smile": "Shows how implied volatility changes across strikes for the same expiry. A flat line would be rare in real markets.",
+    "Term Structure": "Shows how implied volatility changes across maturities for roughly at-the-money options.",
+    "IV Heatmap": "Matrix view of implied volatility by strike and expiry for quick pattern recognition.",
+    "Monte Carlo": "Uses many random price paths to estimate possible future distributions and option values.",
+    "Final Price Distribution": "Histogram of simulated terminal prices showing where the model expects outcomes to cluster.",
+    "Strategy Lab": "Payoff diagrams show how option strategies behave across different underlying prices at expiry.",
+    "Market Snapshot": "Cross-sectional view of recent performance and risk stats for a user-selected watchlist.",
+    "Signal Summary": "Simple rule-based labels derived from RSI and moving-average structure.",
+    "Cross-Asset Monitor": "Snapshot of performance across rates, FX, commodities, equities, bonds, and crypto over multiple horizons.",
+    "Momentum Ranking": "Ranks assets by recent return strength to show relative leadership and laggards.",
+    "Backtest": "Illustrative rebalance test using selected assets and assumptions. It is useful for comparison, not prediction.",
+    "Regime": "Simple heuristic classification of recent market conditions based on volatility, trend, and breadth-style signals.",
+    "Fund Mode": "A lightweight fund workspace for tracking LP commitments, ownership split, NAV allocation, and fee estimates.",
+    "Factor Exposure": "Regression-based estimate of whether returns are mainly explained by market beta, size, value, or momentum.",
+    "Fitted vs Actual": "Compares realized portfolio returns with returns implied by the factor model.",
+}
+
+
+def explain_metric(name: str, default: str = ""):
+    text = EXPLANATION_TEXT.get(name, default)
+    if text:
+        st.caption(text)
+
+
+def section_intro(text: str, title: str = "How to read this"):
+    st.markdown(
+        f"""
+        <div style="border:1px solid {BORDER}; border-radius:14px; background:linear-gradient(180deg,#07111f 0%, #091629 100%); padding:12px 14px; margin:6px 0 14px 0;">
+          <div style="color:{ACCENT}; font-size:10px; font-weight:800; letter-spacing:0.16em; text-transform:uppercase; margin-bottom:6px;">{title}</div>
+          <div style="color:{MUTED}; font-size:12px; line-height:1.6;">{text}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def glossary_expander(title: str, labels: List[str]):
+    items = [(label, EXPLANATION_TEXT.get(label, "")) for label in labels if EXPLANATION_TEXT.get(label, "")]
+    if not items:
+        return
+    with st.expander(title):
+        for label, explanation in items:
+            st.markdown(f"- **{label}**: {explanation}")
