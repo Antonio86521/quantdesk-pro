@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from auth import require_login, sidebar_user_widget
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, app_footer
 from options_models import monte_carlo_paths, bs_price_only, monte_carlo_option_price
 from strategies import (
     payoff_long_call, payoff_short_call,
@@ -18,6 +19,7 @@ from strategies import (
 
 st.set_page_config(page_title="Monte Carlo & Strategy Lab", layout="wide", page_icon="📊")
 apply_theme()
+apply_responsive_layout()
 page_header("Monte Carlo & Strategy Lab", "GBM Simulation · Option Pricing · Payoff Diagrams")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -278,3 +280,6 @@ if pnl is not None:
         "Iron Condor":      "Low vol / range-bound. Profit from time decay in a sideways market.",
     }
     st.info(f"**{strategy}**: {descriptions.get(strategy, '')}")
+
+app_footer()
+
