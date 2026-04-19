@@ -2,7 +2,7 @@ import datetime
 import streamlit as st
 
 from data_loader import load_close_series
-from utils import apply_theme, apply_responsive_layout, section_intro, glossary_expander
+from utils import apply_theme, apply_responsive_layout, page_header, app_footer
 
 
 st.set_page_config(
