@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, section_intro, glossary_expander
 from data_loader import load_close_series, load_price_history
 from analytics import (
     annualized_return, annualized_vol, rsi, sma,
@@ -15,6 +15,7 @@ st.set_page_config(page_title="Screener & Watchlist", layout="wide", page_icon="
 apply_theme()
 apply_responsive_layout()
 page_header("Screener & Watchlist", "Multi-ticker snapshot · Signals · Momentum")
+section_intro("The screener is a fast relative-comparison tool for a custom watchlist. It combines recent returns, volatility, RSI, moving averages, and volume information into one view.")
 
 def _set_run_screener_clicked():
     st.session_state["run_screener_clicked"] = True
@@ -124,6 +125,7 @@ df = pd.DataFrame(records)
 
 # ── Summary Cards ─────────────────────────────────────────────────────────────
 st.markdown("### Market Snapshot")
+glossary_expander("How to read the screener", ["Market Snapshot", "Signal Summary"])
 n_up   = (df["1D Chg %"] > 0).sum()
 n_down = (df["1D Chg %"] < 0).sum()
 avg_rsi = df["RSI (14)"].mean()
@@ -238,6 +240,7 @@ with tab3:
 
 # ── Signal Summary ────────────────────────────────────────────────────────────
 st.markdown("### Signal Summary")
+section_intro("Signals are simple rule-based labels, mainly using RSI and moving-average structure. They help prioritize where to look, but they are not standalone recommendations.", title="Signal logic")
 signal_counts = df["Signal"].value_counts()
 for signal, count in signal_counts.items():
     tickers_with = df[df["Signal"] == signal]["Ticker"].tolist()
@@ -246,5 +249,3 @@ for signal, count in signal_counts.items():
 # ── Export ────────────────────────────────────────────────────────────────────
 csv = df.to_csv(index=False).encode("utf-8")
 st.download_button("⬇ Download Screener CSV", csv, "screener.csv", "text/csv")
-
-
