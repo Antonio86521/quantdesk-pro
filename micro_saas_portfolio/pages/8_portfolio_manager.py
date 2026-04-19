@@ -13,7 +13,7 @@ from portfolio_service import (
     rename_portfolio,
     update_position,
 )
-from utils import apply_responsive_layout, apply_theme, get_active_plan, page_header
+from utils import apply_responsive_layout, apply_theme, get_active_plan, page_header, section_intro, glossary_expander
 
 st.set_page_config(page_title="Portfolio Manager", layout="wide", page_icon="📊")
 apply_theme()
@@ -31,6 +31,7 @@ if not user or not user.get("is_logged_in"):
 
 sidebar_user_widget()
 page_header("Portfolio Manager", "Create portfolios, edit holdings and manage a simple fund workspace")
+section_intro("Use this page to create saved portfolios, maintain position-level data, and run a simple fund-style ownership and fee view. It is the operational entry point for the rest of the app.")
 
 user_id = user.get("sub") if user else None
 user_email = user.get("email") if user else None
@@ -58,6 +59,7 @@ def ensure_fund_state():
 st.caption(f"Workspace plan: {get_active_plan().upper()}")
 
 st.markdown("### Create Portfolio")
+section_intro("Each saved portfolio stores tickers, shares, and average entry prices so you can reopen and analyze it later without retyping inputs.", title="Portfolio workspace")
 c1, c2 = st.columns([4, 1])
 with c1:
     portfolio_name = st.text_input("Portfolio Name", placeholder="e.g. Growth Portfolio")
@@ -182,6 +184,7 @@ if add_clicked:
 
 st.divider()
 st.markdown("### Positions")
+section_intro("Update holdings here to keep saved analysis in sync. The position table acts as the source of truth for saved portfolio analytics.", title="Position maintenance")
 positions = get_positions(portfolio_id)
 if not positions:
     st.info("No positions yet in this portfolio.")
@@ -227,6 +230,8 @@ else:
 
 st.divider()
 st.markdown("### Fund Mode")
+glossary_expander("How to read fund mode", ["Fund Mode"])
+section_intro("Fund mode is a lightweight allocator for LP commitments, ownership split, NAV allocation, and fee estimates. It is illustrative and not a substitute for a full fund administrator system.", title="Fund mode purpose")
 st.caption("Simple investor and NAV monitor so the app feels more like a real fund workspace.")
 ensure_fund_state()
 
@@ -275,4 +280,3 @@ else:
         use_container_width=True,
         hide_index=True,
     )
-
