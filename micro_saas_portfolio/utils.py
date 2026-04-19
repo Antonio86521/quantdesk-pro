@@ -172,13 +172,5 @@ def terminal_ribbon(items):
     st.markdown(html, unsafe_allow_html=True)
 
 
-        parts.append(
-            f'<div class="terminal-ribbon-item">'
-            f'<span class="terminal-ribbon-label">{label}</span>'
-            f'<span class="terminal-ribbon-value">{value}</span>'
-            f'<span class="terminal-ribbon-delta" style="color:{color};background:{bg};padding:2px 8px;border-radius:999px;display:inline-block;">{delta}</span>'
-            f'</div>'
-        )
-
     html = '<div class="terminal-ribbon">' + ''.join(parts) + '</div>'
     st.markdown(html, unsafe_allow_html=True)
