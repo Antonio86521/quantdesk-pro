@@ -4,12 +4,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
 
-from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW
+from auth import require_login, sidebar_user_widget
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, app_footer
 from data_loader import load_option_expiries, load_option_chain, load_price_history, load_spot_price
 
 st.set_page_config(page_title="Vol Surface", layout="wide", page_icon="📊")
 apply_theme()
+apply_responsive_layout()
 page_header("Volatility Surface", "Smile · Term Structure · Heatmap · 3D Surface")
+
+def _set_load_vol_clicked():
+    st.session_state["load_vol_clicked"] = True
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Inputs")
@@ -19,9 +24,9 @@ min_vol         = st.sidebar.number_input("Min volume",        0, 10000, 1,  1)
 moneyness_band  = st.sidebar.slider("Moneyness band (±%)", 5, 60, 25, 5)
 max_expiries    = st.sidebar.slider("Max expiries to load", 2, 8, 4, 1)
 option_side     = st.sidebar.selectbox("Option side", ["calls", "puts"])
-load_btn        = st.sidebar.button("Load Vol Data", use_container_width=True)
+load_btn        = st.sidebar.button("Load Vol Data", use_container_width=True, on_click=_set_load_vol_clicked)
 
-if not load_btn:
+if not st.session_state.get("load_vol_clicked", False):
     st.info("Enter a ticker in the sidebar and click **Load Vol Data**.")
     st.stop()
 
@@ -29,7 +34,7 @@ if not load_btn:
 ticker = smile_ticker.upper()
 
 with st.spinner(f"Loading data for {ticker}…"):
-    spot_df  = load_price_history(ticker, period="5d")
+    spot_df  = load_price_history(ticker, period="5d", source="auto")
     expiries = load_option_expiries(ticker)
 
 if spot_df.empty:
@@ -235,3 +240,6 @@ if exps:
         ax5.set_title(f"{ticker} — Put vs Call IV Skew ({exp0})")
         ax5.legend(); ax5.grid(True, alpha=0.3)
         st.pyplot(fig5); plt.close()
+
+app_footer()
+
