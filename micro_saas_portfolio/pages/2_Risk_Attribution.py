@@ -33,8 +33,7 @@ from utils import (
     premium_notice,
     safe_num,
     safe_pct,
-    section_intro,
-    glossary_expander
+    app_footer,
 )
 
 st.set_page_config(page_title="Risk & Attribution", layout="wide", page_icon="📊")
@@ -43,7 +42,6 @@ apply_responsive_layout()
 require_login()
 sidebar_user_widget()
 page_header("Risk & Attribution", "Rolling Metrics · VaR · Stress Test · Factor Analysis")
-section_intro("This page focuses on how the portfolio behaves under volatility, benchmark-relative movement, concentration effects, and simple macro shock assumptions. Start with the summary cards, then move into rolling diagnostics and scenario analysis.")
 
 
 FACTOR_MAP = {
@@ -168,7 +166,6 @@ cvar95 = cvar(port_ret, var95)
 up_cap, down_cap = compute_capture_ratios(port_ret, bench_ret_s)
 
 st.markdown("### Risk Summary")
-glossary_expander("What do these risk summary metrics mean?", ["Ann. Return", "Ann. Volatility", "Max Drawdown", "Beta", "Alpha", "Historical VaR 95%", "Parametric VaR 95%", "CVaR 95%", "R²"])
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Ann. Return", safe_pct(ann_ret))
 c2.metric("Ann. Volatility", safe_pct(ann_vol))
@@ -210,7 +207,6 @@ st.divider()
 col_a, col_b = st.columns(2)
 with col_a:
     st.markdown("### Rolling Metrics")
-    section_intro("Rolling statistics help you see whether the portfolio risk profile is stable or changing over time. Sudden jumps can signal regime shifts, concentration issues, or benchmark divergence.", title="Rolling diagnostics")
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(rolling_vol(port_ret, roll_window), label="Rolling Vol")
     ax.plot(rolling_sharpe(port_ret, rf=rf, window=roll_window), label="Rolling Sharpe")
@@ -221,7 +217,6 @@ with col_a:
 
 with col_b:
     st.markdown("### Benchmark Diagnostics")
-    section_intro("These series show how tightly the portfolio has tracked the chosen benchmark through time. Beta measures sensitivity; rolling correlation shows co-movement strength.", title="Benchmark context")
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(rolling_beta(port_ret, bench_ret_s, roll_window), label="Rolling Beta")
     ax.plot(rolling_corr(port_ret, bench_ret_s, roll_window), label="Rolling Corr")
@@ -235,7 +230,6 @@ with col_b:
 st.divider()
 
 st.markdown("### Risk Contribution")
-section_intro("Risk contribution splits total portfolio volatility into holding-level components. Large weights do not always mean largest risk, but they often do when correlations are high.", title="Contribution view")
 cov_ann = covariance_matrix(ret)
 contr = marginal_vol_contribution(weights, cov_ann.values)
 risk_df = pd.DataFrame({"Ticker": tickers, "Weight": weights, "Risk Contribution": contr}).sort_values("Risk Contribution", ascending=False)
@@ -254,7 +248,6 @@ with r2c:
 st.divider()
 
 st.markdown("### Stress Test Lab")
-section_intro("This is a rule-based scenario engine, not a full institutional risk model. It is designed to illustrate how concentrated portfolios may respond to broad market, rates, or tech-specific shocks.", title="Scenario assumptions")
 st.caption("A simple rule-based engine to approximate portfolio behavior under macro and concentration shocks.")
 
 stress_df = pd.DataFrame({
@@ -299,7 +292,6 @@ with sright:
 st.divider()
 
 st.markdown("### Factor Exposure")
-section_intro("Factor exposure estimates whether the portfolio behaves mainly like broad beta, small caps, value, or momentum. It helps explain why performance may differ from a simple benchmark view.", title="Factor interpretation")
 if plan != "pro":
     premium_notice("Factor regression")
 else:
@@ -320,7 +312,6 @@ else:
 st.divider()
 
 st.markdown("### Desk Notes")
-section_intro("These notes summarize the most important risk takeaways in plain English. They are rule-based portfolio commentary rather than investment recommendations.", title="Desk note purpose")
 messages = []
 if beta > 1.1:
     messages.append("Portfolio beta is above 1, so it is likely to amplify broad market moves.")
@@ -332,3 +323,5 @@ if not messages:
     messages.append("Risk profile is broadly balanced under the current assumptions.")
 for msg in messages:
     st.markdown(f"- {msg}")
+
+app_footer()
