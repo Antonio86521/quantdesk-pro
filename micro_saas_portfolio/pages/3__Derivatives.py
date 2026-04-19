@@ -6,7 +6,7 @@ import matplotlib.colors as mcolors
 from mpl_toolkits.mplot3d import Axes3D  # noqa
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, section_intro, glossary_expander
 from data_loader import load_option_expiries, load_option_chain, load_spot_price
 from options_models import (
     black_scholes_with_greeks, bs_price_only,
@@ -19,6 +19,7 @@ st.set_page_config(page_title="Derivatives", layout="wide", page_icon="📊")
 apply_theme()
 apply_responsive_layout()
 page_header("Derivatives", "Black-Scholes · Binomial · Monte Carlo · Live Chain")
+section_intro("This page compares common option-pricing frameworks, shows the Greeks, and lets you inspect listed option chains. Use it to understand price, sensitivity, and payoff structure rather than as a trade recommendation.")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Pricing Inputs")
@@ -37,6 +38,7 @@ calc_iv   = st.sidebar.button("Calculate IV", use_container_width=True)
 
 # ── Live Options Chain ────────────────────────────────────────────────────────
 st.markdown("### Live Options Chain")
+section_intro("The live chain displays listed calls and puts for a selected expiry. Open interest and implied volatility help show where the market is most active.", title="Chain guide")
 
 col_tk, col_btn = st.columns([3, 1])
 with col_tk:
@@ -123,6 +125,7 @@ st.markdown("---")
 
 # ── BS / Binomial / MC Pricing ────────────────────────────────────────────────
 st.markdown("### Option Pricing — BS · Binomial · Monte Carlo")
+glossary_expander("How to read the derivatives output", ["Model Comparison", "Greeks", "Live Options Chain"])
 
 if calc_option:
     S = option_S; K = option_K; T = option_T
@@ -281,6 +284,7 @@ else:
 # ── IV Calculator ─────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("### Implied Volatility Calculator")
+section_intro("Implied volatility is the volatility input that makes a pricing model match the observed market option price. It is often read as the market's current pricing of uncertainty.", title="IV interpretation")
 
 if calc_iv:
     iv = implied_volatility_newton(mkt_price, option_S, option_K, option_T, option_r / 100, iv_type)
