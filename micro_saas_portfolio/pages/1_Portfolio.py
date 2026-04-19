@@ -340,7 +340,7 @@ for t in tickers:
 csv = hdf.to_csv(index=False).encode("utf-8")
 st.download_button("⬇ Download Holdings CSV", csv, "holdings_breakdown.csv", "text/csv")
 
-
+app_footer()
 
 
 
