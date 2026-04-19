@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-from auth import require_login, sidebar_user_widget
-from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, section_intro, glossary_expander
+from utils import apply_theme, page_header, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from options_models import monte_carlo_paths, bs_price_only, monte_carlo_option_price
 from strategies import (
     payoff_long_call, payoff_short_call,
@@ -19,9 +18,7 @@ from strategies import (
 
 st.set_page_config(page_title="Monte Carlo & Strategy Lab", layout="wide", page_icon="📊")
 apply_theme()
-apply_responsive_layout()
 page_header("Monte Carlo & Strategy Lab", "GBM Simulation · Option Pricing · Payoff Diagrams")
-section_intro("Monte Carlo simulation approximates many possible price paths under a volatility and drift assumption. The strategy section then translates those outcomes into option payoff intuition.")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Simulation Inputs")
@@ -35,7 +32,6 @@ run_mc       = st.sidebar.button("Run Monte Carlo", use_container_width=True)
 
 # ── Monte Carlo ───────────────────────────────────────────────────────────────
 st.markdown("### Monte Carlo Price Simulation")
-glossary_expander("How to read the simulation outputs", ["Monte Carlo", "Final Price Distribution", "Greeks", "Strategy Lab"])
 
 if run_mc:
     sigma_mc = option_sigma / 100
@@ -130,7 +126,6 @@ else:
 # ── Strategy Lab ──────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("### Strategy Lab")
-section_intro("Payoff diagrams show what each strategy would earn or lose at expiry across a range of underlying prices. They are scenario tools, not forecasts.", title="Payoff interpretation")
 
 STRATEGIES = [
     "Long Call", "Short Call",
