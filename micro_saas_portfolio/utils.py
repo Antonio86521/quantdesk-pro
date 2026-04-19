@@ -135,6 +135,79 @@ def apply_responsive_layout():
         unsafe_allow_html=True,
     )
 
+def apply_responsive_layout():
+    st.markdown(
+        """
+        <style>
+        /* Desktop stays untouched above this line */
+
+        @media (max-width: 768px) {
+            .block-container {
+                padding-left: 0.8rem !important;
+                padding-right: 0.8rem !important;
+                padding-top: 0.6rem !important;
+                max-width: 100% !important;
+            }
+
+            h1, h2, h3 {
+                line-height: 1.15 !important;
+            }
+
+            h1 { font-size: 1.6rem !important; }
+            h2 { font-size: 1.25rem !important; }
+            h3 { font-size: 1.05rem !important; }
+
+            p, li, label, div {
+                font-size: 0.92rem !important;
+            }
+
+            div[data-testid="stMetric"] {
+                padding: 10px 12px !important;
+                border-radius: 12px !important;
+            }
+
+            div[data-testid="stMetricValue"] {
+                font-size: 1.25rem !important;
+            }
+
+            div[data-testid="stMetricLabel"] {
+                font-size: 0.75rem !important;
+            }
+
+            button[kind="primary"],
+            button[kind="secondary"] {
+                width: 100% !important;
+                min-height: 44px !important;
+            }
+
+            div[data-testid="stHorizontalBlock"] {
+                gap: 0.6rem !important;
+                flex-wrap: wrap !important;
+            }
+
+            div[data-testid="column"] {
+                min-width: 100% !important;
+                flex: 1 1 100% !important;
+            }
+
+            div[data-testid="stDataFrame"] {
+                overflow-x: auto !important;
+            }
+
+            .hide-mobile {
+                display: none !important;
+            }
+
+            .mobile-stack {
+                display: block !important;
+                width: 100% !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 def page_header(title: str, subtitle: str = ""):
     st.markdown(
