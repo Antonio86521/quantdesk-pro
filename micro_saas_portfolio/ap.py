@@ -2,7 +2,7 @@ import datetime
 import streamlit as st
 
 from data_loader import load_close_series
-from utils import apply_theme, apply_responsive_layout, page_header, app_footer
+from utils import apply_theme, apply_responsive_layout, app_footer
 
 
 st.set_page_config(
@@ -492,9 +492,6 @@ market_html = market_strip_html()
 if market_html:
     st.html(market_html)
 
-section_intro("The home page is a quick command center. Use it for a delayed public-market snapshot, navigation, and a high-level view of the platform's most important analytics blocks.", title="Dashboard purpose")
-glossary_expander("How to read the dashboard", ["Portfolio Value Card", "Sharpe Card", "VaR Card"])
-
 nav_cols = st.columns(8)
 with nav_cols[0]:
     st.page_link("ap.py", label="Home")
@@ -574,8 +571,6 @@ for ticker, price, ret, signal, cls in table_rows:
     </div>
     """
 
-section_intro("This watchlist table is a quick-read panel for price, recent return, and a simplified signal label. It is designed for orientation, not execution.", title="Watchlist explanation")
-
 st.markdown(
     f"""
     <div class="table-shell">
@@ -602,3 +597,5 @@ st.markdown(
 )
 
 st.markdown("</div>", unsafe_allow_html=True)
+
+app_footer()
