@@ -5,13 +5,14 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, section_intro, glossary_expander
 from data_loader import load_option_expiries, load_option_chain, load_price_history, load_spot_price
 
 st.set_page_config(page_title="Vol Surface", layout="wide", page_icon="📊")
 apply_theme()
 apply_responsive_layout()
 page_header("Volatility Surface", "Smile · Term Structure · Heatmap · 3D Surface")
+section_intro("Use this page to study how implied volatility changes across strikes and maturities. It is especially useful for spotting skew, smile shape, and term structure differences in listed options.")
 
 def _set_load_vol_clicked():
     st.session_state["load_vol_clicked"] = True
@@ -72,6 +73,7 @@ def clean_chain(chain_dict: dict, side: str, spot: float,
 
 # ── Volatility Smile ──────────────────────────────────────────────────────────
 st.markdown("### Volatility Smile by Expiry")
+glossary_expander("How to read the surface tools", ["Volatility Smile", "Term Structure", "IV Heatmap"])
 
 n_cols = min(len(exps), 4)
 fig, axes = plt.subplots(1, n_cols, figsize=(4 * n_cols, 4), sharey=True)
@@ -111,6 +113,7 @@ st.pyplot(fig); plt.close()
 
 # ── ATM IV Term Structure ─────────────────────────────────────────────────────
 st.markdown("### ATM IV Term Structure")
+section_intro("At-the-money term structure focuses on options with strikes closest to spot so you can compare implied volatility by maturity without strong moneyness distortion.", title="Term structure guide")
 atm_ivs = []
 for exp in expiries[:8]:
     chain = load_option_chain(ticker, exp)
