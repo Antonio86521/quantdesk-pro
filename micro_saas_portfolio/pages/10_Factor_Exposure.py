@@ -198,15 +198,17 @@ cards = [
 ]
 
 for col, (label, value, subtitle) in zip([m1, m2, m3, m4, m5], cards):
+    formatted_value = f"{value:.5f}" if label == "Alpha" else f"{value:.2f}"
+
     with col:
         st.markdown(
             f"""
             <div class="fx-card">
                 <div class="fx-label">{label}</div>
-                <div class="fx-value">{value:.2f if label != 'Alpha' else value:.5f}</div>
+                <div class="fx-value">{formatted_value}</div>
                 <div class="fx-sub">{subtitle}</div>
             </div>
-            """.replace("{value:.2f if label != 'Alpha' else value:.5f}", f"{value:.5f}" if label == "Alpha" else f"{value:.2f}"),
+            """,
             unsafe_allow_html=True,
         )
 
