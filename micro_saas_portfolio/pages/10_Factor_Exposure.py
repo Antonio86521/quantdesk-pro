@@ -4,12 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
-from utils import apply_theme, apply_responsive_layout, page_header, BORDER, TEXT, MUTED, ACCENT, ACCENT2
+from utils import apply_theme, apply_responsive_layout, page_header, BORDER, TEXT, MUTED, ACCENT, ACCENT2, section_intro, glossary_expander
 
 st.set_page_config(page_title="Factor Exposure", layout="wide", page_icon="📊")
 apply_theme()
 apply_responsive_layout()
 page_header("Factor Exposure", "Factor Regression · Beta Decomposition · Exposure Map")
+section_intro("This page runs a simple factor regression to estimate whether portfolio returns are mostly driven by broad market beta, size, value, or momentum. It helps separate style exposure from pure stock-specific performance.")
 
 from data_loader import load_close_series
 
@@ -187,6 +188,7 @@ results_df = pd.DataFrame({
 
 # ── Top metrics ───────────────────────────────────────────────────────────────
 st.markdown("## Factor Loadings")
+glossary_expander("How to read factor analysis", ["Factor Exposure", "R²", "Fitted vs Actual"])
 m1, m2, m3, m4, m5 = st.columns(5)
 
 cards = [
@@ -281,6 +283,7 @@ with right:
 
 # ── Fitted vs actual ──────────────────────────────────────────────────────────
 st.markdown("## Actual vs Fitted Returns")
+section_intro("A closer fit means the chosen factors explain more of the return path. Gaps between the lines suggest idiosyncratic behavior not captured by the factor set.", title="Model fit")
 compare = pd.DataFrame({
     "Actual": y,
     "Fitted": model.fittedvalues,
@@ -329,3 +332,4 @@ with st.expander("Factor proxy tickers used"):
 
 if missing:
     st.warning(f"Some factor proxies could not be loaded: {', '.join(missing)}")
+
