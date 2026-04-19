@@ -86,6 +86,14 @@ def apply_theme():
       .terminal-ribbon-value { color: var(--text); font-size: 13px; font-weight: 800; display:block; margin-bottom: 5px; font-family: 'Space Mono', monospace !important; }
       .terminal-ribbon-delta { font-size: 11px; font-weight: 700; }
       .terminal-badge { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--border); }
+      .section-intro { border: 1px solid var(--border); border-radius: 12px; background: linear-gradient(180deg, #07111f 0%, #081526 100%); padding: 12px 14px; margin: 8px 0 14px 0; }
+      .section-intro-title { color: var(--text); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+      .section-intro-body { color: var(--muted); font-size: 12px; line-height: 1.6; }
+      .qd-footer { margin-top: 42px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+      .qd-footer-left, .qd-footer-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .qd-footer a { color: var(--accent); text-decoration: none; }
+      .qd-footer a:hover { text-decoration: underline; }
+      .qd-footnote { color: var(--muted); font-size: 11px; margin-top: 8px; }
     </style>
     """,
         unsafe_allow_html=True,
@@ -129,6 +137,7 @@ def apply_responsive_layout():
         section[data-testid="stSidebar"] { min-width: 250px !important; }
         .terminal-ribbon { flex-wrap: wrap !important; }
         .terminal-ribbon-item { min-width: 50% !important; border-right: 1px solid #17304d !important; border-bottom: 1px solid #17304d !important; }
+        .qd-footer { flex-direction: column !important; align-items: flex-start !important; }
       }
     </style>
     """,
@@ -272,77 +281,81 @@ def safe_num(value: float, decimals: int = 2) -> str:
     return f"{value:.{decimals}f}"
 
 
-EXPLANATION_TEXT = {
+METRIC_EXPLANATIONS = {
     "Portfolio Value": "Current market value of all holdings using the latest available prices.",
-    "Invested Capital": "Total amount originally paid for the current positions based on average buy price and shares.",
-    "Unrealized P&L": "Gain or loss that would be realized if the holdings were sold at current market prices.",
-    "Unrealized P&L %": "Unrealized gain or loss as a percentage of invested capital.",
-    "Total Return": "Overall portfolio growth over the selected lookback period, including price appreciation only.",
-    "Ann. Return": "Annualized return converts the observed period return into a yearly rate for easier comparison.",
-    "Annualized Return": "Annualized return converts the observed period return into a yearly rate for easier comparison.",
-    "Ann. Volatility": "Annualized volatility measures how widely returns move around their average. Higher means more variability.",
-    "Sharpe Ratio": "Risk-adjusted return measured as excess return per unit of volatility. Higher is generally better.",
-    "Sortino": "Similar to Sharpe, but only penalizes downside volatility rather than all volatility.",
-    "Calmar": "Annualized return divided by absolute max drawdown. Useful for comparing return versus downside damage.",
-    "Max Drawdown": "Largest peak-to-trough decline over the selected history. It shows historical downside severity.",
-    "Info. Ratio": "Excess return over the benchmark divided by tracking error.",
-    "Alpha": "Return above or below what benchmark exposure alone would explain.",
-    "Alpha (ann.)": "Return above or below what benchmark exposure alone would explain, expressed annually.",
-    "Beta": "Sensitivity to the selected benchmark. A beta of 1.0 means moves broadly in line with the benchmark.",
-    "R²": "Share of portfolio return variation explained by the benchmark or factor model.",
-    "Historical VaR 95%": "Loss threshold that was exceeded on only 5% of historical days in the sample.",
-    "Hist. VaR 95%": "Loss threshold that was exceeded on only 5% of historical days in the sample.",
-    "Parametric VaR 95%": "Model-based loss threshold using mean and volatility assumptions instead of raw historical observations.",
-    "CVaR 95%": "Average loss during the worst 5% of observed days. Often called expected shortfall.",
-    "Tracking Error": "Standard deviation of excess returns versus the benchmark. It measures how tightly the portfolio tracks it.",
-    "Upside Capture": "How much of the benchmark's positive periods the portfolio typically captures.",
-    "Downside Capture": "How much of the benchmark's negative periods the portfolio participates in. Lower is generally better.",
-    "Portfolio Value Card": "Quick summary card for the current portfolio market value and recent move.",
-    "Sharpe Card": "Quick summary of risk-adjusted performance using volatility as the risk measure.",
-    "VaR Card": "Quick estimate of one-day downside risk at the 95% confidence level.",
-    "Live Options Chain": "Lists calls and puts by strike and expiry so you can inspect market prices, bid/ask, activity, and implied volatility.",
-    "Model Comparison": "Compares theoretical prices from Black-Scholes, binomial trees, and Monte Carlo simulation.",
-    "Greeks": "Sensitivity measures that show how option price changes with the stock price, volatility, time decay, and rates.",
-    "Volatility Smile": "Shows how implied volatility changes across strikes for the same expiry. A flat line would be rare in real markets.",
-    "Term Structure": "Shows how implied volatility changes across maturities for roughly at-the-money options.",
-    "IV Heatmap": "Matrix view of implied volatility by strike and expiry for quick pattern recognition.",
-    "Monte Carlo": "Uses many random price paths to estimate possible future distributions and option values.",
-    "Final Price Distribution": "Histogram of simulated terminal prices showing where the model expects outcomes to cluster.",
-    "Strategy Lab": "Payoff diagrams show how option strategies behave across different underlying prices at expiry.",
-    "Market Snapshot": "Cross-sectional view of recent performance and risk stats for a user-selected watchlist.",
-    "Signal Summary": "Simple rule-based labels derived from RSI and moving-average structure.",
-    "Cross-Asset Monitor": "Snapshot of performance across rates, FX, commodities, equities, bonds, and crypto over multiple horizons.",
-    "Momentum Ranking": "Ranks assets by recent return strength to show relative leadership and laggards.",
-    "Backtest": "Illustrative rebalance test using selected assets and assumptions. It is useful for comparison, not prediction.",
-    "Regime": "Simple heuristic classification of recent market conditions based on volatility, trend, and breadth-style signals.",
-    "Fund Mode": "A lightweight fund workspace for tracking LP commitments, ownership split, NAV allocation, and fee estimates.",
-    "Factor Exposure": "Regression-based estimate of whether returns are mainly explained by market beta, size, value, or momentum.",
-    "Fitted vs Actual": "Compares realized portfolio returns with returns implied by the factor model.",
+    "Invested Capital": "Total amount originally paid for the positions based on shares and buy prices.",
+    "Unrealized P&L": "Profit or loss that would be realized if positions were sold at current prices.",
+    "Total Return": "Overall percentage gain or loss over the selected lookback period.",
+    "Ann. Return": "Annualized portfolio return estimated from daily returns.",
+    "Ann. Volatility": "Annualized standard deviation of returns, used as a simple measure of risk.",
+    "Sharpe Ratio": "Return earned per unit of volatility. Higher values indicate better risk-adjusted performance.",
+    "Sortino": "Return earned per unit of downside volatility, focusing only on harmful moves.",
+    "Calmar": "Annualized return divided by absolute max drawdown.",
+    "Max Drawdown": "Largest historical decline from peak to trough over the selected period.",
+    "Beta": "Sensitivity of portfolio returns to the benchmark. Around 1 means market-like moves.",
+    "Alpha": "Performance above or below what benchmark exposure alone would explain.",
+    "Historical VaR 95%": "Loss threshold exceeded on only 5% of historical days.",
+    "Parametric VaR 95%": "Model-based estimate of the 95% one-period loss threshold using mean and volatility.",
+    "CVaR 95%": "Average loss during the worst 5% of historical outcomes.",
+    "R²": "Share of return variation explained by the benchmark or regression model.",
+    "Tracking Error": "Volatility of active returns versus the chosen benchmark.",
+    "Information Ratio": "Active return divided by tracking error.",
+    "Omega": "Ratio of gains above a threshold to losses below that threshold.",
+    "Gain/Pain": "Total gains divided by total losses.",
+    "Market Beta": "Exposure to broad market movements as captured by the market factor.",
+    "Size": "Exposure to smaller-cap or larger-cap behavior, depending on the factor sign.",
+    "Value": "Exposure to value-oriented stocks relative to growth-oriented stocks.",
+    "Momentum": "Exposure to trend-following behavior, where winners tend to keep outperforming.",
+    "Alpha (Factor)": "Regression intercept after accounting for factor exposures.",
+    "Current NAV": "Estimated current net asset value of the fund workspace.",
+    "Mgmt Fee Revenue": "Estimated management fee revenue based on committed capital and fee terms.",
+    "Estimated Performance Fee": "Illustrative incentive fee based on gains above the hurdle assumption.",
 }
 
 
-def explain_metric(name: str, default: str = ""):
-    text = EXPLANATION_TEXT.get(name, default)
+def explain_metric(name: str):
+    text = METRIC_EXPLANATIONS.get(name)
     if text:
         st.caption(text)
 
 
-def section_intro(text: str, title: str = "How to read this"):
+def section_intro(title: str, body: str):
     st.markdown(
         f"""
-        <div style="border:1px solid {BORDER}; border-radius:14px; background:linear-gradient(180deg,#07111f 0%, #091629 100%); padding:12px 14px; margin:6px 0 14px 0;">
-          <div style="color:{ACCENT}; font-size:10px; font-weight:800; letter-spacing:0.16em; text-transform:uppercase; margin-bottom:6px;">{title}</div>
-          <div style="color:{MUTED}; font-size:12px; line-height:1.6;">{text}</div>
+        <div class="section-intro">
+            <div class="section-intro-title">{title}</div>
+            <div class="section-intro-body">{body}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def glossary_expander(title: str, labels: List[str]):
-    items = [(label, EXPLANATION_TEXT.get(label, "")) for label in labels if EXPLANATION_TEXT.get(label, "")]
-    if not items:
-        return
+def glossary_expander(title: str, items: Dict[str, str]):
     with st.expander(title):
-        for label, explanation in items:
-            st.markdown(f"- **{label}**: {explanation}")
+        for key, value in items.items():
+            st.markdown(f"**{key}** — {value}")
+
+
+def disclaimer_block():
+    st.caption("Educational use only. Not investment advice. Public market data may be delayed.")
+
+
+def app_footer():
+    st.markdown(
+        """
+        <div class="qd-footer">
+            <div class="qd-footer-left">
+                <span>© 2026 QuantDesk Pro</span>
+                <a href="/About" target="_self">About</a>
+                <a href="/Contact" target="_self">Contact</a>
+                <a href="/Privacy" target="_self">Privacy</a>
+                <a href="/Terms" target="_self">Terms</a>
+            </div>
+            <div class="qd-footer-right">
+                <span>Educational use only · Not investment advice</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
