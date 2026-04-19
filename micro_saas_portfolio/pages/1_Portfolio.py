@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 from auth import require_login, sidebar_user_widget
-from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
+from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, section_intro, glossary_expander
 from data_loader import load_close_series, load_price_history, load_news
 from analytics import (
     annualized_return, annualized_vol, max_drawdown_from_returns,
@@ -21,6 +21,7 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 apply_theme()
 apply_responsive_layout()
 page_header("Portfolio Analytics", "Performance · Attribution · Technicals")
+section_intro("This page combines portfolio-level return, risk, benchmark comparison, technical indicators, holdings detail, and related news into one workflow. Use the overview cards for quick diagnostics, then move down the page for charts and deeper context.")
 
 def _set_analyze_portfolio_clicked():
     st.session_state["analyze_portfolio_clicked"] = True
@@ -126,6 +127,7 @@ norm_bench = bench_series / bench_series.iloc[0]
 
 # ── Overview metrics ──────────────────────────────────────────────────────────
 st.markdown("### Overview")
+glossary_expander("What do these overview metrics mean?", ["Portfolio Value", "Invested Capital", "Unrealized P&L", "Unrealized P&L %", "Total Return", "Annualized Return", "Ann. Volatility", "Sharpe Ratio", "Sortino", "Calmar", "Max Drawdown", "Info. Ratio", "Beta", "Alpha (ann.)", "Hist. VaR 95%", "CVaR 95%"])
 
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Portfolio Value",   f"${total_val:,.2f}")
@@ -166,6 +168,7 @@ with st.expander("Extended Statistics"):
 
 # ── Charts ────────────────────────────────────────────────────────────────────
 st.markdown("### Performance")
+section_intro("Compare cumulative portfolio growth against the selected benchmark and review how capital is allocated across holdings. The return contribution view shows which positions drove total performance most strongly.", title="Performance interpretation")
 
 left, right = st.columns([3, 1])
 with left:
@@ -209,6 +212,7 @@ st.pyplot(fig4); plt.close()
 
 # Correlation matrix
 st.markdown("### Correlation Matrix")
+section_intro("Correlation helps show whether holdings tend to move together. Highly correlated portfolios usually offer less diversification than portfolios with lower or mixed correlations.", title="Diversification lens")
 corr = ret.corr()
 fig5, ax5 = plt.subplots(figsize=(max(5, len(tickers) * 1.5), max(4, len(tickers) * 1.2)))
 cmap_c = mcolors.LinearSegmentedColormap.from_list("rg", [RED, "#111827", ACCENT])
@@ -224,6 +228,7 @@ st.pyplot(fig5); plt.close()
 
 # ── Technical Snapshot ────────────────────────────────────────────────────────
 st.markdown("### Technical Snapshot")
+section_intro("Technical indicators provide a short-term market structure view for a selected holding. They are descriptive, not predictive, and should be read alongside the broader portfolio metrics above.", title="Technical context")
 
 tech_ticker = st.selectbox("Select ticker for technical analysis", tickers)
 tech_df     = load_price_history(tech_ticker, period=period, source="auto")
@@ -290,6 +295,7 @@ if not tech_df.empty:
 
 # ── Holdings Breakdown ────────────────────────────────────────────────────────
 st.markdown("### Holdings Breakdown")
+section_intro("This table reconciles cost basis, current price, market value, unrealized gains, and portfolio weights so you can see exactly where risk and P&L sit.", title="Holdings explanation")
 
 hdf = pd.DataFrame({
     "Ticker":             tickers,
@@ -324,6 +330,7 @@ st.dataframe(
 
 # ── News ──────────────────────────────────────────────────────────────────────
 st.markdown("### Latest News")
+section_intro("Headlines are pulled per holding to add qualitative context around recent price action. Use them as prompts for investigation rather than standalone signals.", title="News context")
 for t in tickers:
     news = load_news(t, 2)
     for item in news:
@@ -332,6 +339,7 @@ for t in tickers:
 # ── Export ────────────────────────────────────────────────────────────────────
 csv = hdf.to_csv(index=False).encode("utf-8")
 st.download_button("⬇ Download Holdings CSV", csv, "holdings_breakdown.csv", "text/csv")
+
 
 
 
