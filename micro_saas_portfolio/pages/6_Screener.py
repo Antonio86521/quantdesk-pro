@@ -3,8 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from auth import require_login, sidebar_user_widget
-from utils import apply_theme, apply_responsive_layout, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED, section_intro, glossary_expander
+from utils import apply_theme, page_header, PALETTE, ACCENT, ACCENT2, GREEN, RED, YELLOW, MUTED
 from data_loader import load_close_series, load_price_history
 from analytics import (
     annualized_return, annualized_vol, rsi, sma,
@@ -13,12 +12,7 @@ from analytics import (
 
 st.set_page_config(page_title="Screener & Watchlist", layout="wide", page_icon="📊")
 apply_theme()
-apply_responsive_layout()
 page_header("Screener & Watchlist", "Multi-ticker snapshot · Signals · Momentum")
-section_intro("The screener is a fast relative-comparison tool for a custom watchlist. It combines recent returns, volatility, RSI, moving averages, and volume information into one view.")
-
-def _set_run_screener_clicked():
-    st.session_state["run_screener_clicked"] = True
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Screener Inputs")
@@ -28,9 +22,9 @@ tickers_input   = st.sidebar.text_area("Tickers (one per line or comma-separated
 period          = st.sidebar.selectbox("Lookback period", ["1mo", "3mo", "6mo", "1y"], index=2)
 rsi_ob          = st.sidebar.slider("RSI overbought threshold", 60, 90, 70, 5)
 rsi_os          = st.sidebar.slider("RSI oversold threshold",  10, 40, 30, 5)
-run_screen      = st.sidebar.button("Run Screener", use_container_width=True, on_click=_set_run_screener_clicked)
+run_screen      = st.sidebar.button("Run Screener", use_container_width=True)
 
-if not st.session_state.get("run_screener_clicked", False):
+if not run_screen:
     st.info("Enter tickers in the sidebar and click **Run Screener**.")
     st.stop()
 
@@ -49,8 +43,8 @@ progress = st.progress(0, text="Fetching data…")
 for i, t in enumerate(tickers):
     progress.progress((i + 1) / len(tickers), text=f"Loading {t}…")
     try:
-        close = load_close_series(t, period=period, source="auto")
-        df_full = load_price_history(t, period=period, source="auto")
+        close = load_close_series(t, period=period)
+        df_full = load_price_history(t, period=period)
         if close.empty or len(close) < 15:
             failed.append(t)
             continue
@@ -70,7 +64,7 @@ for i, t in enumerate(tickers):
         chg_pct = (price - prev) / prev * 100
 
         # 52-week high/low (use all available data)
-        close_1y = load_close_series(t, period="1y", source="auto")
+        close_1y = load_close_series(t, period="1y")
         high52  = float(close_1y.max()) if not close_1y.empty else np.nan
         low52   = float(close_1y.min()) if not close_1y.empty else np.nan
         pct_off_high = (price - high52) / high52 * 100 if not np.isnan(high52) else np.nan
@@ -125,7 +119,6 @@ df = pd.DataFrame(records)
 
 # ── Summary Cards ─────────────────────────────────────────────────────────────
 st.markdown("### Market Snapshot")
-glossary_expander("How to read the screener", ["Market Snapshot", "Signal Summary"])
 n_up   = (df["1D Chg %"] > 0).sum()
 n_down = (df["1D Chg %"] < 0).sum()
 avg_rsi = df["RSI (14)"].mean()
@@ -228,7 +221,7 @@ with tab3:
     if selected:
         fig4, ax4 = plt.subplots(figsize=(10, 4))
         for i, t in enumerate(selected):
-            s = load_close_series(t, period=period, source="auto")
+            s = load_close_series(t, period=period)
             if not s.empty:
                 norm = s / s.iloc[0]
                 ax4.plot(norm.index, norm.values, color=PALETTE[i % len(PALETTE)],
@@ -240,7 +233,6 @@ with tab3:
 
 # ── Signal Summary ────────────────────────────────────────────────────────────
 st.markdown("### Signal Summary")
-section_intro("Signals are simple rule-based labels, mainly using RSI and moving-average structure. They help prioritize where to look, but they are not standalone recommendations.", title="Signal logic")
 signal_counts = df["Signal"].value_counts()
 for signal, count in signal_counts.items():
     tickers_with = df[df["Signal"] == signal]["Ticker"].tolist()
