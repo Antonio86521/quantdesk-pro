@@ -441,7 +441,7 @@ def section_box(title: str, subtitle: str = "") -> None:
 def style_perf_table(df: pd.DataFrame):
     """
     Apply number formatting and green/red colouring to a performance
-    DataFrame.  Returns a Styler object ready for st.dataframe().
+    DataFrame. Returns a Styler object ready for st.dataframe().
     """
     fmt = {
         "Last":       "{:,.2f}",
@@ -454,9 +454,8 @@ def style_perf_table(df: pd.DataFrame):
         "Ann. Ret %": "{:.2f}%",
         "RSI(14)":    "{:.1f}",
     }
-    # Only format columns that are actually present
-    fmt = {k: v for k, v in fmt.items() if k in df.columns}
 
+    fmt = {k: v for k, v in fmt.items() if k in df.columns}
     perf_cols = {"1D %", "5D %", "1M %", "3M %", "YTD %", "Ann. Ret %"}
 
     def row_style(row):
@@ -468,7 +467,6 @@ def style_perf_table(df: pd.DataFrame):
         ]
 
     def rsi_style(val):
-        """Colour RSI: red when overbought (>70), green when oversold (<30)."""
         if pd.isna(val):
             return ""
         if val >= 70:
@@ -478,8 +476,10 @@ def style_perf_table(df: pd.DataFrame):
         return ""
 
     styler = df.style.format(fmt, na_rep="—").apply(row_style, axis=1)
+
     if "RSI(14)" in df.columns:
-        styler = styler.applymap(rsi_style, subset=["RSI(14)"])
+        styler = styler.map(rsi_style, subset=["RSI(14)"])
+
     return styler
 
 
