@@ -41,5 +41,4 @@ if st.button("Send Message", use_container_width=True):
 
 st.markdown("""
 
-
 app_footer()
