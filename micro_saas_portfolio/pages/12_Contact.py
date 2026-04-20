@@ -40,5 +40,8 @@ if st.button("Send Message", use_container_width=True):
             st.error(f"Could not send message: {e}")
 
 st.markdown("""
+### Notes
+
+""")
 
 app_footer()
