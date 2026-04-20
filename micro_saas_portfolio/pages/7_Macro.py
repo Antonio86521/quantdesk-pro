@@ -1,33 +1,27 @@
 """
 Macro Dashboard Pro
 ===================
-Cross-asset global markets monitor covering rates, FX, commodities,
-equities, bonds and crypto.
+Cross-asset global markets monitor: rates · FX · commodities · equities · bonds · crypto.
 
-Features
---------
-- Live snapshot table with colour-coded performance columns
-- FX heatmap, inflation proxy basket, yield curve
-- Rolling volatility, correlation matrix
-- Equal-weight basket backtest with drawdown and contribution charts
-- Market regime detection (trend + VIX overlay)
-- Cross-asset leadership and 10Y-3M spread tracker
-- Sharpe ratio, Sortino ratio and Calmar ratio in backtest
-- RSI signal column in the overview table
-- Custom ticker support
-
-Notes
------
-- Data cached for 10 minutes via @st.cache_data
-- Data sourced from Yahoo Finance via yfinance through load_close_series()
-- Educational use only
+Key fixes vs previous version
+------------------------------
+- Correlation matrix: rate tickers (yield levels) use daily *differences*, not pct_change,
+  so the matrix never shows all-NaN values
+- Full universe always loaded regardless of focus-group selection — every tab has data
+- Chart styling unified: dark axes, matching tick colours, consistent padding
+- RSI(14) column with overbought/oversold colouring in every table
+- Backtest adds Sharpe, Sortino, Calmar; drawdown panel below growth curve
+- Yield curve highlights inversion with red shading + banner
+- VIX chart with panic-zone fill
+- 40D rolling S&P 500 / Gold correlation in Regime tab
+- All section headers have educational expanders
 """
 
 import datetime
-from typing import Dict, List, Tuple
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -51,312 +45,164 @@ from utils import (
 from data_loader import load_close_series
 from analytics import annualized_return, annualized_vol, correlation_matrix, rolling_vol
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE SETUP
-# ══════════════════════════════════════════════════════════════════════════════
-
-st.set_page_config(
-    page_title="Macro Dashboard Pro",
-    layout="wide",
-    page_icon="🌍",
-)
-
+# ── Page setup ─────────────────────────────────────────────────────────────────
+st.set_page_config(page_title="Macro Dashboard Pro", layout="wide", page_icon="🌍")
 apply_theme()
 apply_responsive_layout()
-require_login()
-sidebar_user_widget()
 
+# Local design tokens
+BG_CARD  = "#080d18"
+BG_CARD2 = "#0c1220"
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CONSTANTS
+# UNIVERSE
 # ══════════════════════════════════════════════════════════════════════════════
 
-UNIVERSE: Dict[str, str] = {
-    # Rates
-    "US 3M": "^IRX",
-    "US 5Y": "^FVX",
-    "US 10Y": "^TNX",
-    "US 30Y": "^TYX",
-
-    # FX
-    "DXY": "DX-Y.NYB",
-    "EUR/USD": "EURUSD=X",
-    "GBP/USD": "GBPUSD=X",
-    "USD/JPY": "JPY=X",
-    "USD/CHF": "CHF=X",
-    "AUD/USD": "AUDUSD=X",
-    "USD/CAD": "CAD=X",
-
-    # Commodities
-    "Gold": "GC=F",
-    "Silver": "SI=F",
-    "WTI": "CL=F",
-    "Brent": "BZ=F",
-    "Nat Gas": "NG=F",
-    "Copper": "HG=F",
-    "Corn": "ZC=F",
-    "Wheat": "ZW=F",
-
-    # Equities
-    "S&P 500": "^GSPC",
-    "Nasdaq 100": "^NDX",
-    "Dow Jones": "^DJI",
-    "Russell 2000": "^RUT",
-    "Euro Stoxx 50": "^STOXX50E",
-    "DAX": "^GDAXI",
-    "FTSE 100": "^FTSE",
-    "Nikkei 225": "^N225",
-    "Hang Seng": "^HSI",
-    "VIX": "^VIX",
-
-    # Bond ETFs
-    "TLT": "TLT",
-    "IEF": "IEF",
-    "SHY": "SHY",
-    "HYG": "HYG",
-    "LQD": "LQD",
-    "TIP": "TIP",
-
-    # Crypto
-    "Bitcoin": "BTC-USD",
-    "Ethereum": "ETH-USD",
-    "Solana": "SOL-USD",
+UNIVERSE: dict[str, str] = {
+    "US 3M":  "^IRX",  "US 5Y":  "^FVX",
+    "US 10Y": "^TNX",  "US 30Y": "^TYX",
+    "DXY":     "DX-Y.NYB", "EUR/USD": "EURUSD=X",
+    "GBP/USD": "GBPUSD=X", "USD/JPY": "JPY=X",
+    "USD/CHF": "CHF=X",    "AUD/USD": "AUDUSD=X", "USD/CAD": "CAD=X",
+    "Gold":    "GC=F",  "Silver":  "SI=F",
+    "WTI":     "CL=F",  "Brent":   "BZ=F",
+    "Nat Gas": "NG=F",  "Copper":  "HG=F",
+    "Corn":    "ZC=F",  "Wheat":   "ZW=F",
+    "S&P 500":       "^GSPC",   "Nasdaq 100":    "^NDX",
+    "Dow Jones":     "^DJI",    "Russell 2000":  "^RUT",
+    "Euro Stoxx 50": "^STOXX50E","DAX":           "^GDAXI",
+    "FTSE 100":      "^FTSE",   "Nikkei 225":    "^N225",
+    "Hang Seng":     "^HSI",    "VIX":           "^VIX",
+    "TLT": "TLT", "IEF": "IEF", "SHY": "SHY",
+    "HYG": "HYG", "LQD": "LQD", "TIP": "TIP",
+    "Bitcoin":  "BTC-USD", "Ethereum": "ETH-USD", "Solana": "SOL-USD",
 }
 
-GROUPS: Dict[str, List[str]] = {
-    "All": list(UNIVERSE.keys()),
-    "Rates": ["US 3M", "US 5Y", "US 10Y", "US 30Y"],
-    "FX": ["DXY", "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "USD/CAD"],
+# Rate instruments are yield *levels* — handled with diff() not pct_change()
+RATE_TICKERS = {"US 3M", "US 5Y", "US 10Y", "US 30Y"}
+
+GROUPS: dict[str, list[str]] = {
+    "All":         list(UNIVERSE.keys()),
+    "Rates":       ["US 3M", "US 5Y", "US 10Y", "US 30Y"],
+    "FX":          ["DXY", "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "USD/CAD"],
     "Commodities": ["Gold", "Silver", "WTI", "Brent", "Nat Gas", "Copper", "Corn", "Wheat"],
-    "Equities": [
-        "S&P 500", "Nasdaq 100", "Dow Jones", "Russell 2000",
-        "Euro Stoxx 50", "DAX", "FTSE 100", "Nikkei 225", "Hang Seng", "VIX",
-    ],
-    "Bonds": ["TLT", "IEF", "SHY", "HYG", "LQD", "TIP"],
-    "Crypto": ["Bitcoin", "Ethereum", "Solana"],
+    "Equities":    ["S&P 500", "Nasdaq 100", "Dow Jones", "Russell 2000",
+                    "Euro Stoxx 50", "DAX", "FTSE 100", "Nikkei 225", "Hang Seng", "VIX"],
+    "Bonds":       ["TLT", "IEF", "SHY", "HYG", "LQD", "TIP"],
+    "Crypto":      ["Bitcoin", "Ethereum", "Solana"],
 }
 
-RATE_ORDER = ["US 3M", "US 5Y", "US 10Y", "US 30Y"]
-RATE_MATURITY = {
-    "US 3M": 0.25,
-    "US 5Y": 5.0,
-    "US 10Y": 10.0,
-    "US 30Y": 30.0,
-}
-
-FX_LABELS = GROUPS["FX"]
+RATE_ORDER    = ["US 3M", "US 5Y", "US 10Y", "US 30Y"]
+RATE_MATURITY = {"US 3M": 0.25, "US 5Y": 5.0, "US 10Y": 10.0, "US 30Y": 30.0}
+FX_LABELS        = GROUPS["FX"]
 COMMODITY_LABELS = GROUPS["Commodities"]
-EQUITY_LABELS = GROUPS["Equities"]
-BOND_LABELS = GROUPS["Bonds"]
-CRYPTO_LABELS = GROUPS["Crypto"]
-
-BACKTEST_EXCLUDE = {"VIX", "US 3M", "US 5Y", "US 10Y", "US 30Y"}
-
-BASE_REQUIRED = [
-    "S&P 500",
-    "Nasdaq 100",
-    "VIX",
-    "US 3M",
-    "US 5Y",
-    "US 10Y",
-    "US 30Y",
-    "DXY",
-    "EUR/USD",
-    "Gold",
-    "WTI",
-    "TLT",
-    "HYG",
-    "LQD",
-    "TIP",
-    "Bitcoin",
-]
-
+EQUITY_LABELS    = GROUPS["Equities"]
+BOND_LABELS      = GROUPS["Bonds"]
+CRYPTO_LABELS    = GROUPS["Crypto"]
+_BACKTEST_EXCL   = RATE_TICKERS | {"VIX"}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SESSION STATE
 # ══════════════════════════════════════════════════════════════════════════════
 
-if "load_macro_clicked" not in st.session_state:
-    st.session_state["load_macro_clicked"] = False
+if "macro_loaded" not in st.session_state:
+    st.session_state["macro_loaded"] = False
 
 
-def _set_load_macro_clicked() -> None:
-    st.session_state["load_macro_clicked"] = True
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# UI HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
-
-def render_header() -> None:
-    st.markdown(
-        f"""
-        <div style="padding:4px 0 16px 0; border-bottom:1px solid {BORDER}; margin-bottom:18px;">
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <span style="font-size:28px; font-weight:900; color:{TEXT}; letter-spacing:-0.02em;">
-              Macro Dashboard Pro
-            </span>
-            <span style="padding:3px 8px; border-radius:999px; font-size:10px; font-weight:800;
-                         border:1px solid {BORDER}; color:{ACCENT};">
-              MULTI-ASSET
-            </span>
-            <span style="padding:3px 8px; border-radius:999px; font-size:10px; font-weight:800;
-                         border:1px solid {BORDER}; color:{ACCENT2};">
-              CROSS-ASSET
-            </span>
-          </div>
-          <div style="margin-top:7px; font-size:12px; color:{MUTED};">
-            Global markets monitor — rates · FX · commodities · equities · bonds · crypto
-            with regime tracking, relative performance and portfolio backtesting.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def metric_block(title: str, value: str, delta: str | None = None, delta_color: str | None = None) -> None:
-    delta_html = (
-        f'<div style="color:{delta_color or MUTED}; font-size:12px; font-weight:700; margin-top:4px;">{delta}</div>'
-        if delta
-        else ""
-    )
-    st.markdown(
-        f"""
-        <div style="background:linear-gradient(180deg,#0b1220 0%,#0e1627 100%);
-                    border:1px solid {BORDER}; border-radius:12px;
-                    padding:14px 16px; min-height:92px;">
-          <div style="color:{MUTED}; font-size:10px; font-weight:800;
-                      letter-spacing:0.14em; text-transform:uppercase;">{title}</div>
-          <div style="color:{TEXT}; font-size:24px; font-weight:900; margin-top:8px;">{value}</div>
-          {delta_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def section_box(title: str, subtitle: str = "") -> None:
-    sub_html = (
-        f'<div style="color:{MUTED}; font-size:11px; margin-top:6px;">{subtitle}</div>'
-        if subtitle
-        else ""
-    )
-    st.markdown(
-        f"""
-        <div style="background:linear-gradient(180deg,#0b1220 0%,#0d1526 100%);
-                    border:1px solid {BORDER}; border-radius:10px;
-                    padding:12px 14px; margin-bottom:12px;">
-          <div style="color:{TEXT}; font-size:12px; font-weight:800;
-                      letter-spacing:0.14em; text-transform:uppercase;">{title}</div>
-          {sub_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def _apply_chart_style(ax, title: str = "") -> None:
-    ax.set_facecolor("#0a0e1a")
-    ax.figure.patch.set_facecolor("#0a0e1a")
-    ax.tick_params(colors="#8899aa", labelsize=8)
-    for spine in ax.spines.values():
-        spine.set_edgecolor(BORDER)
-    ax.grid(True, alpha=0.18, color="#334455")
-    if title:
-        ax.set_title(title, color=TEXT, fontsize=10, fontweight="bold", pad=8)
+def _trigger_load():
+    st.session_state["macro_loaded"] = True
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
 
-render_header()
+with st.sidebar:
+    st.markdown("## ⚙️ Macro Controls")
+    st.caption("Set parameters then press **Load** to pull live data.")
 
-st.sidebar.markdown("## ⚙️ Macro Controls")
-st.sidebar.caption("Configure the lookback period, asset group and analytical parameters below.")
+    period = st.selectbox(
+        "Lookback period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3,
+        help="Historical window for all charts and calculations.",
+    )
+    focus_group = st.selectbox(
+        "Highlight group", list(GROUPS.keys()), index=0,
+        help="Asset class pinned to top of the overview sort.",
+    )
+    roll_window = st.slider(
+        "Rolling vol window (days)", 5, 60, 20, 5,
+        help="Trading days used for rolling realised vol.",
+    )
+    benchmark_label = st.selectbox(
+        "Benchmark", ["S&P 500", "Gold", "DXY", "Bitcoin", "TLT"], index=0,
+        help="Reference asset for the backtest comparison line.",
+    )
+    backtest_assets = st.multiselect(
+        "Backtest basket",
+        [x for x in UNIVERSE if x not in _BACKTEST_EXCL],
+        default=["S&P 500", "Gold", "TLT"],
+        help="Assets included in the equal-weight backtest.",
+    )
+    custom_input = st.text_input(
+        "Custom Yahoo tickers", placeholder="e.g. GLD, USO, XLE",
+        help="Comma-separated Yahoo Finance tickers to add.",
+    )
+    st.markdown("---")
+    st.button("🚀  Load Macro Dashboard", use_container_width=True, on_click=_trigger_load)
+    sidebar_user_widget()
 
-period = st.sidebar.selectbox(
-    "Lookback period",
-    ["1mo", "3mo", "6mo", "1y", "2y", "5y"],
-    index=3,
-    help="Historical window used for all charts and calculations.",
+# ══════════════════════════════════════════════════════════════════════════════
+# HEADER
+# ══════════════════════════════════════════════════════════════════════════════
+
+st.markdown(
+    f"""
+    <div style="padding:6px 0 18px 0; border-bottom:1px solid {BORDER}; margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span style="font-size:26px; font-weight:900; color:{TEXT}; letter-spacing:-0.02em;">
+          🌍 Macro Dashboard Pro
+        </span>
+        <span style="padding:3px 10px; border-radius:999px; font-size:10px; font-weight:800;
+                     border:1px solid {BORDER}; color:{ACCENT}; letter-spacing:0.08em;">MULTI-ASSET</span>
+        <span style="padding:3px 10px; border-radius:999px; font-size:10px; font-weight:800;
+                     border:1px solid {BORDER}; color:{ACCENT2}; letter-spacing:0.08em;">CROSS-ASSET</span>
+      </div>
+      <div style="margin-top:6px; font-size:12px; color:{MUTED}; line-height:1.6;">
+        Global markets monitor — rates · FX · commodities · equities · bonds · crypto ·
+        regime tracking · backtest · correlation
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
-focus_group = st.sidebar.selectbox(
-    "Focus group",
-    list(GROUPS.keys()),
-    index=0,
-    help="Which asset class to highlight in the overview table.",
-)
+# ══════════════════════════════════════════════════════════════════════════════
+# LANDING SCREEN
+# ══════════════════════════════════════════════════════════════════════════════
 
-roll_window = st.sidebar.slider(
-    "Rolling vol window (days)",
-    min_value=5,
-    max_value=60,
-    value=20,
-    step=5,
-    help="Number of trading days used to compute rolling realised volatility.",
-)
-
-benchmark_label = st.sidebar.selectbox(
-    "Benchmark",
-    ["S&P 500", "Gold", "DXY", "Bitcoin", "TLT"],
-    index=0,
-    help="Reference asset for the backtest comparison.",
-)
-
-backtest_assets = st.sidebar.multiselect(
-    "Backtest basket",
-    [x for x in UNIVERSE if x not in BACKTEST_EXCLUDE],
-    default=["S&P 500", "Gold", "TLT"],
-    help="Assets included in the equal-weight backtest portfolio.",
-)
-
-custom_input = st.sidebar.text_input(
-    "Custom Yahoo tickers",
-    placeholder="e.g. GLD, USO, XLE",
-    help="Comma-separated Yahoo Finance tickers to add to the universe.",
-)
-
-st.sidebar.markdown("---")
-st.sidebar.button(
-    "🚀 Load Macro Dashboard",
-    use_container_width=True,
-    on_click=_set_load_macro_clicked,
-)
-
-if not st.session_state["load_macro_clicked"]:
+if not st.session_state["macro_loaded"]:
     st.markdown(
         f"""
-        <div style="background:linear-gradient(180deg,#0b1220 0%,#0d1526 100%);
-                    border:1px solid {BORDER}; border-radius:12px; padding:36px;
-                    margin-top:16px; text-align:center;">
-          <div style="font-size:46px; margin-bottom:10px;">🌍</div>
-          <div style="font-size:22px; font-weight:800; color:{TEXT}; margin-bottom:8px;">
+        <div style="background:{BG_CARD2}; border:1px solid {BORDER}; border-radius:14px;
+                    padding:44px 32px; margin-top:20px; text-align:center;">
+          <div style="font-size:52px; margin-bottom:12px;">🌍</div>
+          <div style="font-size:22px; font-weight:900; color:{TEXT}; margin-bottom:10px;">
             Global Macro Control Center
           </div>
-          <div style="color:{MUTED}; font-size:13px; line-height:1.9; max-width:760px; margin:0 auto;">
-            Configure your parameters in the sidebar, then press
-            <strong style="color:{ACCENT};">Load Macro Dashboard</strong> to pull live data.<br>
-            The dashboard covers <strong>rates · FX · commodities · equities · bonds · crypto</strong>
-            with snapshot tables, momentum rankings, yield curve, FX heatmap, inflation proxy,
-            correlation matrix, equal-weight backtest and market-regime detection.
+          <div style="color:{MUTED}; font-size:13px; line-height:2.0; max-width:680px; margin:0 auto;">
+            Configure parameters in the sidebar, then press
+            <strong style="color:{ACCENT};">Load Macro Dashboard</strong>.<br>
+            Covers <strong>rates · FX · commodities · equities · bonds · crypto</strong>
+            with snapshot tables, momentum rankings, yield curve, FX heatmap,
+            inflation proxy, correlation matrix, equal-weight backtest and regime detection.
           </div>
-          <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-            <span style="padding:4px 12px; border-radius:999px; font-size:11px;
-                         border:1px solid {BORDER}; color:{ACCENT};">
-              {len(UNIVERSE)} assets in universe
-            </span>
-            <span style="padding:4px 12px; border-radius:999px; font-size:11px;
-                         border:1px solid {BORDER}; color:{ACCENT2};">
-              Data cached 10 min
-            </span>
-            <span style="padding:4px 12px; border-radius:999px; font-size:11px;
-                         border:1px solid {BORDER}; color:{MUTED};">
-              Educational use only
-            </span>
+          <div style="margin-top:24px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <span style="padding:4px 14px; border-radius:999px; font-size:11px;
+                         border:1px solid {BORDER}; color:{ACCENT};">{len(UNIVERSE)} assets in universe</span>
+            <span style="padding:4px 14px; border-radius:999px; font-size:11px;
+                         border:1px solid {BORDER}; color:{ACCENT2};">Cached 10 min · yfinance</span>
+            <span style="padding:4px 14px; border-radius:999px; font-size:11px;
+                         border:1px solid {BORDER}; color:{MUTED};">Educational use only</span>
           </div>
         </div>
         """,
@@ -366,26 +212,16 @@ if not st.session_state["load_macro_clicked"]:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DATA HELPERS
+# DATA LOADING
 # ══════════════════════════════════════════════════════════════════════════════
 
-def parse_custom_tickers(raw: str) -> List[str]:
-    if not raw.strip():
-        return []
-    seen = set()
-    out = []
-    for item in raw.split(","):
-        sym = item.strip().upper()
-        if sym and sym not in seen:
-            seen.add(sym)
-            out.append(sym)
-    return out
-
-
 @st.cache_data(ttl=600)
-def load_macro_prices(labels: List[str], period: str = "1y") -> pd.DataFrame:
-    data: Dict[str, pd.Series] = {}
-
+def load_macro_prices(labels: list[str], period: str = "1y") -> pd.DataFrame:
+    """
+    Fetch close-price series for every label.
+    Failed / empty tickers are silently skipped so a partial result is always returned.
+    """
+    data: dict[str, pd.Series] = {}
     for label in labels:
         ticker = UNIVERSE.get(label, label)
         try:
@@ -393,464 +229,275 @@ def load_macro_prices(labels: List[str], period: str = "1y") -> pd.DataFrame:
             if s is None:
                 continue
             if isinstance(s, pd.DataFrame):
-                if s.empty:
-                    continue
-                s = s.iloc[:, 0]
-
-            s = pd.to_numeric(s, errors="coerce").dropna()
-            if s.empty:
+                s = s.iloc[:, 0] if not s.empty else None
+            if s is None:
                 continue
-
-            data[label] = s
+            s = pd.to_numeric(s, errors="coerce").dropna()
+            if not s.empty:
+                data[label] = s
         except Exception:
             continue
-
     if not data:
         return pd.DataFrame()
-
     return pd.DataFrame(data).sort_index().dropna(how="all")
 
 
-def _safe_pct_change(series: pd.Series) -> pd.Series:
-    return series.pct_change(fill_method=None).replace([np.inf, -np.inf], np.nan).dropna()
+# Add any custom tickers to the universe
+if custom_input.strip():
+    for sym in [x.strip().upper() for x in custom_input.split(",") if x.strip()]:
+        UNIVERSE.setdefault(sym, sym)
+
+# Always load the entire universe so every tab has data, regardless of focus group
+labels_to_load = list(dict.fromkeys(list(UNIVERSE.keys()) + backtest_assets + [benchmark_label]))
+
+with st.spinner("⏳ Fetching cross-asset market data…"):
+    prices = load_macro_prices(labels_to_load, period=period)
+
+if prices.empty:
+    st.error("❌ No market data loaded. Check your connection or try a different lookback period.")
+    st.stop()
 
 
-def _rsi(series: pd.Series, window: int = 14) -> float:
-    delta = series.diff().dropna()
-    if len(delta) < window:
+# ══════════════════════════════════════════════════════════════════════════════
+# ANALYTICS HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _perf(s: pd.Series, n: int) -> float:
+    s = s.dropna()
+    return (float(s.iloc[-1] / s.iloc[-1 - n]) - 1.0) * 100 if len(s) > n else float("nan")
+
+
+def _rsi(s: pd.Series, w: int = 14) -> float:
+    s = s.dropna()
+    d = s.diff().dropna()
+    if len(d) < w:
         return float("nan")
-
-    gain = delta.clip(lower=0).rolling(window).mean()
-    loss = (-delta.clip(upper=0)).rolling(window).mean()
-
-    loss = loss.replace(0, np.nan)
-    rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-
-    if rsi.empty:
-        return float("nan")
-    return float(rsi.iloc[-1])
+    gain = d.clip(lower=0).rolling(w).mean()
+    loss = (-d.clip(upper=0)).rolling(w).mean()
+    rs   = gain / loss.replace(0, np.nan)
+    rsi  = (100 - 100 / (1 + rs)).dropna()
+    return float(rsi.iloc[-1]) if not rsi.empty else float("nan")
 
 
-def _sharpe(returns: pd.Series, rf: float = 0.0) -> float:
-    if returns.empty:
-        return float("nan")
-    excess = returns - rf / 252
-    std = excess.std()
-    if std == 0 or pd.isna(std):
-        return float("nan")
-    return float(excess.mean() / std * np.sqrt(252))
+def _sharpe(r: pd.Series) -> float:
+    r = r.dropna()
+    return float(r.mean() / r.std() * np.sqrt(252)) if r.std() > 0 else float("nan")
 
 
-def _sortino(returns: pd.Series, rf: float = 0.0) -> float:
-    if returns.empty:
-        return float("nan")
-    excess = returns - rf / 252
-    downside = excess[excess < 0].std()
-    if downside == 0 or pd.isna(downside):
-        return float("nan")
-    return float(excess.mean() / downside * np.sqrt(252))
+def _sortino(r: pd.Series) -> float:
+    r  = r.dropna()
+    dd = r[r < 0].std()
+    return float(r.mean() / dd * np.sqrt(252)) if dd > 0 else float("nan")
 
 
-def _calmar(returns: pd.Series) -> float:
-    if returns.empty:
-        return float("nan")
-    curve = (1 + returns).cumprod()
+def _calmar(r: pd.Series) -> float:
+    curve  = (1 + r.dropna()).cumprod()
     max_dd = (curve / curve.cummax() - 1).min()
-    if max_dd == 0 or pd.isna(max_dd):
-        return float("nan")
-    ann_ret = annualized_return(returns)
-    return float(ann_ret / abs(max_dd))
+    return float(annualized_return(r) / abs(max_dd)) if max_dd != 0 else float("nan")
 
 
 def calc_snapshot(prices: pd.DataFrame) -> pd.DataFrame:
     rows = []
-
     for col in prices.columns:
-        s = pd.to_numeric(prices[col], errors="coerce").dropna()
+        s    = prices[col].dropna()
+        rets = s.pct_change().dropna()
         if len(s) < 3:
             continue
-
-        rets = _safe_pct_change(s)
-        last = float(s.iloc[-1])
-
-        def perf(n: int) -> float:
-            if len(s) <= n:
-                return float("nan")
-            return (float(s.iloc[-1] / s.iloc[-1 - n]) - 1.0) * 100
-
-        year_start = s[s.index.year == s.index[-1].year]
-        ytd = (
-            (float(s.iloc[-1] / year_start.iloc[0]) - 1.0) * 100
-            if len(year_start) > 1
-            else float("nan")
-        )
-
-        rows.append(
-            {
-                "Asset": col,
-                "Last": last,
-                "1D %": perf(1),
-                "5D %": perf(5),
-                "1M %": perf(21),
-                "3M %": perf(63),
-                "YTD %": ytd,
-                "20D Vol %": annualized_vol(rets.tail(20)) * 100 if len(rets) >= 20 else float("nan"),
-                "Ann. Ret %": annualized_return(rets) * 100 if len(rets) > 10 else float("nan"),
-                "RSI(14)": _rsi(s, 14),
-            }
-        )
-
-    if not rows:
-        return pd.DataFrame()
-
+        ys = s[s.index.year == s.index[-1].year]
+        ytd = (float(s.iloc[-1] / ys.iloc[0]) - 1.0) * 100 if len(ys) > 1 else float("nan")
+        rows.append({
+            "Asset":      col,
+            "Last":       float(s.iloc[-1]),
+            "1D %":       _perf(s, 1),
+            "5D %":       _perf(s, 5),
+            "1M %":       _perf(s, 21),
+            "3M %":       _perf(s, 63),
+            "YTD %":      ytd,
+            "20D Vol %":  annualized_vol(rets.tail(20)) * 100 if len(rets) >= 20 else float("nan"),
+            "Ann. Ret %": annualized_return(rets) * 100      if len(rets) > 10 else float("nan"),
+            "RSI(14)":    _rsi(s),
+        })
     return pd.DataFrame(rows)
 
 
-def compute_regime(prices: pd.DataFrame) -> Tuple[str, str]:
+def compute_regime(prices: pd.DataFrame) -> tuple[str, str, str]:
+    """Returns (label, hex_colour, plain-English description)."""
     if "S&P 500" not in prices.columns:
-        return "Unavailable", MUTED
-
+        return "Unavailable", MUTED, "Insufficient data."
     spx = prices["S&P 500"].dropna()
     if len(spx) < 60:
-        return "Unavailable", MUTED
-
+        return "Unavailable", MUTED, "Need ≥60 days of S&P 500 data."
     sma20 = spx.rolling(20).mean()
     sma60 = spx.rolling(60).mean()
-
-    latest_spx = float(spx.iloc[-1])
-    latest_20 = float(sma20.iloc[-1]) if pd.notna(sma20.iloc[-1]) else np.nan
-    latest_60 = float(sma60.iloc[-1]) if pd.notna(sma60.iloc[-1]) else np.nan
-
-    if not (np.isfinite(latest_20) and np.isfinite(latest_60)):
-        return "Unavailable", MUTED
-
-    vix_ser = prices["VIX"].dropna() if "VIX" in prices.columns else pd.Series(dtype=float)
-    vix = float(vix_ser.iloc[-1]) if not vix_ser.empty else np.nan
-
-    if latest_spx > latest_20 > latest_60:
+    px, m20, m60 = float(spx.iloc[-1]), float(sma20.iloc[-1]), float(sma60.iloc[-1])
+    if not (np.isfinite(m20) and np.isfinite(m60)):
+        return "Unavailable", MUTED, "Moving average could not be computed."
+    vix_s = prices["VIX"].dropna() if "VIX" in prices.columns else pd.Series(dtype=float)
+    vix   = float(vix_s.iloc[-1]) if not vix_s.empty else float("nan")
+    if px > m20 > m60:
         if np.isfinite(vix) and vix >= 25:
-            return "Bull / High Vol", YELLOW
-        return "Bull Market", GREEN
-
-    if latest_spx < latest_20 < latest_60:
-        return "Bear Market", RED
-
-    return "Transition / Choppy", ORANGE
-
-
-def build_spread_stats(snapshot: pd.DataFrame) -> Tuple[float, str, str]:
-    if not {"US 10Y", "US 3M"}.issubset(set(snapshot["Asset"].values)):
-        return float("nan"), "Unavailable", MUTED
-
-    y10 = float(snapshot.loc[snapshot["Asset"] == "US 10Y", "Last"].iloc[0])
-    y3m = float(snapshot.loc[snapshot["Asset"] == "US 3M", "Last"].iloc[0])
-
-    spread_pct_pts = y10 - y3m
-    state = "Inverted ⚠" if spread_pct_pts < 0 else "Normal"
-    color = RED if spread_pct_pts < 0 else GREEN
-    return spread_pct_pts, state, color
+            return ("Bull / High Vol", YELLOW,
+                    "Uptrend intact but VIX ≥ 25 signals elevated fear. "
+                    "May represent a mid-cycle correction or early regime shift — "
+                    "risk assets can still advance but drawdown risk is higher.")
+        return ("Bull Market", GREEN,
+                "S&P 500 above its 20-day and 60-day SMAs with VIX below 25. "
+                "Trend is positive and volatility is contained. "
+                "Risk assets typically perform well in this environment.")
+    if px < m20 < m60:
+        return ("Bear Market", RED,
+                "S&P 500 below both moving averages — downtrend confirmed. "
+                "Capital preservation and defensive assets are typically favoured. "
+                "Watch credit spreads and VIX for regime-change signals.")
+    return ("Transition / Choppy", ORANGE,
+            "Price and moving averages are in a mixed state with no clear trend. "
+            "Conviction is low in both directions — position sizing should reflect uncertainty.")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TABLE STYLING
+# SNAPSHOT + TOP-LEVEL KPIs
 # ══════════════════════════════════════════════════════════════════════════════
-
-def style_perf_table(df: pd.DataFrame):
-    fmt = {
-        "Last": "{:,.2f}",
-        "1D %": "{:.2f}%",
-        "5D %": "{:.2f}%",
-        "1M %": "{:.2f}%",
-        "3M %": "{:.2f}%",
-        "YTD %": "{:.2f}%",
-        "20D Vol %": "{:.2f}%",
-        "Ann. Ret %": "{:.2f}%",
-        "RSI(14)": "{:.1f}",
-    }
-    fmt = {k: v for k, v in fmt.items() if k in df.columns}
-
-    perf_cols = {"1D %", "5D %", "1M %", "3M %", "YTD %", "Ann. Ret %"}
-
-    def row_style(row):
-        styled = []
-        for c in row.index:
-            if c in perf_cols and pd.notna(row[c]):
-                styled.append(f"color:{GREEN}" if row[c] >= 0 else f"color:{RED}")
-            else:
-                styled.append("")
-        return styled
-
-    def rsi_style(val):
-        if pd.isna(val):
-            return ""
-        if val >= 70:
-            return f"color:{RED}"
-        if val <= 30:
-            return f"color:{GREEN}"
-        return ""
-
-    styler = df.style.format(fmt, na_rep="—").apply(row_style, axis=1)
-
-    if "RSI(14)" in df.columns:
-        try:
-            styler = styler.map(rsi_style, subset=["RSI(14)"])
-        except Exception:
-            try:
-                styler = styler.applymap(rsi_style, subset=["RSI(14)"])
-            except Exception:
-                pass
-
-    return styler
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# CHART SECTIONS
-# ══════════════════════════════════════════════════════════════════════════════
-
-def create_fx_heatmap(snapshot: pd.DataFrame) -> None:
-    fx = snapshot[snapshot["Asset"].isin([x for x in FX_LABELS if x in snapshot["Asset"].values])].copy()
-    if fx.empty:
-        st.info("No FX data available.")
-        return
-
-    heat_cols = ["1D %", "5D %", "1M %", "3M %"]
-    heat = fx.set_index("Asset")[heat_cols].dropna(how="all")
-
-    if heat.empty:
-        st.info("No FX heatmap data available.")
-        return
-
-    vals = heat.values.astype(float)
-    finite_vals = vals[np.isfinite(vals)]
-    vmax = max(np.nanpercentile(np.abs(finite_vals), 90) if finite_vals.size else 1, 0.20)
-
-    cmap = mcolors.LinearSegmentedColormap.from_list("fx_heat", [RED, "#111827", GREEN])
-
-    fig, ax = plt.subplots(figsize=(8, max(3.5, len(heat) * 0.48)))
-    _apply_chart_style(ax, "FX Performance Heatmap")
-    im = ax.imshow(vals, cmap=cmap, vmin=-vmax, vmax=vmax, aspect="auto")
-
-    ax.set_xticks(range(len(heat_cols)))
-    ax.set_xticklabels(heat_cols, fontsize=9, color="#aabbcc")
-    ax.set_yticks(range(len(heat.index)))
-    ax.set_yticklabels(heat.index, fontsize=9, color="#aabbcc")
-
-    for i in range(vals.shape[0]):
-        for j in range(vals.shape[1]):
-            if np.isfinite(vals[i, j]):
-                ax.text(j, i, f"{vals[i, j]:.2f}", ha="center", va="center", fontsize=8, color="white", fontweight="bold")
-
-    plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
-    plt.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
-
-
-def create_inflation_proxy_chart(prices: pd.DataFrame) -> None:
-    req = [x for x in ["Gold", "WTI", "Copper", "Corn", "TIP"] if x in prices.columns]
-    if len(req) < 3:
-        st.info("Need at least 3 of: Gold, WTI, Copper, Corn, TIP to build the inflation proxy.")
-        return
-
-    base = prices[req].dropna(how="all").ffill().dropna()
-    if base.empty:
-        st.info("Inflation proxy: insufficient data.")
-        return
-
-    norm = base / base.iloc[0] * 100
-    proxy = norm.mean(axis=1)
-
-    with st.expander("ℹ️ What is the Inflation Proxy Basket?", expanded=False):
-        st.markdown(
-            "An equal-weight composite of commodity and inflation-linked assets "
-            "(Gold, WTI crude, Copper, Corn, TIP ETF). When the basket rises relative "
-            "to its base value, broad price pressures may be building. "
-            "This is a proxy, not a direct inflation measure."
-        )
-
-    fig, ax = plt.subplots(figsize=(10, 4))
-    _apply_chart_style(ax, "Inflation Proxy Basket (Indexed to 100)")
-
-    for i, col in enumerate(norm.columns):
-        ax.plot(norm.index, norm[col], lw=1.3, alpha=0.65, color=PALETTE[i % len(PALETTE)], label=col)
-
-    ax.plot(proxy.index, proxy.values, lw=2.6, color="white", label="Basket Average", zorder=5)
-    ax.axhline(100, color=MUTED, lw=0.8, ls="--")
-    ax.legend(fontsize=8, ncols=3, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-
-    plt.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
-
-
-def create_backtest(prices: pd.DataFrame, basket: List[str], benchmark: str) -> None:
-    valid_assets = [x for x in basket if x in prices.columns]
-    if not valid_assets:
-        st.info("Choose at least one valid asset for the backtest.")
-        return
-
-    panel = prices[valid_assets].dropna(how="all").ffill().dropna()
-    if panel.empty or len(panel) < 10:
-        st.info("Not enough data for the backtest.")
-        return
-
-    returns = panel.pct_change(fill_method=None).dropna()
-    if returns.empty:
-        st.info("Not enough return history.")
-        return
-
-    weights = np.repeat(1.0 / len(valid_assets), len(valid_assets))
-    port_ret = returns.dot(weights)
-    port_curve = (1 + port_ret).cumprod()
-    drawdown = port_curve / port_curve.cummax() - 1
-
-    bench_curve = None
-    if benchmark in prices.columns:
-        bench = prices[benchmark].reindex(panel.index).ffill().dropna()
-        if len(bench) > 1:
-            bench_curve = bench / bench.iloc[0]
-
-    total_return = (port_curve.iloc[-1] - 1) * 100
-    ann_ret = annualized_return(port_ret) * 100
-    ann_vol = annualized_vol(port_ret) * 100
-    max_dd = drawdown.min() * 100
-    sharpe = _sharpe(port_ret)
-    sortino = _sortino(port_ret)
-    calmar = _calmar(port_ret)
-
-    with st.expander("ℹ️ About this backtest", expanded=False):
-        st.markdown(
-            f"**Equal-weight portfolio** rebalanced daily across: {', '.join(valid_assets)}.  \n"
-            "Returns assume no transaction costs, slippage or taxes.  \n"
-            "**Sharpe** = annualised excess return ÷ annualised vol.  \n"
-            "**Sortino** = annualised excess return ÷ downside deviation.  \n"
-            "**Calmar** = annualised return ÷ |max drawdown|.  \n"
-            "*Past performance is not indicative of future results.*"
-        )
-
-    cols = st.columns(7)
-    metrics = [
-        ("Total Return", f"{total_return:.2f}%"),
-        ("Ann. Return", f"{ann_ret:.2f}%"),
-        ("Ann. Vol", f"{ann_vol:.2f}%"),
-        ("Max Drawdown", f"{max_dd:.2f}%"),
-        ("Sharpe", f"{sharpe:.2f}" if np.isfinite(sharpe) else "—"),
-        ("Sortino", f"{sortino:.2f}" if np.isfinite(sortino) else "—"),
-        ("Calmar", f"{calmar:.2f}" if np.isfinite(calmar) else "—"),
-    ]
-
-    for col, (label, val) in zip(cols, metrics):
-        col.metric(label, val)
-
-    fig, axes = plt.subplots(2, 1, figsize=(11, 7), gridspec_kw={"height_ratios": [3, 1.2]})
-    ax_growth, ax_dd = axes
-
-    _apply_chart_style(ax_growth, "Portfolio Growth (Equal-Weight Basket)")
-    ax_growth.plot(port_curve.index, port_curve.values, lw=2.2, color=ACCENT, label="Basket")
-
-    if bench_curve is not None and not bench_curve.empty:
-        aligned = bench_curve.reindex(port_curve.index).dropna()
-        if not aligned.empty:
-            ax_growth.plot(aligned.index, aligned.values, lw=1.8, ls="--", color=ACCENT2, label=benchmark)
-
-    ax_growth.axhline(1.0, color=MUTED, lw=0.7, ls=":")
-    ax_growth.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-
-    _apply_chart_style(ax_dd, "Drawdown from Peak")
-    ax_dd.fill_between(drawdown.index, drawdown.values, 0, color=RED, alpha=0.45)
-    ax_dd.plot(drawdown.index, drawdown.values, lw=1.2, color=RED)
-
-    plt.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
-
-    contrib = ((panel.iloc[-1] / panel.iloc[0]) - 1).sort_values()
-    fig2, ax2 = plt.subplots(figsize=(8, max(3.5, len(contrib) * 0.44)))
-    _apply_chart_style(ax2, "Individual Asset Total Returns in Basket")
-
-    bar_colors = [GREEN if v >= 0 else RED for v in contrib.values]
-    ax2.barh(contrib.index, contrib.values * 100, color=bar_colors, edgecolor="#0a0e1a", height=0.65)
-    ax2.axvline(0, color="white", lw=0.8, ls="--")
-    ax2.set_xlabel("Return (%)", color="#aabbcc", fontsize=9)
-    ax2.tick_params(axis="y", colors="#aabbcc")
-
-    plt.tight_layout()
-    st.pyplot(fig2)
-    plt.close(fig2)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# DATA PIPELINE
-# ══════════════════════════════════════════════════════════════════════════════
-
-custom_tickers = parse_custom_tickers(custom_input)
-active_labels = GROUPS[focus_group].copy()
-
-for sym in custom_tickers:
-    UNIVERSE.setdefault(sym, sym)
-    if sym not in active_labels:
-        active_labels.append(sym)
-
-labels_to_load = list(dict.fromkeys(active_labels + BASE_REQUIRED + backtest_assets + [benchmark_label]))
-
-with st.spinner("Loading cross-asset market data…"):
-    prices = load_macro_prices(labels_to_load, period=period)
-
-if prices.empty:
-    st.error("❌ No market data could be loaded. Check your connection or try a different period.")
-    st.stop()
 
 snap = calc_snapshot(prices)
 if snap.empty:
-    st.error("❌ Snapshot could not be built from the loaded data.")
+    st.error("❌ Snapshot could not be built. Try a longer lookback period.")
     st.stop()
 
-up_today = int((snap["1D %"] > 0).sum())
+regime_label, regime_color, regime_desc = compute_regime(prices)
+up_today   = int((snap["1D %"] > 0).sum())
 down_today = int((snap["1D %"] < 0).sum())
-avg_vol = snap["20D Vol %"].mean()
-regime_label, regime_color = compute_regime(prices)
-curve_spread, spread_state, spread_color = build_spread_stats(snap)
+avg_vol    = snap["20D Vol %"].mean()
 
-headline = [
-    x for x in ["S&P 500", "Nasdaq 100", "VIX", "US 10Y", "DXY", "Gold", "WTI", "Bitcoin"]
-    if x in snap["Asset"].values
-]
+_r10 = snap.loc[snap["Asset"] == "US 10Y", "Last"]
+_r3m = snap.loc[snap["Asset"] == "US 3M",  "Last"]
+curve_spread = float(_r10.iloc[0]) - float(_r3m.iloc[0]) if (not _r10.empty and not _r3m.empty) else float("nan")
+_inverted    = np.isfinite(curve_spread) and curve_spread < 0
 
+
+# ── UI helpers ─────────────────────────────────────────────────────────────────
+
+def metric_card(col, title: str, value: str, delta: str = "", dcol: str = ""):
+    with col:
+        dh = (f'<div style="color:{dcol or MUTED}; font-size:11px; font-weight:700; '
+              f'margin-top:3px;">{delta}</div>') if delta else ""
+        st.markdown(
+            f"""
+            <div style="background:{BG_CARD2}; border:1px solid {BORDER};
+                        border-radius:10px; padding:14px 16px; min-height:86px;">
+              <div style="color:{MUTED}; font-size:9px; font-weight:800;
+                          letter-spacing:0.16em; text-transform:uppercase;">{title}</div>
+              <div style="color:{TEXT}; font-size:22px; font-weight:900;
+                          margin-top:7px; line-height:1.15;">{value}</div>
+              {dh}
+            </div>
+            """, unsafe_allow_html=True,
+        )
+
+
+def section_hdr(title: str, sub: str = ""):
+    sh = (f'<div style="color:{MUTED}; font-size:11px; margin-top:5px; line-height:1.5;">'
+          f'{sub}</div>') if sub else ""
+    st.markdown(
+        f"""
+        <div style="background:{BG_CARD2}; border:1px solid {BORDER};
+                    border-radius:8px; padding:11px 14px; margin-bottom:10px;">
+          <div style="color:{TEXT}; font-size:11px; font-weight:800;
+                      letter-spacing:0.15em; text-transform:uppercase;">{title}</div>
+          {sh}
+        </div>
+        """, unsafe_allow_html=True,
+    )
+
+
+def style_table(df: pd.DataFrame):
+    fmt = {c: "{:.2f}%" for c in ["1D %","5D %","1M %","3M %","YTD %","20D Vol %","Ann. Ret %"]}
+    fmt.update({"Last": "{:,.2f}", "RSI(14)": "{:.1f}"})
+    fmt = {k: v for k, v in fmt.items() if k in df.columns}
+    perf = {"1D %","5D %","1M %","3M %","YTD %","Ann. Ret %"}
+
+    def row_style(row):
+        return [(f"color:{GREEN}" if row[c] >= 0 else f"color:{RED}")
+                if c in perf and pd.notna(row[c]) else "" for c in row.index]
+
+    def rsi_map(v):
+        if pd.isna(v): return ""
+        return f"color:{RED}" if v >= 70 else (f"color:{GREEN}" if v <= 30 else "")
+
+    styler = df.style.format(fmt, na_rep="—").apply(row_style, axis=1)
+    if "RSI(14)" in df.columns:
+        styler = styler.applymap(rsi_map, subset=["RSI(14)"])
+    return styler
+
+
+def _fig(h: float = 4.2, w: float = 10.0):
+    fig, ax = plt.subplots(figsize=(w, h))
+    fig.patch.set_facecolor(BG_CARD)
+    ax.set_facecolor(BG_CARD)
+    ax.tick_params(colors="#7a8fa6", labelsize=8)
+    for sp in ax.spines.values():
+        sp.set_edgecolor("#1c2a3a")
+    ax.grid(True, alpha=0.14, color="#1c2a3a", linewidth=0.7)
+    return fig, ax
+
+
+def _fig2(h_ratios: list, total_h: float = 7.0, w: float = 10.0):
+    fig, axes = plt.subplots(len(h_ratios), 1, figsize=(w, total_h),
+                             gridspec_kw={"height_ratios": h_ratios, "hspace": 0.06})
+    fig.patch.set_facecolor(BG_CARD)
+    for ax in axes:
+        ax.set_facecolor(BG_CARD)
+        ax.tick_params(colors="#7a8fa6", labelsize=8)
+        for sp in ax.spines.values():
+            sp.set_edgecolor("#1c2a3a")
+        ax.grid(True, alpha=0.14, color="#1c2a3a", linewidth=0.7)
+    return fig, axes
+
+
+def _t(ax, title: str):
+    ax.set_title(title, color="#c8d8e8", fontsize=9, fontweight="bold", pad=8, loc="left")
+
+
+def _leg(ax, **kw):
+    ax.legend(fontsize=7.5, facecolor=BG_CARD2, edgecolor="#1c2a3a",
+              labelcolor="#8fa8c0", framealpha=0.85, **kw)
+
+
+def _show(fig):
+    plt.tight_layout(pad=0.6)
+    st.pyplot(fig)
+    plt.close(fig)
+
+
+# ── Headline ticker cards ──────────────────────────────────────────────────────
+_HL = ["S&P 500", "Nasdaq 100", "VIX", "US 10Y", "DXY", "Gold", "WTI", "Bitcoin"]
+headline = [x for x in _HL if x in snap["Asset"].values]
 if headline:
-    hl_cols = st.columns(min(8, len(headline)))
-    for i, lbl in enumerate(headline[: len(hl_cols)]):
-        row = snap.loc[snap["Asset"] == lbl].iloc[0]
-        delta = row["1D %"]
-        color = GREEN if pd.notna(delta) and delta >= 0 else RED
-        last_fmt = f"{row['Last']:,.2f}" if abs(row["Last"]) < 100_000 else f"{row['Last']:,.0f}"
+    hc = st.columns(len(headline))
+    for i, lbl in enumerate(headline):
+        row  = snap.loc[snap["Asset"] == lbl].iloc[0]
+        d    = row["1D %"]
+        dc   = (GREEN if d >= 0 else RED) if pd.notna(d) else MUTED
+        last = row["Last"]
+        metric_card(hc[i], lbl,
+                    f"{last:,.2f}" if last < 10_000 else f"{last:,.0f}",
+                    f"{d:+.2f}%" if pd.notna(d) else "—", dc)
 
-        with hl_cols[i]:
-            metric_block(lbl, last_fmt, f"{delta:+.2f}%" if pd.notna(delta) else "—", color)
+st.markdown("<div style='margin-top:10px'></div>", unsafe_allow_html=True)
 
-st.markdown("")
+# ── KPI row ────────────────────────────────────────────────────────────────────
+kc = st.columns(5)
+metric_card(kc[0], "Assets Loaded",   str(len(snap)))
+metric_card(kc[1], "Up / Down Today", f"{up_today} / {down_today}",
+            "Breadth positive" if up_today >= down_today else "Breadth negative",
+            GREEN if up_today >= down_today else RED)
+metric_card(kc[2], "Avg 20D Vol",     f"{avg_vol:.1f}%", "Realised — cross-asset")
+metric_card(kc[3], "10Y − 3M Spread",
+            f"{curve_spread:.2f}bps" if np.isfinite(curve_spread) else "—",
+            "⚠ Inverted" if _inverted else "Normal",
+            RED if _inverted else GREEN)
+metric_card(kc[4], "Market Regime",   regime_label, delta_col=regime_color)
 
-k1, k2, k3, k4, k5 = st.columns(5)
-with k1:
-    metric_block("Assets Loaded", str(len(snap)))
-with k2:
-    metric_block(
-        "Up / Down Today",
-        f"{up_today} / {down_today}",
-        "Breadth positive" if up_today >= down_today else "Breadth negative",
-        GREEN if up_today >= down_today else RED,
-    )
-with k3:
-    metric_block("Avg 20D Vol", f"{avg_vol:.1f}%", "Realised volatility cross-asset")
-with k4:
-    metric_block(
-        "10Y − 3M Spread",
-        f"{curve_spread:.2f} pts" if np.isfinite(curve_spread) else "—",
-        spread_state,
-        spread_color,
-    )
-with k5:
-    metric_block("Market Regime", regime_label)
+st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -858,434 +505,571 @@ with k5:
 # ══════════════════════════════════════════════════════════════════════════════
 
 tabs = st.tabs([
-    "📊 Overview",
-    "💱 FX & Commodities",
-    "📈 Equities & Crypto",
-    "📉 Rates & Bonds",
-    "🔗 Correlation",
-    "🧮 Backtest",
-    "🎯 Regime",
+    "📊  Overview",
+    "💱  FX & Commodities",
+    "📈  Equities & Crypto",
+    "📉  Rates & Bonds",
+    "🔗  Correlation",
+    "🧮  Backtest",
+    "🎯  Regime",
 ])
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 0 — OVERVIEW
+# ─────────────────────────────────────────────────────────────────────────────
 with tabs[0]:
-    left, right = st.columns([1.35, 1], gap="large")
+    L, R = st.columns([1.4, 1], gap="large")
 
-    with left:
-        section_box(
+    with L:
+        section_hdr(
             "Cross-Asset Monitor",
-            "Sortable snapshot — green/red = return direction; RSI(14) > 70 = overbought, < 30 = oversold",
+            "Green/red = return direction · RSI > 70 = overbought (red) · RSI < 30 = oversold (green)",
         )
-        sort_by = st.selectbox(
-            "Sort by",
-            ["1D %", "1M %", "3M %", "YTD %", "20D Vol %", "Ann. Ret %", "RSI(14)", "Asset"],
-            key="macro_sort",
-        )
-        ascending = st.checkbox("Ascending", value=False, key="macro_asc")
-        disp = snap.sort_values(sort_by, ascending=ascending).reset_index(drop=True)
+        sc  = st.selectbox("Sort by",
+                           ["1D %","1M %","3M %","YTD %","20D Vol %","Ann. Ret %","RSI(14)","Asset"],
+                           key="ov_sort")
+        asc = st.checkbox("Ascending", False, key="ov_asc")
+        DISP_COLS = ["Asset","Last","1D %","5D %","1M %","3M %","YTD %","20D Vol %","Ann. Ret %","RSI(14)"]
+        disp = snap.sort_values(sc, ascending=asc).reset_index(drop=True)
+        st.dataframe(style_table(disp[DISP_COLS]), use_container_width=True, height=520)
 
-        cols = ["Asset", "Last", "1D %", "5D %", "1M %", "3M %", "YTD %", "20D Vol %", "Ann. Ret %", "RSI(14)"]
-        st.dataframe(style_perf_table(disp[cols]), use_container_width=True, height=540)
-
-    with right:
-        section_box("1M Momentum Ranking", "Relative strength — sorted by 1-month return")
+    with R:
+        section_hdr("1M Momentum Ranking", "Sorted by 1-month return")
         rank = snap.dropna(subset=["1M %"]).sort_values("1M %")
+        fig, ax = _fig(max(4, len(rank) * 0.30), 8)
+        _t(ax, "1-Month Return (%)")
+        bc = [GREEN if v >= 0 else RED for v in rank["1M %"]]
+        ax.barh(rank["Asset"], rank["1M %"], color=bc, edgecolor=BG_CARD, height=0.68)
+        ax.axvline(0, color="#ffffff25", lw=0.8, ls="--")
+        ax.set_xlabel("Return (%)", color="#7a8fa6", fontsize=8)
+        ax.tick_params(axis="y", labelsize=7.5, colors="#8fa8c0")
+        _show(fig)
 
-        fig, ax = plt.subplots(figsize=(8, max(4, len(rank) * 0.28)))
-        _apply_chart_style(ax, "1-Month Return (%)")
-        bar_cols = [GREEN if v >= 0 else RED for v in rank["1M %"]]
-        ax.barh(rank["Asset"], rank["1M %"], color=bar_cols, edgecolor="#0a0e1a", height=0.7)
-        ax.axvline(0, color="white", lw=0.8, ls="--")
-        ax.set_xlabel("Return (%)", color="#aabbcc", fontsize=9)
-        ax.tick_params(axis="y", colors="#aabbcc", labelsize=8)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
-
-        section_box("Performance Heatmap", "Colour intensity = magnitude; red = negative, green = positive")
-        heat_cols_ov = ["1D %", "5D %", "1M %", "3M %", "YTD %"]
-        heat = snap.set_index("Asset")[heat_cols_ov].dropna(how="all")
-
-        vals = heat.values.astype(float)
-        finite_vals = vals[np.isfinite(vals)]
-        vmax = max(np.nanpercentile(np.abs(finite_vals), 95) if finite_vals.size else 1, 0.25)
-        cmap = mcolors.LinearSegmentedColormap.from_list("perf_heat", [RED, "#111827", GREEN])
-
-        fig2, ax2 = plt.subplots(figsize=(8, max(4, len(heat) * 0.28)))
-        _apply_chart_style(ax2, "Multi-Horizon Performance Heatmap")
-        im = ax2.imshow(vals, aspect="auto", cmap=cmap, vmin=-vmax, vmax=vmax)
-
-        ax2.set_xticks(range(len(heat_cols_ov)))
-        ax2.set_xticklabels(heat_cols_ov, fontsize=9, color="#aabbcc")
-        ax2.set_yticks(range(len(heat.index)))
-        ax2.set_yticklabels(heat.index, fontsize=8, color="#aabbcc")
-
-        for i in range(vals.shape[0]):
-            for j in range(vals.shape[1]):
-                if np.isfinite(vals[i, j]):
-                    ax2.text(j, i, f"{vals[i, j]:.1f}", ha="center", va="center", fontsize=7, color="white")
-
+        section_hdr("Performance Heatmap",
+                    "Colour intensity = magnitude · red = negative · green = positive")
+        HC = ["1D %","5D %","1M %","3M %","YTD %"]
+        hd = snap.set_index("Asset")[HC].dropna(how="all")
+        vv = hd.values.astype(float)
+        fv = vv[np.isfinite(vv)]
+        vm = max(np.nanpercentile(np.abs(fv), 95) if fv.size else 1, 0.25)
+        cmap = mcolors.LinearSegmentedColormap.from_list("ph", [RED, "#0d1526", GREEN])
+        fig2, ax2 = _fig(max(4, len(hd) * 0.30), 8)
+        _t(ax2, "Multi-Horizon Performance Heatmap")
+        im = ax2.imshow(vv, aspect="auto", cmap=cmap, vmin=-vm, vmax=vm)
+        ax2.set_xticks(range(len(HC)));   ax2.set_xticklabels(HC, fontsize=8, color="#8fa8c0")
+        ax2.set_yticks(range(len(hd)));   ax2.set_yticklabels(hd.index, fontsize=7, color="#8fa8c0")
+        for i in range(vv.shape[0]):
+            for j in range(vv.shape[1]):
+                if np.isfinite(vv[i, j]):
+                    ax2.text(j, i, f"{vv[i,j]:.1f}", ha="center", va="center",
+                             fontsize=6.5, color="white")
         plt.colorbar(im, ax=ax2, fraction=0.025, pad=0.02)
-        plt.tight_layout()
-        st.pyplot(fig2)
-        plt.close(fig2)
+        _show(fig2)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 1 — FX & COMMODITIES
+# ─────────────────────────────────────────────────────────────────────────────
 with tabs[1]:
-    c1, c2 = st.columns(2, gap="large")
+    C1, C2 = st.columns(2, gap="large")
 
-    with c1:
-        section_box("FX Dashboard", "Major currency pairs — performance and heatmap")
-        fx_snap = snap[snap["Asset"].isin([x for x in FX_LABELS if x in snap["Asset"].values])].copy()
+    with C1:
+        section_hdr("FX Dashboard", "Major currency pairs — performance and RSI signals")
+        fx_s = snap[snap["Asset"].isin([x for x in FX_LABELS if x in snap["Asset"].values])]
+        if not fx_s.empty:
+            st.dataframe(style_table(fx_s[["Asset","Last","1D %","1M %","3M %","20D Vol %","RSI(14)"]]),
+                         use_container_width=True, height=270)
+        with st.expander("ℹ️ Reading the FX table"):
+            st.markdown(
+                "**DXY** measures USD vs a basket of six major currencies. "
+                "Rising DXY = USD strength → typically pressures commodities, EM assets and risk. "
+                "**EUR/USD** is the world's most liquid pair and often leads macro FX trends.  \n"
+                "**RSI > 70** = potentially overbought; **RSI < 30** = potentially oversold."
+            )
+        # FX heatmap
+        hc = ["1D %","5D %","1M %","3M %"]
+        hd = fx_s.set_index("Asset")[hc].dropna(how="all") if not fx_s.empty else pd.DataFrame()
+        if not hd.empty:
+            vv = hd.values.astype(float)
+            fv = vv[np.isfinite(vv)]
+            vm = max(np.nanpercentile(np.abs(fv), 90) if fv.size else 1, 0.2)
+            cmap = mcolors.LinearSegmentedColormap.from_list("fx", [RED, "#0d1526", GREEN])
+            fig, ax = _fig(max(3.5, len(hd) * 0.54), 8)
+            _t(ax, "FX Performance Heatmap")
+            im = ax.imshow(vv, cmap=cmap, vmin=-vm, vmax=vm, aspect="auto")
+            ax.set_xticks(range(len(hc)));  ax.set_xticklabels(hc, fontsize=9, color="#8fa8c0")
+            ax.set_yticks(range(len(hd)));  ax.set_yticklabels(hd.index, fontsize=8.5, color="#8fa8c0")
+            for i in range(vv.shape[0]):
+                for j in range(vv.shape[1]):
+                    if np.isfinite(vv[i, j]):
+                        ax.text(j, i, f"{vv[i,j]:.2f}", ha="center", va="center",
+                                fontsize=8, color="white", fontweight="bold")
+            plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
+            _show(fig)
 
-        if not fx_snap.empty:
-            st.dataframe(
-                style_perf_table(fx_snap[["Asset", "Last", "1D %", "1M %", "3M %", "20D Vol %", "RSI(14)"]]),
-                use_container_width=True,
-                height=300,
+    with C2:
+        section_hdr("Commodities + Inflation Proxy",
+                    "Energy, metals, agricultural and inflation-linked basket")
+        cm_s = snap[snap["Asset"].isin([x for x in COMMODITY_LABELS if x in snap["Asset"].values])]
+        if not cm_s.empty:
+            st.dataframe(style_table(cm_s[["Asset","Last","1D %","1M %","3M %","20D Vol %","RSI(14)"]]),
+                         use_container_width=True, height=310)
+        with st.expander("ℹ️ What is the Inflation Proxy Basket?"):
+            st.markdown(
+                "An equal-weight composite of Gold, WTI crude, Copper, Corn and TIP ETF. "
+                "When the basket rises, broad price pressures may be building. "
+                "This is a *directional proxy* only — not a direct inflation measure."
+            )
+        req = [x for x in ["Gold","WTI","Copper","Corn","TIP"] if x in prices.columns]
+        if len(req) >= 3:
+            base = prices[req].dropna(how="all").ffill().dropna()
+            if not base.empty:
+                norm  = base / base.iloc[0] * 100
+                proxy = norm.mean(axis=1)
+                fig, ax = _fig(4.2, 8)
+                _t(ax, "Inflation Proxy Basket (Indexed to 100)")
+                for i, col in enumerate(norm.columns):
+                    ax.plot(norm.index, norm[col], lw=1.2, alpha=0.6,
+                            color=PALETTE[i % len(PALETTE)], label=col)
+                ax.plot(proxy.index, proxy.values, lw=2.5, color="white",
+                        label="Basket Avg", zorder=5)
+                ax.axhline(100, color=MUTED, lw=0.7, ls="--")
+                _leg(ax, ncols=3)
+                ax.set_ylabel("Index (base=100)", color="#7a8fa6", fontsize=8)
+                _show(fig)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 2 — EQUITIES & CRYPTO
+# ─────────────────────────────────────────────────────────────────────────────
+with tabs[2]:
+    L, R = st.columns(2, gap="large")
+
+    with L:
+        section_hdr("Global Equities", "US and international equity index performance")
+        eq_s = snap[snap["Asset"].isin([x for x in EQUITY_LABELS if x in snap["Asset"].values])]
+        if not eq_s.empty:
+            st.dataframe(style_table(eq_s[["Asset","Last","1D %","1M %","3M %","20D Vol %","RSI(14)"]]),
+                         use_container_width=True, height=340)
+        eq_p = prices[[x for x in EQUITY_LABELS if x in prices.columns]]
+        if not eq_p.empty:
+            sel = st.multiselect("Indices to chart", eq_p.columns.tolist(),
+                                 default=eq_p.columns.tolist()[:5], key="eq_sel")
+            if sel:
+                norm = eq_p[sel] / eq_p[sel].iloc[0] * 100
+                fig, ax = _fig(4.2, 10)
+                _t(ax, "Equity Indices — Indexed to 100")
+                for i, col in enumerate(norm.columns):
+                    ax.plot(norm.index, norm[col], lw=1.7, label=col,
+                            color=PALETTE[i % len(PALETTE)])
+                ax.axhline(100, color="#ffffff18", lw=0.7, ls="--")
+                ax.set_ylabel("Index (base=100)", color="#7a8fa6", fontsize=8)
+                _leg(ax, ncols=3)
+                _show(fig)
+
+    with R:
+        section_hdr("Crypto Monitor", "Prices, rolling volatility and RSI signals")
+        cr_s = snap[snap["Asset"].isin([x for x in CRYPTO_LABELS if x in snap["Asset"].values])]
+        if not cr_s.empty:
+            st.dataframe(style_table(cr_s[["Asset","Last","1D %","1M %","3M %","20D Vol %","RSI(14)"]]),
+                         use_container_width=True, height=200)
+        cr_p = prices[[x for x in CRYPTO_LABELS if x in prices.columns]]
+        if not cr_p.empty:
+            fig, ax = _fig(4.2, 10)
+            _t(ax, f"Rolling {roll_window}D Annualised Volatility (%)")
+            for i, col in enumerate(cr_p.columns):
+                rv = rolling_vol(cr_p[col].pct_change().dropna(), window=roll_window) * 100
+                ax.plot(rv.index, rv.values, lw=1.8, label=col,
+                        color=PALETTE[i % len(PALETTE)])
+            ax.set_ylabel("Ann. Vol (%)", color="#7a8fa6", fontsize=8)
+            _leg(ax)
+            _show(fig)
+        with st.expander("ℹ️ Crypto volatility context"):
+            st.markdown(
+                "Crypto typically exhibits **annualised realised vol of 60–120%**, "
+                "far above equities (≈15–25%) or bonds (≈5–10%). "
+                "Spikes in rolling vol coincide with liquidation cascades, "
+                "exchange failures or macro shocks."
             )
 
-            with st.expander("ℹ️ Reading the FX table", expanded=False):
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 3 — RATES & BONDS
+# ─────────────────────────────────────────────────────────────────────────────
+with tabs[3]:
+    L, R = st.columns(2, gap="large")
+
+    with L:
+        section_hdr("Rates Panel", "US Treasury yield levels and yield curve shape")
+        rt_s = snap[snap["Asset"].isin([x for x in RATE_ORDER if x in snap["Asset"].values])]
+        if not rt_s.empty:
+            st.dataframe(style_table(rt_s[["Asset","Last","1D %","1M %","3M %"]]),
+                         use_container_width=True, height=215)
+        avail = [x for x in RATE_ORDER if x in prices.columns]
+        if avail:
+            fig, ax = _fig(4.0, 10)
+            _t(ax, "Treasury Yield Trend")
+            for i, col in enumerate(avail):
+                s = prices[col].dropna()
+                ax.plot(s.index, s.values, lw=1.6, label=col, color=PALETTE[i % len(PALETTE)])
+            ax.set_ylabel("Yield (%)", color="#7a8fa6", fontsize=8)
+            _leg(ax, ncols=2)
+            _show(fig)
+
+            xs = [RATE_MATURITY[x] for x in avail]
+            ys = [float(prices[x].dropna().iloc[-1]) for x in avail]
+            fig2, ax2 = _fig(3.2, 10)
+            if _inverted:
+                ax2.set_facecolor("#1a0808")
+                _t(ax2, "Current Yield Curve  ⚠  INVERTED")
+                ax2.title.set_color(RED)
+            else:
+                _t(ax2, "Current Yield Curve")
+            ax2.plot(xs, ys, marker="o", lw=2.2, color=ACCENT, zorder=5, markersize=6)
+            for xp, yp, lb in zip(xs, ys, avail):
+                ax2.annotate(f"{yp:.2f}%", (xp, yp), textcoords="offset points",
+                             xytext=(0, 10), ha="center", fontsize=8, color=ACCENT)
+            ax2.set_xticks(xs); ax2.set_xticklabels(avail, color="#8fa8c0", fontsize=8)
+            ax2.set_ylabel("Yield (%)", color="#7a8fa6", fontsize=8)
+            _show(fig2)
+
+        with st.expander("ℹ️ Yield curve interpretation"):
+            spread_txt = f"{curve_spread:.2f} bps" if np.isfinite(curve_spread) else "N/A"
+            st.markdown(
+                "A **normal** yield curve slopes upward (longer maturities yield more). "
+                "An **inverted** curve has historically preceded US recessions by 6–18 months. "
+                f"Current 10Y − 3M spread: **{spread_txt}** — "
+                f"{'⚠ **Inverted**' if _inverted else '✓ Normal'}."
+            )
+
+    with R:
+        section_hdr("Bonds & Credit", "Duration, credit spreads and inflation-linked proxies")
+        bd_s = snap[snap["Asset"].isin([x for x in BOND_LABELS if x in snap["Asset"].values])]
+        if not bd_s.empty:
+            st.dataframe(style_table(bd_s[["Asset","Last","1D %","1M %","3M %","20D Vol %"]]),
+                         use_container_width=True, height=215)
+
+        if {"HYG","LQD"}.issubset(prices.columns):
+            ratio = (prices["HYG"] / prices["LQD"]).dropna()
+            fig3, ax3 = _fig(3.5, 10)
+            _t(ax3, "HYG / LQD — Credit Risk Proxy")
+            ax3.plot(ratio.index, ratio.values, lw=1.9, color=ACCENT2)
+            ax3.axhline(ratio.mean(), color="#ffffff25", lw=0.8, ls="--",
+                        label=f"Mean {ratio.mean():.3f}")
+            _leg(ax3)
+            _show(fig3)
+            with st.expander("ℹ️ HYG / LQD ratio"):
                 st.markdown(
-                    "DXY measures the US dollar against a basket of six major currencies. "
-                    "A rising DXY often signals USD strength, which can pressure commodities, "
-                    "emerging markets and risk assets."
+                    "**Rising** → risk-on, credit appetite improving (HY outperforming IG).  \n"
+                    "**Falling** → risk-off / credit stress — watch for equity follow-through."
                 )
 
-        create_fx_heatmap(snap)
+        if {"TLT","TIP"}.issubset(prices.columns):
+            spd = ((prices["TIP"] / prices["TIP"].iloc[0]) -
+                   (prices["TLT"] / prices["TLT"].iloc[0])) * 100
+            fig4, ax4 = _fig(3.5, 10)
+            _t(ax4, "TIP vs TLT — Inflation vs Duration")
+            ax4.plot(spd.index, spd.values, lw=1.9, color=YELLOW)
+            ax4.axhline(0, color="#ffffff18", lw=0.7, ls="--")
+            ax4.fill_between(spd.index, spd.values, 0, where=(spd.values > 0),
+                             alpha=0.15, color=GREEN)
+            ax4.fill_between(spd.index, spd.values, 0, where=(spd.values < 0),
+                             alpha=0.15, color=RED)
+            ax4.set_ylabel("Rel. Perf (%)", color="#7a8fa6", fontsize=8)
+            _show(fig4)
+            with st.expander("ℹ️ TIP vs TLT"):
+                st.markdown(
+                    "**TIP outperforming** → inflation expectations rising.  \n"
+                    "**TLT outperforming** → deflation / recession fears, flight to nominal duration."
+                )
 
-    with c2:
-        section_box("Commodities + Inflation Proxy", "Energy, metals, agriculture and inflation-linked basket")
-        comm_snap = snap[snap["Asset"].isin([x for x in COMMODITY_LABELS if x in snap["Asset"].values])].copy()
 
-        if not comm_snap.empty:
-            st.dataframe(
-                style_perf_table(comm_snap[["Asset", "Last", "1D %", "1M %", "3M %", "20D Vol %", "RSI(14)"]]),
-                use_container_width=True,
-                height=300,
-            )
-
-        create_inflation_proxy_chart(prices)
-
-with tabs[2]:
-    left, right = st.columns(2, gap="large")
-
-    with left:
-        section_box("Global Equities", "US and international equity index performance")
-        eq_snap = snap[snap["Asset"].isin([x for x in EQUITY_LABELS if x in snap["Asset"].values])].copy()
-
-        if not eq_snap.empty:
-            st.dataframe(
-                style_perf_table(eq_snap[["Asset", "Last", "1D %", "1M %", "3M %", "20D Vol %", "RSI(14)"]]),
-                use_container_width=True,
-                height=320,
-            )
-
-        eq_prices = prices[[x for x in EQUITY_LABELS if x in prices.columns]]
-        if not eq_prices.empty:
-            sel = st.multiselect(
-                "Equity indices to chart",
-                eq_prices.columns.tolist(),
-                default=eq_prices.columns.tolist()[:5],
-                key="macro_eq_sel",
-            )
-            if sel:
-                norm = eq_prices[sel] / eq_prices[sel].iloc[0] * 100
-                fig, ax = plt.subplots(figsize=(10, 4))
-                _apply_chart_style(ax, "Equity Indices — Indexed to 100")
-                for i, col in enumerate(norm.columns):
-                    ax.plot(norm.index, norm[col], lw=1.8, label=col, color=PALETTE[i % len(PALETTE)])
-                ax.axhline(100, color="white", lw=0.8, ls="--")
-                ax.legend(fontsize=8, ncols=3, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-                plt.tight_layout()
-                st.pyplot(fig)
-                plt.close(fig)
-
-    with right:
-        section_box("Crypto Monitor", "Crypto prices, rolling volatility and RSI signals")
-        crypto_snap = snap[snap["Asset"].isin([x for x in CRYPTO_LABELS if x in snap["Asset"].values])].copy()
-
-        if not crypto_snap.empty:
-            st.dataframe(
-                style_perf_table(crypto_snap[["Asset", "Last", "1D %", "1M %", "3M %", "20D Vol %", "RSI(14)"]]),
-                use_container_width=True,
-                height=200,
-            )
-
-        crypto_prices = prices[[x for x in CRYPTO_LABELS if x in prices.columns]]
-        if not crypto_prices.empty:
-            fig2, ax2 = plt.subplots(figsize=(10, 4))
-            _apply_chart_style(ax2, f"Rolling {roll_window}D Annualised Volatility (%)")
-
-            for i, col in enumerate(crypto_prices.columns):
-                rv = rolling_vol(crypto_prices[col].pct_change(fill_method=None).dropna(), window=roll_window) * 100
-                ax2.plot(rv.index, rv.values, lw=1.8, label=col, color=PALETTE[i % len(PALETTE)])
-
-            ax2.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-            plt.tight_layout()
-            st.pyplot(fig2)
-            plt.close(fig2)
-
-with tabs[3]:
-    left, right = st.columns(2, gap="large")
-
-    with left:
-        section_box("Rates Panel", "US Treasury yield trend and current yield curve shape")
-        rate_snap = snap[snap["Asset"].isin([x for x in RATE_ORDER if x in snap["Asset"].values])].copy()
-
-        if not rate_snap.empty:
-            st.dataframe(
-                style_perf_table(rate_snap[["Asset", "Last", "1D %", "1M %", "3M %"]]),
-                use_container_width=True,
-                height=220,
-            )
-
-        available = [x for x in RATE_ORDER if x in prices.columns]
-        if available:
-            fig, ax = plt.subplots(figsize=(10, 4))
-            _apply_chart_style(ax, "Treasury Yield Trend Panel")
-
-            for i, col in enumerate(available):
-                s = prices[col].dropna()
-                ax.plot(s.index, s.values, lw=1.7, label=col, color=PALETTE[i % len(PALETTE)])
-
-            ax.set_ylabel("Yield (%)", color="#aabbcc", fontsize=9)
-            ax.legend(fontsize=8, ncols=2, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-            plt.tight_layout()
-            st.pyplot(fig)
-            plt.close(fig)
-
-            xs = [RATE_MATURITY[x] for x in available]
-            ys = [float(prices[x].dropna().iloc[-1]) for x in available]
-
-            fig2, ax2 = plt.subplots(figsize=(10, 3.5))
-            _apply_chart_style(ax2, "Current Yield Curve")
-            ax2.plot(xs, ys, marker="o", lw=2.2, color=ACCENT, zorder=5)
-
-            for x_pt, y_pt, lbl in zip(xs, ys, available):
-                ax2.annotate(f"{y_pt:.2f}%", (x_pt, y_pt), textcoords="offset points", xytext=(0, 9), ha="center", fontsize=8, color=ACCENT)
-
-            ax2.set_xticks(xs)
-            ax2.set_xticklabels(available, color="#aabbcc")
-            ax2.set_ylabel("Yield (%)", color="#aabbcc", fontsize=9)
-
-            if np.isfinite(curve_spread) and curve_spread < 0:
-                ax2.axhspan(min(ys) - 0.1, max(ys) + 0.1, alpha=0.06, color=RED)
-                ax2.set_title("Current Yield Curve ⚠ INVERTED", color=RED, fontsize=10, fontweight="bold", pad=8)
-
-            plt.tight_layout()
-            st.pyplot(fig2)
-            plt.close(fig2)
-
-    with right:
-        section_box("Bonds & Credit", "Duration, credit spreads and inflation-linked proxies")
-        bond_snap = snap[snap["Asset"].isin([x for x in BOND_LABELS if x in snap["Asset"].values])].copy()
-
-        if not bond_snap.empty:
-            st.dataframe(
-                style_perf_table(bond_snap[["Asset", "Last", "1D %", "1M %", "3M %", "20D Vol %"]]),
-                use_container_width=True,
-                height=220,
-            )
-
-        if {"HYG", "LQD"}.issubset(prices.columns):
-            ratio = (prices["HYG"] / prices["LQD"]).dropna()
-            fig3, ax3 = plt.subplots(figsize=(10, 3.5))
-            _apply_chart_style(ax3, "HYG / LQD Credit Risk Proxy")
-            ax3.plot(ratio.index, ratio.values, lw=2.0, color=ACCENT2)
-            ax3.axhline(ratio.mean(), color="white", lw=0.8, ls="--", label=f"Mean: {ratio.mean():.3f}")
-            ax3.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-            plt.tight_layout()
-            st.pyplot(fig3)
-            plt.close(fig3)
-
-        if {"TLT", "TIP"}.issubset(prices.columns):
-            spread = ((prices["TIP"] / prices["TIP"].iloc[0]) - (prices["TLT"] / prices["TLT"].iloc[0])) * 100
-            fig4, ax4 = plt.subplots(figsize=(10, 3.5))
-            _apply_chart_style(ax4, "TIP vs TLT Relative Performance (Inflation vs Duration)")
-            ax4.plot(spread.index, spread.values, lw=2.0, color=YELLOW)
-            ax4.axhline(0, color="white", lw=0.8, ls="--")
-            ax4.fill_between(spread.index, spread.values, 0, where=(spread.values > 0), alpha=0.18, color=GREEN)
-            ax4.fill_between(spread.index, spread.values, 0, where=(spread.values < 0), alpha=0.18, color=RED)
-            plt.tight_layout()
-            st.pyplot(fig4)
-            plt.close(fig4)
-
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 4 — CORRELATION
+# ─────────────────────────────────────────────────────────────────────────────
 with tabs[4]:
-    section_box(
+    section_hdr(
         "Correlation Matrix",
-        "Daily return correlation — blue = positive, red = negative; values near ±1 = strong co-movement",
+        "Daily return correlation · blue = positive · red = negative · bold text = |corr| > 0.7",
     )
+    with st.expander("ℹ️ How to read this matrix"):
+        st.markdown(
+            "**+1** → assets move perfectly together (no diversification benefit).  \n"
+            "**−1** → assets move perfectly opposite (natural hedge).  \n"
+            "**0** → no linear relationship.  \n\n"
+            "**Note on rate tickers** (US 3M, 5Y, 10Y, 30Y): these are yield *levels*, "
+            "not prices. The matrix uses daily *differences* for rate series "
+            "(e.g. +2bps) and daily *% returns* for all other assets, "
+            "ensuring meaningful correlation values instead of all-NaN."
+        )
 
     corr_assets = st.multiselect(
         "Assets for correlation",
         prices.columns.tolist(),
-        default=prices.columns.tolist()[: min(14, len(prices.columns))],
-        key="macro_corr_assets",
+        default=prices.columns.tolist()[: min(16, len(prices.columns))],
+        key="corr_sel",
     )
 
     if len(corr_assets) >= 2:
-        rets = prices[corr_assets].pct_change(fill_method=None).dropna(how="all")
-        corr = correlation_matrix(rets)
-        n = len(corr_assets)
+        # Build a mixed returns frame: diff() for rates, pct_change() for everything else
+        parts = []
+        for col in corr_assets:
+            s = prices[col].dropna()
+            r = s.diff().dropna() if col in RATE_TICKERS else s.pct_change().dropna()
+            r.name = col
+            parts.append(r)
+        rets_df = pd.concat(parts, axis=1).dropna(how="all")
+        valid   = rets_df.dropna(axis=1, how="all").columns.tolist()
 
-        fig, ax = plt.subplots(figsize=(max(7, n * 0.72), max(5, n * 0.58)))
-        _apply_chart_style(ax, f"Return Correlation Matrix ({period} lookback)")
-        cmap = mcolors.LinearSegmentedColormap.from_list("corr", [RED, "#111827", ACCENT])
-        im = ax.imshow(corr.values, cmap=cmap, vmin=-1, vmax=1)
-
-        ax.set_xticks(range(n))
-        ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=8, color="#aabbcc")
-        ax.set_yticks(range(n))
-        ax.set_yticklabels(corr.index, fontsize=8, color="#aabbcc")
-
-        for i in range(n):
-            for j in range(n):
-                ax.text(
-                    j,
-                    i,
-                    f"{corr.values[i, j]:.2f}",
-                    ha="center",
-                    va="center",
-                    fontsize=7,
-                    color="white",
-                    fontweight="bold" if abs(corr.values[i, j]) > 0.7 else "normal",
-                )
-
-        plt.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
-    else:
-        st.info("Select at least two assets to compute the correlation matrix.")
-
-with tabs[5]:
-    section_box(
-        "Macro Basket Backtest",
-        "Equal-weight portfolio — Sharpe, Sortino, Calmar, drawdown profile and asset contributions",
-    )
-    create_backtest(prices, backtest_assets, benchmark_label)
-
-with tabs[6]:
-    left, right = st.columns(2, gap="large")
-
-    with left:
-        section_box("Market Regime Detector", "Trend structure (SMA 20/60) + VIX volatility overlay")
-
-        regime_descriptions = {
-            "Bull Market": "S&P 500 is above both its 20-day and 60-day moving averages with VIX below 25.",
-            "Bull / High Vol": "S&P 500 is in an uptrend but VIX ≥ 25 signals elevated fear.",
-            "Bear Market": "S&P 500 is below both its 20-day and 60-day moving averages.",
-            "Transition / Choppy": "Price and moving averages are in a mixed state.",
-            "Unavailable": "Insufficient data to determine regime.",
-        }
-
-        desc = regime_descriptions.get(regime_label, "")
-
-        st.markdown(
-            f"""
-            <div style="background:linear-gradient(180deg,#0b1220 0%,#0d1526 100%);
-                        border:1px solid {regime_color}; border-radius:12px;
-                        padding:18px; margin-bottom:12px;">
-              <div style="color:{MUTED}; font-size:10px; font-weight:800;
-                          letter-spacing:0.14em; text-transform:uppercase;">Current Regime</div>
-              <div style="color:{regime_color}; font-size:28px; font-weight:900; margin-top:8px;">
-                {regime_label}
-              </div>
-              <div style="color:{MUTED}; font-size:11px; margin-top:8px; line-height:1.6;">
-                {desc}
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        if "S&P 500" in prices.columns:
-            spx = prices["S&P 500"].dropna()
-            sma20 = spx.rolling(20).mean()
-            sma60 = spx.rolling(60).mean()
-
-            fig, ax = plt.subplots(figsize=(10, 4))
-            _apply_chart_style(ax, "S&P 500 Trend Structure")
-            ax.plot(spx.index, spx.values, lw=1.9, color=ACCENT, label="S&P 500")
-            ax.plot(sma20.index, sma20.values, lw=1.2, ls="--", color=YELLOW, label="SMA 20")
-            ax.plot(sma60.index, sma60.values, lw=1.2, ls="--", color=RED, label="SMA 60")
-            ax.fill_between(
-                spx.index,
-                sma60.reindex(spx.index),
-                spx.values,
-                where=(spx.values < sma60.reindex(spx.index).values),
-                alpha=0.12,
-                color=RED,
-                interpolate=True,
-            )
-            ax.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-            plt.tight_layout()
+        if len(valid) < 2:
+            st.warning("Not enough overlapping data. Try a different combination or longer period.")
+        else:
+            corr = rets_df[valid].corr()
+            n    = len(valid)
+            fig, ax = plt.subplots(figsize=(max(7, n * 0.76), max(5, n * 0.62)))
+            fig.patch.set_facecolor(BG_CARD)
+            ax.set_facecolor(BG_CARD)
+            for sp in ax.spines.values():
+                sp.set_edgecolor("#1c2a3a")
+            cmap = mcolors.LinearSegmentedColormap.from_list("corr", [RED, "#0d1526", ACCENT])
+            im = ax.imshow(corr.values, cmap=cmap, vmin=-1, vmax=1)
+            ax.set_xticks(range(n))
+            ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=8, color="#8fa8c0")
+            ax.set_yticks(range(n))
+            ax.set_yticklabels(corr.index, fontsize=8, color="#8fa8c0")
+            ax.set_title(f"Return Correlation Matrix ({period} lookback)",
+                         color="#c8d8e8", fontsize=10, fontweight="bold", pad=10)
+            for i in range(n):
+                for j in range(n):
+                    v = corr.values[i, j]
+                    if np.isfinite(v):
+                        ax.text(j, i, f"{v:.2f}", ha="center", va="center",
+                                fontsize=6.5, color="white",
+                                fontweight="bold" if abs(v) > 0.7 else "normal")
+            cb = plt.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
+            cb.ax.tick_params(colors="#7a8fa6", labelsize=7)
+            plt.tight_layout(pad=0.8)
             st.pyplot(fig)
             plt.close(fig)
+    else:
+        st.info("Select at least two assets.")
 
-    with right:
-        section_box("Cross-Asset Leadership", "Relative 1M and 3M performance of key macro assets")
-        leaders = snap[snap["Asset"].isin([x for x in ["S&P 500", "Gold", "TLT", "DXY", "Bitcoin", "WTI"] if x in snap["Asset"].values])]
 
-        if not leaders.empty:
-            st.dataframe(
-                leaders[["Asset", "1M %", "3M %", "20D Vol %", "RSI(14)"]]
-                .set_index("Asset")
-                .style.format({
-                    "1M %": "{:.2f}%",
-                    "3M %": "{:.2f}%",
-                    "20D Vol %": "{:.2f}%",
-                    "RSI(14)": "{:.1f}",
-                }),
-                use_container_width=True,
-                height=270,
-            )
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 5 — BACKTEST
+# ─────────────────────────────────────────────────────────────────────────────
+with tabs[5]:
+    section_hdr(
+        "Macro Basket Backtest",
+        "Equal-weight portfolio · daily rebalance · no transaction costs · educational only",
+    )
+    with st.expander("ℹ️ About this backtest"):
+        bnames = ", ".join(backtest_assets) if backtest_assets else "no assets selected"
+        st.markdown(
+            f"**Portfolio**: equal-weight — {bnames}.  \n"
+            "Rebalanced daily (academic assumption).  No costs, slippage or taxes.  \n"
+            "**Sharpe** = ann. excess return ÷ ann. std dev.  \n"
+            "**Sortino** = ann. excess return ÷ downside deviation.  \n"
+            "**Calmar** = ann. return ÷ |max drawdown|.  \n"
+            "*Past performance is not indicative of future results.*"
+        )
 
-        if {"US 10Y", "US 3M"}.issubset(prices.columns):
-            spread_ts = (prices["US 10Y"] - prices["US 3M"]).dropna()
+    valid_bt = [x for x in backtest_assets if x in prices.columns]
+    if not valid_bt:
+        st.info("Choose at least one valid investable asset in the sidebar Backtest basket.")
+    else:
+        panel = prices[valid_bt].dropna(how="all").ffill().dropna()
+        if len(panel) < 10:
+            st.info("Not enough data — try a longer lookback period.")
+        else:
+            rets       = panel.pct_change().dropna()
+            w          = np.repeat(1.0 / len(valid_bt), len(valid_bt))
+            port_ret   = rets.dot(w)
+            port_curve = (1 + port_ret).cumprod()
+            dd         = port_curve / port_curve.cummax() - 1
 
-            fig2, ax2 = plt.subplots(figsize=(10, 4))
-            _apply_chart_style(ax2, "10Y − 3M Yield Spread Through Time")
-            ax2.plot(spread_ts.index, spread_ts.values, color=ACCENT2, lw=2.0)
-            ax2.axhline(0, color=RED, lw=1.0, ls="--", label="Inversion threshold")
-            ax2.fill_between(spread_ts.index, spread_ts.values, 0, where=(spread_ts.values < 0), alpha=0.18, color=RED, label="Inverted")
-            ax2.fill_between(spread_ts.index, spread_ts.values, 0, where=(spread_ts.values >= 0), alpha=0.10, color=GREEN)
-            ax2.set_ylabel("Spread (pts)", color="#aabbcc", fontsize=9)
-            ax2.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-            plt.tight_layout()
-            st.pyplot(fig2)
-            plt.close(fig2)
+            bench_curve: pd.Series | None = None
+            if benchmark_label in prices.columns:
+                b = prices[benchmark_label].reindex(panel.index).ffill().dropna()
+                if len(b) > 1:
+                    bench_curve = b / b.iloc[0]
+
+            tr = (port_curve.iloc[-1] - 1) * 100
+            ar = annualized_return(port_ret) * 100
+            av = annualized_vol(port_ret) * 100
+            md = dd.min() * 100
+            sh = _sharpe(port_ret)
+            so = _sortino(port_ret)
+            ca = _calmar(port_ret)
+
+            mc = st.columns(7)
+            for col, (lbl, val) in zip(mc, [
+                ("Total Return",  f"{tr:.2f}%"),
+                ("Ann. Return",   f"{ar:.2f}%"),
+                ("Ann. Vol",      f"{av:.2f}%"),
+                ("Max Drawdown",  f"{md:.2f}%"),
+                ("Sharpe",        f"{sh:.2f}" if np.isfinite(sh) else "—"),
+                ("Sortino",       f"{so:.2f}" if np.isfinite(so) else "—"),
+                ("Calmar",        f"{ca:.2f}" if np.isfinite(ca) else "—"),
+            ]):
+                col.metric(lbl, val)
+
+            st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
+
+            # Growth + drawdown dual panel
+            fig, (ax1, ax2) = _fig2([3, 1.2], 7.0, 11)
+            _t(ax1, "Portfolio Growth vs Benchmark")
+            ax1.plot(port_curve.index, port_curve.values, lw=2.2, color=ACCENT, label="Basket")
+            if bench_curve is not None and not bench_curve.empty:
+                al = bench_curve.reindex(port_curve.index).dropna()
+                ax1.plot(al.index, al.values, lw=1.6, ls="--", color=ACCENT2,
+                         label=benchmark_label)
+            ax1.axhline(1.0, color="#ffffff12", lw=0.6, ls=":")
+            ax1.set_ylabel("Growth of $1", color="#7a8fa6", fontsize=8)
+            _leg(ax1)
+            ax1.tick_params(labelbottom=False)
+
+            _t(ax2, "Drawdown from Peak")
+            ax2.fill_between(dd.index, dd.values, 0, color=RED, alpha=0.38)
+            ax2.plot(dd.index, dd.values, lw=1.0, color=RED)
+            ax2.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1, decimals=0))
+            ax2.set_ylabel("Drawdown", color="#7a8fa6", fontsize=8)
+            plt.tight_layout(pad=0.6)
+            st.pyplot(fig); plt.close(fig)
+
+            # Per-asset contribution bar
+            contrib = ((panel.iloc[-1] / panel.iloc[0]) - 1).sort_values()
+            fig2, ax2b = _fig(max(3.2, len(contrib) * 0.48), 11)
+            _t(ax2b, "Individual Asset Total Returns in Basket")
+            bc = [GREEN if v >= 0 else RED for v in contrib.values]
+            ax2b.barh(contrib.index, contrib.values * 100, color=bc,
+                      edgecolor=BG_CARD, height=0.65)
+            ax2b.axvline(0, color="#ffffff20", lw=0.7, ls="--")
+            ax2b.set_xlabel("Return (%)", color="#7a8fa6", fontsize=8)
+            ax2b.tick_params(axis="y", labelsize=8, colors="#8fa8c0")
+            _show(fig2)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 6 — REGIME
+# ─────────────────────────────────────────────────────────────────────────────
+with tabs[6]:
+    L, R = st.columns(2, gap="large")
+
+    with L:
+        section_hdr("Market Regime Detector",
+                    "S&P 500 trend (SMA 20 / SMA 60) + VIX volatility overlay")
+        st.markdown(
+            f"""
+            <div style="background:{BG_CARD2}; border:1.5px solid {regime_color};
+                        border-radius:12px; padding:18px 20px; margin-bottom:12px;">
+              <div style="color:{MUTED}; font-size:9px; font-weight:800;
+                          letter-spacing:0.18em; text-transform:uppercase;">Current Regime</div>
+              <div style="color:{regime_color}; font-size:26px; font-weight:900;
+                          margin-top:8px; letter-spacing:-0.01em;">{regime_label}</div>
+              <div style="color:{MUTED}; font-size:11px; margin-top:10px;
+                          line-height:1.7; max-width:480px;">{regime_desc}</div>
+            </div>
+            """, unsafe_allow_html=True,
+        )
+        if "S&P 500" in prices.columns:
+            spx   = prices["S&P 500"].dropna()
+            sma20 = spx.rolling(20).mean()
+            sma60 = spx.rolling(60).mean()
+            fig, ax = _fig(4.2, 10)
+            _t(ax, "S&P 500 — Trend Structure (SMA 20 / 60)")
+            ax.plot(spx.index, spx.values, lw=1.9, color=ACCENT, label="S&P 500")
+            ax.plot(sma20.index, sma20.values, lw=1.1, ls="--", color=YELLOW, label="SMA 20")
+            ax.plot(sma60.index, sma60.values, lw=1.1, ls="--", color=RED,    label="SMA 60")
+            ax.fill_between(spx.index,
+                            sma60.reindex(spx.index).values, spx.values,
+                            where=(spx.values < sma60.reindex(spx.index).values),
+                            alpha=0.12, color=RED, interpolate=True)
+            ax.set_ylabel("Index Level", color="#7a8fa6", fontsize=8)
+            _leg(ax)
+            _show(fig)
 
         if "VIX" in prices.columns:
             vix = prices["VIX"].dropna()
+            fig2, ax2 = _fig(3.2, 10)
+            _t(ax2, "VIX — Fear Gauge")
+            ax2.plot(vix.index, vix.values, lw=1.8, color=ORANGE)
+            ax2.axhline(20, color=YELLOW, lw=0.8, ls="--", label="Elevated (20)")
+            ax2.axhline(30, color=RED,    lw=0.8, ls="--", label="Panic (30)")
+            ax2.fill_between(vix.index, vix.values, 20,
+                             where=(vix.values > 20), alpha=0.14, color=RED)
+            ax2.set_ylabel("VIX", color="#7a8fa6", fontsize=8)
+            _leg(ax2)
+            _show(fig2)
 
-            fig3, ax3 = plt.subplots(figsize=(10, 3.5))
-            _apply_chart_style(ax3, "VIX — Fear Gauge")
-            ax3.plot(vix.index, vix.values, lw=1.8, color=ORANGE)
-            ax3.axhline(20, color=YELLOW, lw=0.9, ls="--", label="Elevated (20)")
-            ax3.axhline(30, color=RED, lw=0.9, ls="--", label="Panic (30)")
-            ax3.fill_between(vix.index, vix.values, 20, where=(vix.values > 20), alpha=0.15, color=RED)
-            ax3.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
-            ax3.set_ylabel("VIX", color="#aabbcc", fontsize=9)
-            plt.tight_layout()
-            st.pyplot(fig3)
-            plt.close(fig3)
+    with R:
+        section_hdr("Cross-Asset Leadership",
+                    "Relative 1M and 3M performance of key macro assets")
+        _lead = ["S&P 500","Gold","TLT","DXY","Bitcoin","WTI","VIX"]
+        leaders = snap[snap["Asset"].isin([x for x in _lead if x in snap["Asset"].values])]
+        if not leaders.empty:
+            st.dataframe(
+                leaders[["Asset","1M %","3M %","20D Vol %","RSI(14)"]].set_index("Asset")
+                .style.format({"1M %":"{:.2f}%","3M %":"{:.2f}%",
+                               "20D Vol %":"{:.2f}%","RSI(14)":"{:.1f}"}),
+                use_container_width=True, height=280,
+            )
+
+        if {"US 10Y","US 3M"}.issubset(prices.columns):
+            spd_ts = (prices["US 10Y"] - prices["US 3M"]).dropna()
+            fig3, ax3 = _fig(3.8, 10)
+            _t(ax3, "10Y − 3M Yield Spread")
+            ax3.plot(spd_ts.index, spd_ts.values, color=ACCENT2, lw=1.9)
+            ax3.axhline(0, color=RED, lw=0.9, ls="--", label="Inversion (0)")
+            ax3.fill_between(spd_ts.index, spd_ts.values, 0,
+                             where=(spd_ts.values < 0),  alpha=0.18, color=RED,   label="Inverted")
+            ax3.fill_between(spd_ts.index, spd_ts.values, 0,
+                             where=(spd_ts.values >= 0), alpha=0.10, color=GREEN)
+            ax3.set_ylabel("Spread (bps)", color="#7a8fa6", fontsize=8)
+            _leg(ax3)
+            _show(fig3)
+
+        # S&P 500 / Gold rolling correlation — hedge effectiveness check
+        if {"S&P 500","Gold"}.issubset(prices.columns):
+            rc = (prices["S&P 500"].pct_change()
+                  .rolling(40)
+                  .corr(prices["Gold"].pct_change())
+                  .dropna())
+            if not rc.empty:
+                fig4, ax4 = _fig(3.2, 10)
+                _t(ax4, "40D Rolling Correlation: S&P 500 vs Gold")
+                ax4.plot(rc.index, rc.values, lw=1.8, color=YELLOW)
+                ax4.axhline(0,    color="#ffffff20", lw=0.7, ls="--")
+                ax4.axhline(-0.3, color=GREEN,       lw=0.7, ls=":", label="Hedge threshold (−0.3)")
+                ax4.fill_between(rc.index, rc.values, 0,
+                                 where=(rc.values < 0), alpha=0.13, color=GREEN)
+                ax4.set_ylim(-1, 1)
+                ax4.set_ylabel("Correlation", color="#7a8fa6", fontsize=8)
+                _leg(ax4)
+                _show(fig4)
+                with st.expander("ℹ️ S&P 500 / Gold rolling correlation"):
+                    st.markdown(
+                        "When correlation is **negative**, gold is acting as an equity hedge "
+                        "(classic risk-off behaviour). When it turns **positive**, both assets "
+                        "move together — common during liquidity crises or broad USD selling."
+                    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FOOTER
 # ══════════════════════════════════════════════════════════════════════════════
-
 st.markdown("---")
 st.markdown(
     f"""
-    <div style="color:{MUTED}; font-size:11px; text-align:center;
-                letter-spacing:0.10em; text-transform:uppercase;">
+    <div style="color:{MUTED}; font-size:10px; text-align:center;
+                letter-spacing:0.10em; text-transform:uppercase; padding:4px 0 8px 0;">
       QuantDesk Pro · Macro Dashboard Pro ·
-      Data via yfinance ·
-      Cached {datetime.datetime.utcnow().strftime('%H:%M UTC')} ·
+      Data via yfinance · Cached {datetime.datetime.utcnow().strftime("%H:%M UTC")} ·
       Educational use only — not financial advice
     </div>
     """,
     unsafe_allow_html=True,
 )
 app_footer()
+
