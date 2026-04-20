@@ -40,10 +40,6 @@ if st.button("Send Message", use_container_width=True):
             st.error(f"Could not send message: {e}")
 
 st.markdown("""
-### Notes
 
-- Messages are stored in the app database.
-- A real email backend such as SendGrid can be connected later.
-""")
 
 app_footer()
