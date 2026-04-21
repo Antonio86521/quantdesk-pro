@@ -94,7 +94,6 @@ def apply_theme() -> None:
         .stApp { background: var(--bg) !important; }
         .block-container { padding-top: 0.6rem; padding-bottom: 1rem; max-width: 1260px; }
 
-        /* ── Sidebar ── */
         section[data-testid="stSidebar"] {
           background: var(--bg2) !important;
           border-right: 1px solid var(--border2) !important;
@@ -123,7 +122,6 @@ def apply_theme() -> None:
           border: 1px solid rgba(47,128,237,0.22);
         }
 
-        /* ── Metrics ── */
         [data-testid="metric-container"], div[data-testid="stMetric"] {
           background: var(--bg3);
           border: 1px solid var(--border);
@@ -147,7 +145,6 @@ def apply_theme() -> None:
         }
         div[data-testid="stMetricDelta"] { font-size: 11px !important; }
 
-        /* ── Tabs ── */
         .stTabs [data-baseweb="tab-list"] {
           background: var(--bg3); padding: 3px; border-radius: 8px;
           gap: 2px; width: fit-content;
@@ -165,7 +162,6 @@ def apply_theme() -> None:
           font-weight: 500;
         }
 
-        /* ── Buttons ── */
         .stButton > button, .stDownloadButton > button {
           background: var(--bg3);
           border: 1px solid var(--border2);
@@ -179,7 +175,6 @@ def apply_theme() -> None:
           background: var(--bg4); border-color: var(--border3);
         }
 
-        /* ── Inputs ── */
         .stTextInput input, .stNumberInput input, textarea {
           background: var(--bg4) !important;
           border: 1px solid var(--border2) !important;
@@ -197,7 +192,6 @@ def apply_theme() -> None:
           font-size: 13px !important;
         }
 
-        /* ── DataFrames / Tables ── */
         [data-testid="stDataFrame"] {
           border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
         }
@@ -211,7 +205,6 @@ def apply_theme() -> None:
         td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.025) !important; }
         tr:hover td { background: rgba(255,255,255,0.018); }
 
-        /* ── Typography ── */
         h1, h2, h3, h4 {
           font-family: var(--font-d);
           color: var(--text);
@@ -219,7 +212,6 @@ def apply_theme() -> None:
         }
         hr { border-color: var(--border) !important; }
 
-        /* ── Card components ── */
         .qd-card {
           background: var(--bg2);
           border: 1px solid var(--border);
@@ -237,7 +229,6 @@ def apply_theme() -> None:
         }
         .qd-card-sub { font-size: 10.5px; color: var(--text2); margin-top: 2px; }
 
-        /* ── Badges ── */
         .b {
           display: inline-block; padding: 2px 7px;
           border-radius: 4px; font-size: 10px; font-weight: 500;
@@ -249,14 +240,12 @@ def apply_theme() -> None:
         .b-am { background: rgba(240,165,0,0.12); color: var(--amber); }
         .b-pu { background: rgba(124,92,252,0.12); color: var(--purple); }
 
-        /* ── Section label ── */
         .section-lbl {
           font-size: 9.5px; color: var(--text3);
           letter-spacing: 1px; text-transform: uppercase;
           font-weight: 600; margin-bottom: 10px;
         }
 
-        /* ── Page header ── */
         .pg-hd {
           margin-bottom: 18px;
           padding-bottom: 14px;
@@ -269,11 +258,9 @@ def apply_theme() -> None:
         }
         .pg-hd-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
-        /* ── Misc ── */
         .divider { height: 1px; background: var(--border); margin: 14px 0; }
         .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 
-        /* ── Footer ── */
         .qd-footer {
           margin-top: 42px; padding-top: 14px;
           border-top: 1px solid var(--border);
@@ -284,7 +271,6 @@ def apply_theme() -> None:
         .qd-footer a { color: var(--accent); text-decoration: none; }
         .qd-footer a:hover { text-decoration: underline; }
 
-        /* ── Section intro panel ── */
         .section-intro {
           background: var(--bg2);
           border: 1px solid var(--border);
@@ -299,10 +285,8 @@ def apply_theme() -> None:
         }
         .section-intro-body { color: var(--text2); font-size: 12px; line-height: 1.6; }
 
-        /* ── Alert overrides ── */
         .stAlert { border-radius: 8px; border: 1px solid var(--border); }
 
-        /* ── Scrollbar ── */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 2px; }
 
@@ -312,27 +296,42 @@ def apply_theme() -> None:
         unsafe_allow_html=True,
     )
 
-    # Matplotlib dark theme aligned to Apex palette
-    plt.rcParams.update({
-        "figure.facecolor":  BG,
-        "axes.facecolor":    BG2,
-        "axes.edgecolor":    BG4,
-        "axes.labelcolor":   TEXT2,
-        "xtick.color":       TEXT2,
-        "ytick.color":       TEXT2,
-        "text.color":        TEXT,
-        "grid.color":        "rgba(255,255,255,0.04)",
-        "grid.linewidth":    0.5,
-        "lines.linewidth":   1.8,
-        "legend.facecolor":  BG2,
-        "legend.edgecolor":  BG4,
-        "legend.labelcolor": TEXT,
-        "figure.dpi":        110,
-        "axes.titleweight":  "bold",
-        "axes.titlesize":    11,
-        "axes.spines.top":   False,
-        "axes.spines.right": False,
-    })
+    try:
+        plt.rcParams.update({
+            "figure.facecolor": BG,
+            "axes.facecolor": BG2,
+            "axes.edgecolor": BG4,
+            "axes.labelcolor": TEXT2,
+            "xtick.color": TEXT2,
+            "ytick.color": TEXT2,
+            "text.color": TEXT,
+            "grid.color": (1, 1, 1, 0.04),
+            "grid.linewidth": 0.5,
+            "lines.linewidth": 1.8,
+            "legend.facecolor": BG2,
+            "legend.edgecolor": BG4,
+            "legend.labelcolor": TEXT,
+            "figure.dpi": 110,
+            "axes.titleweight": "bold",
+            "axes.titlesize": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+        })
+    except Exception:
+        plt.rcParams["figure.facecolor"] = BG
+        plt.rcParams["axes.facecolor"] = BG2
+        plt.rcParams["axes.edgecolor"] = BG4
+        plt.rcParams["axes.labelcolor"] = TEXT2
+        plt.rcParams["xtick.color"] = TEXT2
+        plt.rcParams["ytick.color"] = TEXT2
+        plt.rcParams["text.color"] = TEXT
+        plt.rcParams["grid.color"] = (1, 1, 1, 0.04)
+        plt.rcParams["grid.linewidth"] = 0.5
+        plt.rcParams["lines.linewidth"] = 1.8
+        plt.rcParams["legend.facecolor"] = BG2
+        plt.rcParams["legend.edgecolor"] = BG4
+        plt.rcParams["legend.labelcolor"] = TEXT
+        plt.rcParams["figure.dpi"] = 110
 
 
 def apply_responsive_layout() -> None:
