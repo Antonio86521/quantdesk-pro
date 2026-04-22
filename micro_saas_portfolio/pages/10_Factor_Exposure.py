@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
-from utils import apply_theme, apply_responsive_layout, page_header, BORDER, TEXT, MUTED, ACCENT, ACCENT2, app_footer, TEXT2, BG3, BG4
+from utils import apply_theme, apply_responsive_layout, page_header, BORDER, TEXT, MUTED, ACCENT, ACCENT2, app_footer, TEXT2, BG3, BG4, section_header
 
 st.set_page_config(page_title="Factor Exposure", layout="wide", page_icon="📊")
 apply_theme()
@@ -331,4 +331,3 @@ if missing:
     st.warning(f"Some factor proxies could not be loaded: {', '.join(missing)}")
 
 app_footer()
-
