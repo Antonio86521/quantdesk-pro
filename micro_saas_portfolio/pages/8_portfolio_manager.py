@@ -13,7 +13,7 @@ from portfolio_service import (
     rename_portfolio,
     update_position,
 )
-from utils import apply_responsive_layout, apply_theme, get_active_plan, page_header, app_footer
+from utils import apply_responsive_layout, apply_theme, get_active_plan, page_header, app_footer, TEXT2, BG3, BORDER, section_header
 
 st.set_page_config(page_title="Portfolio Manager", layout="wide", page_icon="📊")
 apply_theme()
@@ -57,7 +57,7 @@ def ensure_fund_state():
 
 st.caption(f"Workspace plan: {get_active_plan().upper()}")
 
-st.markdown("### Create Portfolio")
+section_header("Create Portfolio")
 c1, c2 = st.columns([4, 1])
 with c1:
     portfolio_name = st.text_input("Portfolio Name", placeholder="e.g. Growth Portfolio")
@@ -99,7 +99,7 @@ st.session_state["analysis_selected_portfolio"] = selected_name
 
 action1, action2 = st.columns(2)
 with action1:
-    st.markdown("### Portfolio Actions")
+    section_header("Portfolio Actions")
     new_portfolio_name = st.text_input("Rename Portfolio", value=selected_name, key="rename_portfolio_input")
     if st.button("Rename Portfolio", use_container_width=True):
         cleaned_name = new_portfolio_name.strip()
@@ -116,7 +116,7 @@ with action1:
     st.page_link("pages/9_portfolio_analysis.py", label="Analyze This Portfolio", icon="📈")
 
 with action2:
-    st.markdown("### Delete Portfolio")
+    section_header("Delete Portfolio")
     confirm_delete = st.checkbox(f'I confirm I want to delete "{selected_name}"', key="confirm_delete_portfolio")
     if st.button("Delete Portfolio", use_container_width=True):
         if not confirm_delete:
@@ -151,7 +151,7 @@ s2.metric("Total Shares", f"{total_shares:,.2f}")
 s3.metric("Total Cost Basis", f"${total_cost:,.2f}")
 
 st.divider()
-st.markdown("### Add Position")
+section_header("Add Position")
 a1, a2, a3, a4 = st.columns([2, 1, 1, 1])
 with a1:
     ticker = st.text_input("Ticker", placeholder="AAPL")
@@ -181,7 +181,7 @@ if add_clicked:
             st.error(f"Could not add position: {e}")
 
 st.divider()
-st.markdown("### Positions")
+section_header("Positions")
 positions = get_positions(portfolio_id)
 if not positions:
     st.info("No positions yet in this portfolio.")
@@ -226,7 +226,7 @@ else:
                 st.error(f"Could not delete position: {e}")
 
 st.divider()
-st.markdown("### Fund Mode")
+section_header("Fund Mode")
 st.caption("Simple investor and NAV monitor so the app feels more like a real fund workspace.")
 ensure_fund_state()
 
@@ -277,4 +277,3 @@ else:
     )
 
 app_footer()
-
