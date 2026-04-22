@@ -414,7 +414,7 @@ pages = [
     ("pages/6_Screener.py",                   "🔍 Screener"),
     ("pages/7_Macro.py",                      "🌍 Macro"),
     ("pages/8_portfolio_manager.py",          "💼 Portfolios"),
-    ("pages/11_Market_Overview.py",         "📡 Markets"),
+    ("pages/15_Market_Overview.py",         "📡 Markets"),
 ]
 for col, (path, label) in zip(nav_cols, pages):
     with col:
@@ -435,10 +435,10 @@ modules = [
     ("pages/8_portfolio_manager.py",         "💼", "Portfolio Manager",       "Create, edit and save portfolios",             "Pro"),
     ("pages/9_portfolio_analysis.py",        "📊", "Saved Portfolio Analysis","Benchmark diagnostics · Export packs",         "Pro"),
     ("pages/10_Factor_Exposure.py",          "🧪", "Factor Exposure",         "Fama-French regression · Style map",           "Pro"),
-    ("pages/11_Market_Overview.py",          "📡", "Market Overview",         "Live heatmap · Sectors · Yield curve",         "Live"),
-    ("pages/12_Alerts.py",                   "🔔", "Price Alerts",            "Threshold monitoring · Live status",           "Tools"),
-    ("pages/13_Trade_Journal.py",            "📓", "Trade Journal",           "Log trades · P&L · Win rate · Equity curve",  "Tools"),
-    ("pages/14_Reports.py",                  "📄", "Report Generator",        "Portfolio · Risk · Macro · Multi-asset",       "Pro"),
+    ("pages/15_Market_Overview.py",          "📡", "Market Overview",         "Live heatmap · Sectors · Yield curve",         "Live"),
+    ("pages/16_Alerts.py",                   "🔔", "Price Alerts",            "Threshold monitoring · Live status",           "Tools"),
+    ("pages/17_Trade_Journal.py",            "📓", "Trade Journal",           "Log trades · P&L · Win rate · Equity curve",  "Tools"),
+    ("pages/18_Reports.py",                  "📄", "Report Generator",        "Portfolio · Risk · Macro · Multi-asset",       "Pro"),
 ]
 
 tag_colors = {
