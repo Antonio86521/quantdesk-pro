@@ -36,7 +36,7 @@ from auth import require_login, sidebar_user_widget
 from utils import (
     app_footer,
     ACCENT, ACCENT2, AMBER, AMBER as YELLOW, AMBER as ORANGE,
-    BORDER, GREEN, MUTED, PALETTE, RED, TEXT, TEXT2, BG3,
+    BORDER, MPL_BORDER, GREEN, MUTED, PALETTE, RED, TEXT, TEXT2, BG3,
     apply_theme, apply_responsive_layout, page_header,
 )
 from data_loader import load_close_series
@@ -239,8 +239,8 @@ def _apply_chart_style(ax, title: str = "") -> None:
     ax.figure.patch.set_facecolor("#080b10")
     ax.tick_params(colors="#8899aa", labelsize=8)
     for spine in ax.spines.values():
-        spine.set_edgecolor(BORDER)
-    ax.grid(True, alpha=0.18, color="#334455")
+        spine.set_edgecolor(MPL_BORDER)
+    ax.grid(True, alpha=0.18, color=MPL_BORDER)
     if title:
         ax.set_title(title, color=TEXT, fontsize=10, fontweight="bold", pad=8)
 
