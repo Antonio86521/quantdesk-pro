@@ -210,7 +210,7 @@ nav_pages = [
     ("pages/2_Risk_Attribution.py","⚡ Risk"),("pages/3__Derivatives.py","⚙ Derivatives"),
     ("pages/4_Vol_Surface.py","🌊 Vol Surface"),("pages/5_Monte_Carlo__Strategy_Lab.py","🎲 Monte Carlo"),
     ("pages/6_Screener.py","🔍 Screener"),("pages/7_Macro.py","🌍 Macro"),
-    ("pages/11_Market_Overview.py","📡 Markets"),("pages/12_Alerts.py","🔔 Alerts"),
+    ("pages/15_Market_Overview.py","📡 Markets"),("pages/16_Alerts.py","🔔 Alerts"),
 ]
 for col, (path, label) in zip(nav_cols, nav_pages):
     with col: st.page_link(path, label=label)
@@ -229,10 +229,10 @@ MODS = [
     ("pages/8_portfolio_manager.py","💼","Portfolio Manager","Create · Edit · Save portfolios","Pro",AMBER,"rgba(240,165,0,0.13)"),
     ("pages/9_portfolio_analysis.py","📊","Saved Analysis","Benchmark · Diagnostics · Export","Pro",AMBER,"rgba(240,165,0,0.13)"),
     ("pages/10_Factor_Exposure.py","🧪","Factor Exposure","Fama-French · Style map · R²","Quant",PURPLE,"rgba(124,92,252,0.13)"),
-    ("pages/11_Market_Overview.py","📡","Market Overview","Live heatmap · Sectors · Yield curve","Live",GREEN,"rgba(14,201,125,0.13)"),
-    ("pages/12_Alerts.py","🔔","Price Alerts","Threshold monitoring · Live status","Tools",ACCENT2,"rgba(45,127,249,0.13)"),
-    ("pages/13_Trade_Journal.py","📓","Trade Journal","Log · P&L · Win rate · Equity curve","Tools",GREEN,"rgba(14,201,125,0.13)"),
-    ("pages/14_Reports.py","📄","Report Generator","Portfolio · Risk · Macro · Export","Pro",AMBER,"rgba(240,165,0,0.13)"),
+    ("pages/15_Market_Overview.py","📡","Market Overview","Live heatmap · Sectors · Yield curve","Live",GREEN,"rgba(14,201,125,0.13)"),
+    ("pages/16_Alerts.py","🔔","Price Alerts","Threshold monitoring · Live status","Tools",ACCENT2,"rgba(45,127,249,0.13)"),
+    ("pages/17_Trade_Journal.py","📓","Trade Journal","Log · P&L · Win rate · Equity curve","Tools",GREEN,"rgba(14,201,125,0.13)"),
+    ("pages/18_Reports.py","📄","Report Generator","Portfolio · Risk · Macro · Export","Pro",AMBER,"rgba(240,165,0,0.13)"),
 ]
 
 main_col, watch_col = st.columns([2.5, 1])
@@ -278,9 +278,9 @@ with watch_col:
     for path, label in [
         ("pages/8_portfolio_manager.py","💼 Portfolio Manager"),
         ("pages/9_portfolio_analysis.py","📊 Saved Analysis"),
-        ("pages/11_Market_Overview.py","📡 Market Overview"),
-        ("pages/13_Trade_Journal.py","📓 Trade Journal"),
-        ("pages/14_Reports.py","📄 Reports"),
+        ("pages/15_Market_Overview.py","📡 Market Overview"),
+        ("pages/17_Trade_Journal.py","📓 Trade Journal"),
+        ("pages/18_Reports.py","📄 Reports"),
     ]:
         st.page_link(path, label=label)
 
