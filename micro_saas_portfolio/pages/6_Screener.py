@@ -9,7 +9,7 @@ from utils import (
     apply_theme, apply_responsive_layout, page_header,
     PALETTE, ACCENT, ACCENT2, GREEN, RED, AMBER, MUTED, TEXT2, BG3, BORDER,
     app_footer,
-)
+    section_header,)
 from data_loader import load_close_series, load_price_history
 from analytics import annualized_return, annualized_vol, rsi, sma, historical_var, max_drawdown_from_returns
 
@@ -23,13 +23,6 @@ sidebar_user_widget()
 def _set_clicked():
     st.session_state["run_screener_clicked"] = True
 
-
-def _slbl(text):
-    st.markdown(
-        f'<div style="font-size:9.5px;color:#3d5068;letter-spacing:1px;'
-        f'text-transform:uppercase;font-weight:600;margin:18px 0 10px;">{text}</div>',
-        unsafe_allow_html=True,
-    )
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -129,7 +122,7 @@ if not records:
 df = pd.DataFrame(records)
 
 # ── SNAPSHOT CARDS ────────────────────────────────────────────────────────────
-_slbl("Market Snapshot")
+section_header("Market Snapshot")
 n_up   = (df["1D Chg %"] > 0).sum()
 n_down = (df["1D Chg %"] < 0).sum()
 
@@ -141,7 +134,7 @@ c4.metric("Overbought",      f"{(df['RSI (14)'] >= rsi_ob).sum()}")
 c5.metric("Oversold",        f"{(df['RSI (14)'] <= rsi_os).sum()}")
 
 # ── SCREENER TABLE ────────────────────────────────────────────────────────────
-_slbl("Screener Table")
+section_header("Screener Table")
 
 fmt = {
     "Price":          "${:.2f}",
@@ -178,7 +171,7 @@ st.dataframe(
 )
 
 # ── CHARTS ────────────────────────────────────────────────────────────────────
-_slbl("Visual Comparison")
+section_header("Visual Comparison")
 tab1, tab2, tab3 = st.tabs(["Returns & Sharpe", "RSI Heatmap", "Price History"])
 
 with tab1:
@@ -227,7 +220,7 @@ with tab3:
         st.pyplot(fig4); plt.close()
 
 # ── SIGNAL SUMMARY ────────────────────────────────────────────────────────────
-_slbl("Signal Summary")
+section_header("Signal Summary")
 for signal, count in df["Signal"].value_counts().items():
     tickers_w = df[df["Signal"] == signal]["Ticker"].tolist()
     st.markdown(f"{signal}: **{', '.join(tickers_w)}**")
