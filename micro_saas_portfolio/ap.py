@@ -26,14 +26,14 @@ st.markdown(f"""
 
 .block-container {{
   padding-top: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  max-width: 100% !important;
+  max-width: 1340px !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
 }}
 
 /* ── Topbar ─────────────────────────────────────────────── */
 .qd-topbar {{
-  position: sticky; top: 0; z-index: 200;
+  position: sticky; top: 0; z-index: 99;
   height: 56px;
   background: rgba(8,11,16,0.96);
   backdrop-filter: blur(20px) saturate(180%);
@@ -41,6 +41,13 @@ st.markdown(f"""
   border-bottom: 1px solid rgba(255,255,255,0.06);
   display: flex; align-items: center;
   padding: 0 28px; gap: 20px;
+}}
+/* Never let topbar cover Streamlit sidebar controls */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"],
+button[kind="header"] {{
+  z-index: 100 !important;
+  position: relative !important;
 }}
 .qd-logo {{
   display: flex; align-items: center; gap: 11px; flex-shrink: 0;
@@ -104,7 +111,7 @@ st.markdown(f"""
 .qd-btn-accent:hover {{ background: #1a6de0; box-shadow: 0 0 28px rgba(45,127,249,0.4); }}
 
 /* ── Page wrapper ─────────────────────────────────────── */
-.qd-page {{ padding: 0 28px 40px; }}
+.qd-page {{ padding: 0 0 40px; }}
 
 /* ── Hero ─────────────────────────────────────────────── */
 .qd-hero {{
