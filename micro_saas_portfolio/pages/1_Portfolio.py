@@ -9,7 +9,7 @@ from utils import (
     apply_theme, apply_responsive_layout, page_header,
     PALETTE, ACCENT, ACCENT2, GREEN, RED, AMBER, TEXT2, BG3, BORDER,
     app_footer, safe_pct, safe_num,
-)
+    section_header,)
 from data_loader import load_close_series, load_price_history, load_news
 from analytics import (
     annualized_return, annualized_vol, max_drawdown_from_returns,
