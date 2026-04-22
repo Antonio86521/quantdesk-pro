@@ -8,7 +8,7 @@ from utils import (
     apply_theme, apply_responsive_layout, page_header,
     ACCENT, ACCENT2, GREEN, RED, AMBER, PURPLE, TEXT2, BG3, BORDER,
     app_footer,
-)
+    section_header,)
 from options_models import monte_carlo_paths, bs_price_only, monte_carlo_option_price
 from strategies import (
     payoff_long_call, payoff_short_call, payoff_long_put, payoff_short_put,
@@ -27,13 +27,6 @@ page_header("Monte Carlo & Strategy Lab", "GBM Simulation · Option Pricing · P
 sidebar_user_widget()
 
 
-def _slbl(text):
-    st.markdown(
-        f'<div style="font-size:9.5px;color:#3d5068;letter-spacing:1px;'
-        f'text-transform:uppercase;font-weight:600;margin:18px 0 10px;">{text}</div>',
-        unsafe_allow_html=True,
-    )
-
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("## Simulation Inputs")
@@ -46,7 +39,7 @@ mc_paths_n   = st.sidebar.slider("Number of paths", 100, 10_000, 3_000, 100)
 run_mc       = st.sidebar.button("Run Monte Carlo", use_container_width=True)
 
 # ── MONTE CARLO ───────────────────────────────────────────────────────────────
-_slbl("Monte Carlo Price Simulation")
+section_header("Monte Carlo Price Simulation")
 
 if run_mc:
     sigma_mc = option_sigma / 100
@@ -93,7 +86,7 @@ if run_mc:
     ax.legend(fontsize=8); ax.grid(True, alpha=0.25)
     st.pyplot(fig); plt.close()
 
-    _slbl("Final Price Distribution")
+    section_header("Final Price Distribution")
     fig2, ax2 = plt.subplots(figsize=(10, 3))
     ax2.hist(final_prices, bins=70, color=ACCENT2, alpha=0.75, edgecolor="#0d1117")
     ax2.axvline(option_K,                  color=AMBER,  lw=1.5, ls="--", label=f"Strike ${option_K:.0f}")
@@ -112,7 +105,7 @@ if run_mc:
     s5.metric("95th Pct",    f"${np.percentile(final_prices, 95):.2f}")
     s6.metric("P(above K)",  f"{(final_prices > option_K).mean()*100:.1f}%")
 
-    _slbl("MC Convergence")
+    section_header("MC Convergence")
     sample_sizes = np.unique(np.linspace(100, mc_paths_n, 40).astype(int))
     conv_prices  = [np.exp(-r_mc * mc_horizon) * np.maximum(paths[-1, :n] - option_K, 0).mean()
                     for n in sample_sizes]
@@ -137,7 +130,7 @@ else:
 st.divider()
 
 # ── STRATEGY LAB ──────────────────────────────────────────────────────────────
-_slbl("Strategy Lab — Expiry Payoff Diagrams")
+section_header("Strategy Lab — Expiry Payoff Diagrams")
 
 STRATEGIES = [
     "Long Call","Short Call","Long Put","Short Put",
