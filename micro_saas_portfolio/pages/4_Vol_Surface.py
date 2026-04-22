@@ -9,7 +9,7 @@ from utils import (
     apply_theme, apply_responsive_layout, page_header,
     ACCENT, ACCENT2, GREEN, RED, AMBER, TEXT2, BG3, BORDER,
     app_footer,
-)
+    section_header,)
 from data_loader import load_option_expiries, load_option_chain, load_price_history, load_spot_price
 
 st.set_page_config(page_title="Vol Surface — QuantDesk Pro", layout="wide", page_icon="📊")
@@ -18,13 +18,6 @@ apply_responsive_layout()
 page_header("Volatility Surface", "Smile · Term Structure · Heatmap · 3D Surface")
 sidebar_user_widget()
 
-
-def _slbl(text):
-    st.markdown(
-        f'<div style="font-size:9.5px;color:#3d5068;letter-spacing:1px;'
-        f'text-transform:uppercase;font-weight:600;margin:18px 0 10px;">{text}</div>',
-        unsafe_allow_html=True,
-    )
 
 
 def _set_clicked():
@@ -95,7 +88,7 @@ def clean_chain(chain_dict, side, spot, min_vol, min_oi, lo, hi):
 
 
 # ── VOLATILITY SMILE ──────────────────────────────────────────────────────────
-_slbl("Volatility Smile by Expiry")
+section_header("Volatility Smile by Expiry")
 n_cols = min(len(exps), 4)
 fig, axes = plt.subplots(1, n_cols, figsize=(4 * n_cols, 4), sharey=True)
 if n_cols == 1:
@@ -125,7 +118,7 @@ plt.tight_layout()
 st.pyplot(fig); plt.close()
 
 # ── ATM IV TERM STRUCTURE ─────────────────────────────────────────────────────
-_slbl("ATM IV Term Structure")
+section_header("ATM IV Term Structure")
 atm_ivs = []
 for exp in expiries[:8]:
     chain = load_option_chain(ticker, exp)
@@ -155,7 +148,7 @@ else:
     st.warning("Not enough data to build the term structure.")
 
 # ── IV HEATMAP ────────────────────────────────────────────────────────────────
-_slbl("IV Heatmap (Strike × Expiry)")
+section_header("IV Heatmap (Strike × Expiry)")
 surface_data = []
 for exp in exps:
     chain = load_option_chain(ticker, exp)
@@ -185,7 +178,7 @@ if surface_data:
         ax3.set_xlabel("Strike"); ax3.set_ylabel("Expiry"); ax3.set_title(f"{ticker} IV Heatmap")
         st.pyplot(fig3); plt.close()
 
-        _slbl("3D Implied Volatility Surface")
+        section_header("3D Implied Volatility Surface")
         pivot_3d = pivot.dropna(axis=1, thresh=max(1, int(len(pivot) * 0.5)))
         if not pivot_3d.empty and pivot_3d.shape[1] >= 3:
             strikes    = pivot_3d.columns.values.astype(float)
@@ -206,7 +199,7 @@ else:
 
 # ── PUT / CALL IV SKEW ────────────────────────────────────────────────────────
 if exps:
-    _slbl(f"Put vs Call IV Skew — {exps[0]}")
+    section_header(f"Put vs Call IV Skew — {exps[0]}")
     chain0  = load_option_chain(ticker, exps[0])
     calls_0 = clean_chain(chain0, "calls", spot, 0, 0, band_lo, band_hi)
     puts_0  = clean_chain(chain0, "puts",  spot, 0, 0, band_lo, band_hi)
