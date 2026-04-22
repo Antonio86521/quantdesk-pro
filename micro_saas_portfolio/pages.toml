@@ -54,21 +54,21 @@ name = "Factor Exposure"
 icon = ":material/science:"
 
 [[pages]]
-path = "pages/11_Market_Overview.py"
+path = "pages/15_Market_Overview.py"
 name = "Market Overview"
 icon = ":material/bar_chart:"
 
 [[pages]]
-path = "pages/12_Alerts.py"
+path = "pages/16_Alerts.py"
 name = "Alerts"
 icon = ":material/notifications:"
 
 [[pages]]
-path = "pages/13_Trade_Journal.py"
+path = "pages/17_Trade_Journal.py"
 name = "Trade Journal"
 icon = ":material/edit_note:"
 
 [[pages]]
-path = "pages/14_Reports.py"
+path = "pages/18_Reports.py"
 name = "Reports"
 icon = ":material/description:"
