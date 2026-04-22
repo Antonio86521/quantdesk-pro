@@ -96,35 +96,56 @@ def apply_theme() -> None:
         }
 
         .stApp { background: var(--bg) !important; }
-        .block-container { padding-top: 0.6rem; padding-bottom: 1rem; max-width: 1260px; }
+        .block-container { padding-top: 1rem !important; padding-bottom: 1.5rem !important; max-width: 1280px !important; padding-left: 2rem !important; padding-right: 2rem !important; }
 
         /* ── Sidebar ── */
         section[data-testid="stSidebar"] {
           background: var(--bg2) !important;
           border-right: 1px solid var(--border2) !important;
         }
+        /* ── Sidebar nav ── */
+        [data-testid="stSidebarNav"] {
+          padding-top: 0 !important;
+        }
         [data-testid="stSidebarNav"]::before {
           content: "QD";
           display: flex; align-items: center; justify-content: center;
           background: linear-gradient(135deg, #2f80ed 0%, #7c5cfc 100%);
           color: #fff; width: 34px; height: 34px; border-radius: 9px;
-          font-family: var(--font-d); font-size: 13px; font-weight: 800;
-          margin: 1rem auto 0.8rem auto;
+          font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+          margin: 1.2rem auto 1rem auto;
           box-shadow: 0 0 24px rgba(47,128,237,0.35);
         }
+        [data-testid="stSidebarNav"] li { list-style: none !important; }
         [data-testid="stSidebarNav"] a {
-          color: var(--text2) !important;
-          font-size: 12px; font-weight: 400;
-          border-radius: 8px; padding: 0.55rem 0.85rem;
-          transition: all 0.14s;
+          display: flex !important; align-items: center !important; gap: 8px !important;
+          color: #7a8fa8 !important;
+          font-family: 'Inter', sans-serif !important;
+          font-size: 12.5px !important; font-weight: 400 !important;
+          border-radius: 8px !important;
+          padding: 8px 10px !important;
+          margin-bottom: 1px !important;
+          border: 1px solid transparent !important;
+          transition: all 0.14s !important;
+          text-decoration: none !important;
         }
         [data-testid="stSidebarNav"] a:hover {
-          background: var(--bg3) !important; color: var(--text) !important;
+          background: #131920 !important;
+          color: #dde4f0 !important;
+          border-color: rgba(255,255,255,0.06) !important;
         }
         [data-testid="stSidebarNav"] a[aria-current="page"] {
-          background: var(--accent3) !important;
-          color: var(--accent2) !important;
-          border: 1px solid rgba(47,128,237,0.22);
+          background: rgba(47,128,237,0.12) !important;
+          color: #5ba3f5 !important;
+          border-color: rgba(47,128,237,0.22) !important;
+          font-weight: 500 !important;
+        }
+        /* Sidebar section/group labels injected via page emoji grouping */
+        section[data-testid="stSidebar"] .sidebar-group-label {
+          font-size: 9.5px; color: #3d5068;
+          letter-spacing: 1.2px; text-transform: uppercase;
+          font-weight: 600; padding: 10px 10px 4px;
+          display: block;
         }
 
         /* ── Metrics ── */
@@ -216,10 +237,25 @@ def apply_theme() -> None:
         tr:hover td { background: rgba(255,255,255,0.018); }
 
         /* ── Typography ── */
-        h1, h2, h3, h4 {
-          font-family: var(--font-d);
-          color: var(--text);
-          letter-spacing: -0.3px;
+        h1, h2, h3, h4,
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4,
+        [data-testid="stMarkdownContainer"] h1,
+        [data-testid="stMarkdownContainer"] h2,
+        [data-testid="stMarkdownContainer"] h3,
+        [data-testid="stMarkdownContainer"] h4 {
+          font-family: 'Syne', sans-serif !important;
+          color: #dde4f0 !important;
+          letter-spacing: -0.3px !important;
+          font-weight: 700 !important;
+        }
+        [data-testid="stMarkdownContainer"] h3 {
+          font-size: 1.05rem !important;
+          margin-bottom: 12px !important;
+          padding-bottom: 8px !important;
+          border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+        }
+        [data-testid="stMarkdownContainer"] h2 {
+          font-size: 1.25rem !important;
         }
         hr { border-color: var(--border) !important; }
 
@@ -262,20 +298,78 @@ def apply_theme() -> None:
 
         /* ── Page header ── */
         .pg-hd {
-          margin-bottom: 18px;
-          padding-bottom: 14px;
-          border-bottom: 1px solid var(--border);
+          margin-bottom: 20px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          display: flex; align-items: flex-start;
+          justify-content: space-between;
         }
         .pg-hd-title {
-          font-family: var(--font-d);
-          font-size: 20px; font-weight: 700;
-          letter-spacing: -0.3px; color: var(--text);
+          font-family: 'Syne', sans-serif !important;
+          font-size: 22px !important; font-weight: 700 !important;
+          letter-spacing: -0.4px !important; color: #dde4f0 !important;
+          line-height: 1.2 !important;
         }
-        .pg-hd-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+        .pg-hd-sub {
+          font-size: 12px; color: #7a8fa8; margin-top: 4px;
+          font-family: 'Inter', sans-serif;
+        }
+        .pg-hd-badge {
+          display: inline-block; padding: 3px 9px; border-radius: 4px;
+          font-size: 10px; font-weight: 500;
+          background: rgba(47,128,237,0.12); color: #5ba3f5;
+          margin-top: 2px;
+        }
 
         /* ── Misc ── */
-        .divider { height: 1px; background: var(--border); margin: 14px 0; }
+        .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 20px 0; }
+        hr[data-testid='stDivider'], .stDivider { border-color: rgba(255,255,255,0.06) !important; margin: 20px 0 !important; }
         .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+        /* ── Expander ── */
+        details[data-testid="stExpander"] {
+          background: #0d1117 !important;
+          border: 1px solid rgba(255,255,255,0.06) !important;
+          border-radius: 10px !important;
+        }
+        details[data-testid="stExpander"] summary {
+          color: #7a8fa8 !important;
+          font-size: 12px !important;
+          font-weight: 500 !important;
+        }
+        details[data-testid="stExpander"] summary:hover {
+          color: #dde4f0 !important;
+        }
+
+        /* ── Progress / spinner ── */
+        .stSpinner > div { border-top-color: #2f80ed !important; }
+
+        /* ── Checkbox / radio ── */
+        [data-testid="stCheckbox"] label { color: #7a8fa8 !important; font-size: 12px !important; }
+        [data-testid="stRadio"] label { color: #7a8fa8 !important; font-size: 12px !important; }
+
+        /* ── Slider ── */
+        [data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"] {
+          background: #2f80ed !important;
+        }
+
+        /* ── Popover ── */
+        div[data-testid="stPopover"] button {
+          border-radius: 8px !important; border: 1px solid rgba(255,255,255,0.11) !important;
+          background: #131920 !important; color: #dde4f0 !important;
+          font-weight: 500 !important;
+        }
+
+        /* ── Caption / footnotes ── */
+        .stCaption, [data-testid="stCaptionContainer"] p {
+          color: #3d5068 !important; font-size: 11px !important;
+        }
+
+        /* ── Warning/info/success alerts ── */
+        [data-testid="stAlert"] {
+          border-radius: 8px !important;
+          border-width: 1px !important;
+        }
 
         /* ── Footer ── */
         .qd-footer {
@@ -317,25 +411,41 @@ def apply_theme() -> None:
     )
 
     # Matplotlib dark theme aligned to Apex palette
+    _MPL_TEXT   = "#9aafc4"   # axes labels, ticks - subtle but readable
+    _MPL_TEXT2  = "#dde4f0"   # title, legend text - fully visible
+    _MPL_BG     = "#080b10"
+    _MPL_BG2    = "#0d1117"
+    _MPL_BG4    = "#1a2230"
+
     plt.rcParams.update({
-        "figure.facecolor":  BG,
-        "axes.facecolor":    BG2,
-        "axes.edgecolor":    BG4,
-        "axes.labelcolor":   TEXT2,
-        "xtick.color":       TEXT2,
-        "ytick.color":       TEXT2,
-        "text.color":        TEXT,
-        "grid.color":        MPL_GRID,
-        "grid.linewidth":    0.5,
-        "lines.linewidth":   1.8,
-        "legend.facecolor":  BG2,
-        "legend.edgecolor":  BG4,
-        "legend.labelcolor": TEXT,
-        "figure.dpi":        110,
-        "axes.titleweight":  "bold",
-        "axes.titlesize":    11,
-        "axes.spines.top":   False,
-        "axes.spines.right": False,
+        "figure.facecolor":   _MPL_BG,
+        "axes.facecolor":     _MPL_BG2,
+        "axes.edgecolor":     "#1e2b3a",
+        "axes.labelcolor":    _MPL_TEXT,
+        "axes.labelsize":     10,
+        "xtick.color":        _MPL_TEXT,
+        "ytick.color":        _MPL_TEXT,
+        "xtick.labelsize":    9,
+        "ytick.labelsize":    9,
+        "text.color":         _MPL_TEXT2,
+        "grid.color":         MPL_GRID,
+        "grid.linewidth":     0.5,
+        "lines.linewidth":    1.8,
+        "patch.edgecolor":    _MPL_BG,
+        "legend.facecolor":   _MPL_BG2,
+        "legend.edgecolor":   "#1e2b3a",
+        "legend.labelcolor":  _MPL_TEXT2,
+        "legend.fontsize":    9,
+        "legend.framealpha":  0.85,
+        "figure.dpi":         110,
+        "axes.titleweight":   "semibold",
+        "axes.titlesize":     11,
+        "axes.titlecolor":    _MPL_TEXT2,
+        "axes.spines.top":    False,
+        "axes.spines.right":  False,
+        "axes.spines.left":   True,
+        "axes.spines.bottom": True,
+        "figure.constrained_layout.use": False,
     })
 
 
@@ -365,17 +475,46 @@ def apply_responsive_layout() -> None:
 
 # ── Page header ───────────────────────────────────────────────────────────────
 
-def page_header(title: str, subtitle: str = "") -> None:
-    sub_html = f'<div class="pg-hd-sub">{subtitle}</div>' if subtitle else ""
+def page_header(title: str, subtitle: str = "", badge: str = "") -> None:
+    sub_html   = f'<div class="pg-hd-sub">{subtitle}</div>' if subtitle else ""
+    badge_html = f'<span class="pg-hd-badge">{badge}</span>' if badge else ""
     st.markdown(
         f"""
         <div class="pg-hd">
+          <div>
             <div class="pg-hd-title">{title}</div>
             {sub_html}
+          </div>
+          {badge_html}
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+
+def section_header(title: str) -> None:
+    """Apex-style section label — small caps, muted, with bottom rule."""
+    st.markdown(
+        f'<div style="font-size:9.5px;color:#3d5068;letter-spacing:1.2px;'
+        f'text-transform:uppercase;font-weight:600;margin:22px 0 10px;">'
+        f'{title}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def card_wrap(content_fn, title: str = "", subtitle: str = "", badge: str = ""):
+    """Render content inside an Apex-style glass card div."""
+    hdr = ""
+    if title:
+        badge_html = f'<span class="pg-hd-badge">{badge}</span>' if badge else ""
+        sub_html   = f'<div class="qd-card-sub">{subtitle}</div>' if subtitle else ""
+        hdr = f"""<div class="qd-card-hd">
+          <div><div class="qd-card-title">{title}</div>{sub_html}</div>
+          {badge_html}
+        </div>"""
+    st.markdown(f'<div class="qd-card">{hdr}', unsafe_allow_html=True)
+    content_fn()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ── Metric card (custom HTML, richer than st.metric) ─────────────────────────
