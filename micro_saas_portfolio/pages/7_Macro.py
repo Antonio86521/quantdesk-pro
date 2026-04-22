@@ -35,18 +35,9 @@ import streamlit as st
 from auth import require_login, sidebar_user_widget
 from utils import (
     app_footer,
-    ACCENT,
-    ACCENT2,
-    BORDER,
-    GREEN,
-    MUTED,
-    ORANGE,
-    PALETTE,
-    RED,
-    TEXT,
-    YELLOW,
-    apply_theme,
-    apply_responsive_layout,
+    ACCENT, ACCENT2, AMBER, AMBER as YELLOW, AMBER as ORANGE,
+    BORDER, GREEN, MUTED, PALETTE, RED, TEXT, TEXT2, BG3,
+    apply_theme, apply_responsive_layout, page_header,
 )
 from data_loader import load_close_series
 from analytics import annualized_return, annualized_vol, correlation_matrix, rolling_vol
@@ -191,24 +182,12 @@ def _set_load_macro_clicked() -> None:
 
 def render_header() -> None:
     st.markdown(
-        f"""
-        <div style="padding:4px 0 16px 0; border-bottom:1px solid {BORDER}; margin-bottom:18px;">
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <span style="font-size:28px; font-weight:900; color:{TEXT}; letter-spacing:-0.02em;">
-              Macro Dashboard Pro
-            </span>
-            <span style="padding:3px 8px; border-radius:999px; font-size:10px; font-weight:800;
-                         border:1px solid {BORDER}; color:{ACCENT};">
-              MULTI-ASSET
-            </span>
-            <span style="padding:3px 8px; border-radius:999px; font-size:10px; font-weight:800;
-                         border:1px solid {BORDER}; color:{ACCENT2};">
-              CROSS-ASSET
-            </span>
-          </div>
-          <div style="margin-top:7px; font-size:12px; color:{MUTED};">
-            Global markets monitor — rates · FX · commodities · equities · bonds · crypto
-            with regime tracking, relative performance and portfolio backtesting.
+        """
+        <div style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;
+                      letter-spacing:-0.3px;color:#dde4f0;">Macro Dashboard</div>
+          <div style="font-size:12px;color:#7a8fa8;margin-top:3px;">
+            Rates · FX · Commodities · Equities · Bonds · Crypto · Regime Detection
           </div>
         </div>
         """,
@@ -218,18 +197,18 @@ def render_header() -> None:
 
 def metric_block(title: str, value: str, delta: str | None = None, delta_color: str | None = None) -> None:
     delta_html = (
-        f'<div style="color:{delta_color or MUTED}; font-size:12px; font-weight:700; margin-top:4px;">{delta}</div>'
+        f'<div style="color:{delta_color or MUTED}; font-size:10.5px; margin-top:5px;">{delta}</div>'
         if delta
         else ""
     )
     st.markdown(
         f"""
-        <div style="background:linear-gradient(180deg,#0b1220 0%,#0e1627 100%);
-                    border:1px solid {BORDER}; border-radius:12px;
-                    padding:14px 16px; min-height:92px;">
-          <div style="color:{MUTED}; font-size:10px; font-weight:800;
-                      letter-spacing:0.14em; text-transform:uppercase;">{title}</div>
-          <div style="color:{TEXT}; font-size:24px; font-weight:900; margin-top:8px;">{value}</div>
+        <div style="background:#131920; border:1px solid rgba(255,255,255,0.06);
+                    border-radius:10px; padding:14px 16px; min-height:88px;">
+          <div style="color:#7a8fa8; font-size:10px; letter-spacing:0.4px;
+                      text-transform:uppercase; margin-bottom:6px;">{title}</div>
+          <div style="font-family:'DM Mono',monospace; font-size:22px; font-weight:500;
+                      letter-spacing:-0.5px; color:#dde4f0;">{value}</div>
           {delta_html}
         </div>
         """,
@@ -239,27 +218,25 @@ def metric_block(title: str, value: str, delta: str | None = None, delta_color: 
 
 def section_box(title: str, subtitle: str = "") -> None:
     sub_html = (
-        f'<div style="color:{MUTED}; font-size:11px; margin-top:6px;">{subtitle}</div>'
+        f'<div style="color:#7a8fa8; font-size:11px; margin-top:4px;">{subtitle}</div>'
         if subtitle
         else ""
     )
     st.markdown(
         f"""
-        <div style="background:linear-gradient(180deg,#0b1220 0%,#0d1526 100%);
-                    border:1px solid {BORDER}; border-radius:10px;
-                    padding:12px 14px; margin-bottom:12px;">
-          <div style="color:{TEXT}; font-size:12px; font-weight:800;
-                      letter-spacing:0.14em; text-transform:uppercase;">{title}</div>
-          {sub_html}
+        <div style="font-size:9.5px;color:#3d5068;letter-spacing:1px;
+                    text-transform:uppercase;font-weight:600;margin:2px 0 10px;">
+          {title}
         </div>
+        {sub_html}
         """,
         unsafe_allow_html=True,
     )
 
 
 def _apply_chart_style(ax, title: str = "") -> None:
-    ax.set_facecolor("#0a0e1a")
-    ax.figure.patch.set_facecolor("#0a0e1a")
+    ax.set_facecolor("#0d1117")
+    ax.figure.patch.set_facecolor("#080b10")
     ax.tick_params(colors="#8899aa", labelsize=8)
     for spine in ax.spines.values():
         spine.set_edgecolor(BORDER)
@@ -330,8 +307,8 @@ st.sidebar.button(
 if not st.session_state["load_macro_clicked"]:
     st.markdown(
         f"""
-        <div style="background:linear-gradient(180deg,#0b1220 0%,#0d1526 100%);
-                    border:1px solid {BORDER}; border-radius:12px; padding:36px;
+        <div style="background:#0d1117;
+                    border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:36px;
                     margin-top:16px; text-align:center;">
           <div style="font-size:46px; margin-bottom:10px;">🌍</div>
           <div style="font-size:22px; font-weight:800; color:{TEXT}; margin-bottom:8px;">
@@ -677,7 +654,7 @@ def create_inflation_proxy_chart(prices: pd.DataFrame) -> None:
 
     ax.plot(proxy.index, proxy.values, lw=2.6, color="white", label="Basket Average", zorder=5)
     ax.axhline(100, color=MUTED, lw=0.8, ls="--")
-    ax.legend(fontsize=8, ncols=3, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+    ax.legend(fontsize=8, ncols=3, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
 
     plt.tight_layout()
     st.pyplot(fig)
@@ -755,7 +732,7 @@ def create_backtest(prices: pd.DataFrame, basket: List[str], benchmark: str) -> 
             ax_growth.plot(aligned.index, aligned.values, lw=1.8, ls="--", color=ACCENT2, label=benchmark)
 
     ax_growth.axhline(1.0, color=MUTED, lw=0.7, ls=":")
-    ax_growth.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+    ax_growth.legend(fontsize=8, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
 
     _apply_chart_style(ax_dd, "Drawdown from Peak")
     ax_dd.fill_between(drawdown.index, drawdown.values, 0, color=RED, alpha=0.45)
@@ -770,7 +747,7 @@ def create_backtest(prices: pd.DataFrame, basket: List[str], benchmark: str) -> 
     _apply_chart_style(ax2, "Individual Asset Total Returns in Basket")
 
     bar_colors = [GREEN if v >= 0 else RED for v in contrib.values]
-    ax2.barh(contrib.index, contrib.values * 100, color=bar_colors, edgecolor="#0a0e1a", height=0.65)
+    ax2.barh(contrib.index, contrib.values * 100, color=bar_colors, edgecolor="#0d1117", height=0.65)
     ax2.axvline(0, color="white", lw=0.8, ls="--")
     ax2.set_xlabel("Return (%)", color="#aabbcc", fontsize=9)
     ax2.tick_params(axis="y", colors="#aabbcc")
@@ -893,7 +870,7 @@ with tabs[0]:
         fig, ax = plt.subplots(figsize=(8, max(4, len(rank) * 0.28)))
         _apply_chart_style(ax, "1-Month Return (%)")
         bar_cols = [GREEN if v >= 0 else RED for v in rank["1M %"]]
-        ax.barh(rank["Asset"], rank["1M %"], color=bar_cols, edgecolor="#0a0e1a", height=0.7)
+        ax.barh(rank["Asset"], rank["1M %"], color=bar_cols, edgecolor="#0d1117", height=0.7)
         ax.axvline(0, color="white", lw=0.8, ls="--")
         ax.set_xlabel("Return (%)", color="#aabbcc", fontsize=9)
         ax.tick_params(axis="y", colors="#aabbcc", labelsize=8)
@@ -994,7 +971,7 @@ with tabs[2]:
                 for i, col in enumerate(norm.columns):
                     ax.plot(norm.index, norm[col], lw=1.8, label=col, color=PALETTE[i % len(PALETTE)])
                 ax.axhline(100, color="white", lw=0.8, ls="--")
-                ax.legend(fontsize=8, ncols=3, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+                ax.legend(fontsize=8, ncols=3, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
                 plt.tight_layout()
                 st.pyplot(fig)
                 plt.close(fig)
@@ -1019,7 +996,7 @@ with tabs[2]:
                 rv = rolling_vol(crypto_prices[col].pct_change(fill_method=None).dropna(), window=roll_window) * 100
                 ax2.plot(rv.index, rv.values, lw=1.8, label=col, color=PALETTE[i % len(PALETTE)])
 
-            ax2.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+            ax2.legend(fontsize=8, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
             plt.tight_layout()
             st.pyplot(fig2)
             plt.close(fig2)
@@ -1048,7 +1025,7 @@ with tabs[3]:
                 ax.plot(s.index, s.values, lw=1.7, label=col, color=PALETTE[i % len(PALETTE)])
 
             ax.set_ylabel("Yield (%)", color="#aabbcc", fontsize=9)
-            ax.legend(fontsize=8, ncols=2, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+            ax.legend(fontsize=8, ncols=2, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
             plt.tight_layout()
             st.pyplot(fig)
             plt.close(fig)
@@ -1092,7 +1069,7 @@ with tabs[3]:
             _apply_chart_style(ax3, "HYG / LQD Credit Risk Proxy")
             ax3.plot(ratio.index, ratio.values, lw=2.0, color=ACCENT2)
             ax3.axhline(ratio.mean(), color="white", lw=0.8, ls="--", label=f"Mean: {ratio.mean():.3f}")
-            ax3.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+            ax3.legend(fontsize=8, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
             plt.tight_layout()
             st.pyplot(fig3)
             plt.close(fig3)
@@ -1182,7 +1159,7 @@ with tabs[6]:
 
         st.markdown(
             f"""
-            <div style="background:linear-gradient(180deg,#0b1220 0%,#0d1526 100%);
+            <div style="background:linear-gradient(180deg,#0d1117 0%,#0d1526 100%);
                         border:1px solid {regime_color}; border-radius:12px;
                         padding:18px; margin-bottom:12px;">
               <div style="color:{MUTED}; font-size:10px; font-weight:800;
@@ -1217,7 +1194,7 @@ with tabs[6]:
                 color=RED,
                 interpolate=True,
             )
-            ax.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+            ax.legend(fontsize=8, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
             plt.tight_layout()
             st.pyplot(fig)
             plt.close(fig)
@@ -1250,7 +1227,7 @@ with tabs[6]:
             ax2.fill_between(spread_ts.index, spread_ts.values, 0, where=(spread_ts.values < 0), alpha=0.18, color=RED, label="Inverted")
             ax2.fill_between(spread_ts.index, spread_ts.values, 0, where=(spread_ts.values >= 0), alpha=0.10, color=GREEN)
             ax2.set_ylabel("Spread (pts)", color="#aabbcc", fontsize=9)
-            ax2.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+            ax2.legend(fontsize=8, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
             plt.tight_layout()
             st.pyplot(fig2)
             plt.close(fig2)
@@ -1264,7 +1241,7 @@ with tabs[6]:
             ax3.axhline(20, color=YELLOW, lw=0.9, ls="--", label="Elevated (20)")
             ax3.axhline(30, color=RED, lw=0.9, ls="--", label="Panic (30)")
             ax3.fill_between(vix.index, vix.values, 20, where=(vix.values > 20), alpha=0.15, color=RED)
-            ax3.legend(fontsize=8, facecolor="#0a0e1a", labelcolor="#aabbcc", framealpha=0.6)
+            ax3.legend(fontsize=8, facecolor="#0d1117", labelcolor="#aabbcc", framealpha=0.6)
             ax3.set_ylabel("VIX", color="#aabbcc", fontsize=9)
             plt.tight_layout()
             st.pyplot(fig3)
@@ -1289,4 +1266,3 @@ st.markdown(
     unsafe_allow_html=True,
 )
 app_footer()
-
