@@ -163,6 +163,9 @@ section[data-testid="stSidebar"] > div {
   font-size: 13px !important; font-weight: 400 !important;
   border: 1px solid transparent !important; transition: all 0.15s ease !important;
   text-decoration: none !important; white-space: nowrap !important;
+  opacity: 1 !important; visibility: visible !important;
+  position: relative !important; inset: auto !important;
+  width: auto !important; height: auto !important;
 }
 [data-testid="stSidebarNav"] a:hover {
   background: var(--bg3) !important; color: var(--text) !important;
@@ -697,6 +700,49 @@ div[data-testid="stPageLink"] a:hover {
 def apply_responsive_layout() -> None:
     st.markdown("""
 <style>
+/* Sidebar always visible */
+section[data-testid="stSidebar"] {
+  min-width: 220px !important;
+}
+section[data-testid="stSidebar"] * {
+  visibility: visible !important;
+}
+[data-testid="stSidebarNav"] a {
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  inset: auto !important;
+}
+
+/* Page link buttons — always visible and styled */
+div[data-testid="stPageLink"] a {
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  padding: 8px 12px !important;
+  background: rgba(45,127,249,0.08) !important;
+  border: 1px solid rgba(45,127,249,0.2) !important;
+  border-radius: 8px !important;
+  color: #5b9ef5 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: all 0.15s !important;
+  margin-top: 6px !important;
+}
+div[data-testid="stPageLink"] a:hover {
+  background: rgba(45,127,249,0.15) !important;
+  border-color: rgba(45,127,249,0.4) !important;
+  color: #7cb8ff !important;
+}
+div[data-testid="stPageLink"] { margin: 0 !important; }
+
 @media (max-width: 900px) {
   .block-container {
     padding-left: 0.9rem !important;
@@ -710,6 +756,10 @@ def apply_responsive_layout() -> None:
   div[data-baseweb="select"] > div,
   .stTextInput input, .stNumberInput input, textarea {
     font-size: 16px !important;
+  }
+  .block-container {
+    padding-left: 0.6rem !important;
+    padding-right: 0.6rem !important;
   }
 }
 </style>
