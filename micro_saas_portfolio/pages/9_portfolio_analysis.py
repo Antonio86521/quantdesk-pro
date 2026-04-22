@@ -25,17 +25,11 @@ from analytics import (
     tracking_stats,
 )
 from utils import (
-    app_footer,
-apply_responsive_layout,
-    apply_theme,
-    get_active_plan,
-    html_report,
-    make_download_zip,
-    page_header,
-    premium_notice,
-    safe_num,
-    safe_pct,
-)
+    app_footer, apply_responsive_layout, apply_theme,
+    get_active_plan, html_report, make_download_zip,
+    page_header, premium_notice, safe_num, safe_pct,
+    TEXT2, BG3, BORDER,
+    section_header,)
 
 st.set_page_config(page_title="Saved Portfolio Analysis", layout="wide", page_icon="📊")
 apply_theme()
@@ -260,7 +254,7 @@ with st.expander("Download portfolio report pack"):
     )
     st.download_button("Download report pack (.zip)", data=zip_bytes, file_name=f"{selected_name.lower().replace(' ', '_')}_report_pack.zip", mime="application/zip")
 
-st.markdown("### Holdings Overview")
+section_header("Holdings Overview")
 display_df = pos_df[["ticker", "shares", "buy_price", "current_price", "market_value", "weight"]].copy()
 display_df.columns = ["Ticker", "Shares", "Avg Buy Price", "Current Price", "Market Value", "Weight"]
 st.dataframe(
@@ -272,7 +266,7 @@ st.dataframe(
 st.divider()
 perf_col, alloc_col = st.columns([1.2, 1])
 with perf_col:
-    st.markdown("### Cumulative Return vs Benchmark")
+    section_header("Cumulative Return vs Benchmark")
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(cum_returns.index, cum_returns.values, linewidth=2, label="Portfolio")
     if not benchmark_cum_returns.empty:
@@ -282,7 +276,7 @@ with perf_col:
     fig.tight_layout()
     st.pyplot(fig, clear_figure=True)
 with alloc_col:
-    st.markdown("### Allocation")
+    section_header("Allocation")
     fig, ax = plt.subplots(figsize=(6.4, 4.6))
     ax.pie(pos_df["market_value"], labels=pos_df["ticker"], autopct="%1.1f%%", startangle=90)
     ax.axis("equal")
@@ -292,14 +286,14 @@ with alloc_col:
 st.divider()
 risk_col, corr_col = st.columns(2)
 with risk_col:
-    st.markdown("### Rolling Volatility")
+    section_header("Rolling Volatility")
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(rolling_vol(portfolio_returns, window=30), linewidth=2)
     ax.grid(alpha=0.2)
     fig.tight_layout()
     st.pyplot(fig, clear_figure=True)
 with corr_col:
-    st.markdown("### Correlation Matrix")
+    section_header("Correlation Matrix")
     asset_returns = price_df.pct_change().dropna()
     corr = correlation_matrix(asset_returns)
     fig, ax = plt.subplots(figsize=(7.2, 4.8))
@@ -313,7 +307,7 @@ with corr_col:
     st.pyplot(fig, clear_figure=True)
 
 st.divider()
-st.markdown("### Benchmark Comparison")
+section_header("Benchmark Comparison")
 if benchmark_returns.empty:
     st.info("Enter a valid benchmark ticker to unlock alpha, tracking and capture diagnostics.")
 else:
@@ -340,7 +334,7 @@ else:
     st.dataframe(comparison_df.style.format({"Portfolio": "{:.2%}", benchmark_ticker: "{:.2%}"}, na_rep="—"), use_container_width=True, hide_index=True)
 
 st.divider()
-st.markdown("### Advanced Risk Metrics")
+section_header("Advanced Risk Metrics")
 r1, r2c, r3 = st.columns(3)
 r1.metric("Parametric VaR (95%)", safe_pct(var_param))
 r2c.metric("Historical VaR (95%)", safe_pct(var_hist))
@@ -350,7 +344,7 @@ r4.metric("Skewness", safe_num(sk))
 r5.metric("Kurtosis", safe_num(kt))
 
 st.divider()
-st.markdown("### Manager Notes")
+section_header("Manager Notes")
 notes = []
 if not benchmark_returns.empty and information_ratio > 0.4:
     notes.append("Active return efficiency is strong relative to the benchmark.")
@@ -374,5 +368,3 @@ with st.expander("Show Daily Portfolio Returns"):
 st.caption(f"Analysis based on {lookback} history. Risk-free rate for ratio calculations: {risk_free_rate:.2%}.")
 
 app_footer()
-
-
