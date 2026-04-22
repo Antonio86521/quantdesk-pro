@@ -403,7 +403,7 @@ if market_rows:
 
 # ── NAV LINKS ─────────────────────────────────────────────────────────────────
 st.markdown('<div class="apex-section">Navigation</div>', unsafe_allow_html=True)
-nav_cols = st.columns(9)
+nav_cols = st.columns(10)
 pages = [
     ("ap.py",                                 "🏠 Home"),
     ("pages/1_Portfolio.py",                  "📈 Portfolio"),
@@ -414,6 +414,7 @@ pages = [
     ("pages/6_Screener.py",                   "🔍 Screener"),
     ("pages/7_Macro.py",                      "🌍 Macro"),
     ("pages/8_portfolio_manager.py",          "💼 Portfolios"),
+    ("pages/11_Market_Overview.py",         "📡 Markets"),
 ]
 for col, (path, label) in zip(nav_cols, pages):
     with col:
@@ -434,6 +435,10 @@ modules = [
     ("pages/8_portfolio_manager.py",         "💼", "Portfolio Manager",       "Create, edit and save portfolios",             "Pro"),
     ("pages/9_portfolio_analysis.py",        "📊", "Saved Portfolio Analysis","Benchmark diagnostics · Export packs",         "Pro"),
     ("pages/10_Factor_Exposure.py",          "🧪", "Factor Exposure",         "Fama-French regression · Style map",           "Pro"),
+    ("pages/11_Market_Overview.py",          "📡", "Market Overview",         "Live heatmap · Sectors · Yield curve",         "Live"),
+    ("pages/12_Alerts.py",                   "🔔", "Price Alerts",            "Threshold monitoring · Live status",           "Tools"),
+    ("pages/13_Trade_Journal.py",            "📓", "Trade Journal",           "Log trades · P&L · Win rate · Equity curve",  "Tools"),
+    ("pages/14_Reports.py",                  "📄", "Report Generator",        "Portfolio · Risk · Macro · Multi-asset",       "Pro"),
 ]
 
 tag_colors = {
@@ -444,16 +449,17 @@ tag_colors = {
     "Tools":     (ACCENT2,  "rgba(47,128,237,0.12)"),
     "Macro":     (PURPLE,   "rgba(124,92,252,0.12)"),
     "Pro":       ("#d4a853","rgba(212,168,83,0.12)"),
+    "Live":      ("#0ecb81","rgba(14,203,129,0.12)"),
 }
 
 main_col, watch_col = st.columns([2.2, 1])
 
 with main_col:
     # 5 + 5 layout
-    row1 = st.columns(5)
-    row2 = st.columns(5)
+    row1 = st.columns(7)
+    row2 = st.columns(7)
     for i, (path, icon, title, sub, tag) in enumerate(modules):
-        col = row1[i] if i < 5 else row2[i - 5]
+        col = row1[i] if i < 7 else row2[i - 7]
         tc, tbg = tag_colors.get(tag, (ACCENT2, "rgba(47,128,237,0.12)"))
         with col:
             st.markdown(
