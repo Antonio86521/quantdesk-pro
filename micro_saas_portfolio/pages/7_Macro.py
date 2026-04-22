@@ -38,7 +38,7 @@ from utils import (
     ACCENT, ACCENT2, AMBER, AMBER as YELLOW, AMBER as ORANGE,
     BORDER, MPL_BORDER, GREEN, MUTED, PALETTE, RED, TEXT, TEXT2, BG3,
     apply_theme, apply_responsive_layout, page_header,
-)
+    section_header,)
 from data_loader import load_close_series
 from analytics import annualized_return, annualized_vol, correlation_matrix, rolling_vol
 
