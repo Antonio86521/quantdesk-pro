@@ -117,7 +117,7 @@ html, body {
 .block-container {
   padding-top: 0.75rem !important;
   padding-bottom: 2rem !important;
-  padding-left: 1.5rem !important;
+  padding-left: 1.25rem !important;
   padding-right: 1.5rem !important;
   max-width: 1340px !important;
 }
@@ -132,6 +132,18 @@ header[data-testid="stHeader"] {
 section[data-testid="stSidebar"] {
   background: var(--bg2) !important;
   border-right: 1px solid var(--b1) !important;
+  min-width: 220px !important;
+}
+/* Collapsed sidebar — minimal footprint */
+section[data-testid="stSidebar"][aria-expanded="false"] {
+  min-width: 0px !important;
+  width: 0px !important;
+  overflow: hidden !important;
+}
+/* Remove the big left margin when sidebar is collapsed */
+.stApp > div[data-testid="stAppViewContainer"] > section.main {
+  margin-left: 0 !important;
+  transition: margin-left 0.3s ease !important;
 }
 /* Sidebar collapse/expand button — always on top, always clickable */
 [data-testid="collapsedControl"],
