@@ -10,7 +10,7 @@ from utils import (
     apply_theme, apply_responsive_layout, page_header,
     ACCENT, ACCENT2, GREEN, RED, AMBER, PURPLE, TEXT2, BG3, BORDER,
     app_footer,
-)
+    section_header,)
 from data_loader import load_option_expiries, load_option_chain, load_spot_price
 from options_models import (
     black_scholes_with_greeks, bs_price_only,
@@ -25,13 +25,6 @@ apply_responsive_layout()
 page_header("Derivatives Pricer", "Black-Scholes · Binomial · Monte Carlo · Live Chain")
 sidebar_user_widget()
 
-
-def _slbl(text):
-    st.markdown(
-        f'<div style="font-size:9.5px;color:#3d5068;letter-spacing:1px;'
-        f'text-transform:uppercase;font-weight:600;margin:18px 0 10px;">{text}</div>',
-        unsafe_allow_html=True,
-    )
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -49,7 +42,7 @@ iv_type   = st.sidebar.selectbox("Option Type", ["call", "put"])
 calc_iv   = st.sidebar.button("Calculate IV", use_container_width=True)
 
 # ── LIVE CHAIN ────────────────────────────────────────────────────────────────
-_slbl("Live Options Chain")
+section_header("Live Options Chain")
 col_tk, col_btn = st.columns([3, 1])
 with col_tk:
     chain_ticker = st.text_input("Ticker", value="AAPL")
@@ -98,7 +91,7 @@ if load_chain_btn:
                 use_container_width=True, height=300,
             )
         if "openInterest" in chain["calls"].columns:
-            _slbl("Open Interest by Strike")
+            section_header("Open Interest by Strike")
             oi_c = chain["calls"][["strike","openInterest"]].dropna()
             oi_p = chain["puts"][["strike","openInterest"]].dropna()
             fig_oi, ax_oi = plt.subplots(figsize=(10, 3))
@@ -113,7 +106,7 @@ if load_chain_btn:
 st.divider()
 
 # ── PRICING ────────────────────────────────────────────────────────────────────
-_slbl("Option Pricing — Black-Scholes · Binomial · Monte Carlo")
+section_header("Option Pricing — Black-Scholes · Binomial · Monte Carlo")
 
 if calc_option:
     S = option_S; K = option_K; T = option_T
@@ -140,7 +133,7 @@ if calc_option:
         use_container_width=True, hide_index=True,
     )
 
-    _slbl("Greeks & Probabilities")
+    section_header("Greeks & Probabilities")
     g1,g2,g3,g4,g5,g6 = st.columns(6)
     g1.metric("Call Δ",      f"{cdelta:.4f}")
     g2.metric("Put Δ",       f"{pdelta:.4f}")
@@ -159,7 +152,7 @@ if calc_option:
     parity_c = GREEN if abs(parity) < 0.01 else RED
     st.markdown(f'<div style="font-size:12px;margin:8px 0;">Put-Call Parity gap: <strong style="color:{parity_c};">{parity:.6f}</strong></div>', unsafe_allow_html=True)
 
-    _slbl("Option Price vs Stock Price")
+    section_header("Option Price vs Stock Price")
     sp = np.linspace(max(1, S * 0.5), S * 1.5, 200)
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(sp, [bs_price_only(s, K, T, r, sigma, "call") for s in sp], color=ACCENT, label="Call", lw=2)
@@ -172,7 +165,7 @@ if calc_option:
     ax.legend(fontsize=8); ax.grid(True, alpha=0.25)
     st.pyplot(fig); plt.close()
 
-    _slbl("P&L Heatmap — Call Option")
+    section_header("P&L Heatmap — Call Option")
     stock_r = np.linspace(S*0.6, S*1.4, 50); time_r = np.linspace(T, 0.01, 25)
     pnl_grid = np.array([[bs_price_only(sv, K, tv, r, sigma, "call") - call_p
                           for sv in stock_r] for tv in time_r])
@@ -189,7 +182,7 @@ if calc_option:
     ax6.set_title("Call Option P&L Heatmap"); ax6.legend(fontsize=8)
     st.pyplot(fig6); plt.close()
 
-    _slbl("Greeks Curves")
+    section_header("Greeks Curves")
     delta_c, delta_p, gamma_c, vega_c, theta_c = [], [], [], [], []
     for s in sp:
         rr = black_scholes_with_greeks(s, K, T, r, sigma)
@@ -222,7 +215,7 @@ if calc_option:
         ax5.set_title("Call Theta"); ax5.grid(True, alpha=0.25)
         st.pyplot(fig5); plt.close()
 
-    _slbl("3D Call Price Surface")
+    section_header("3D Call Price Surface")
     sr = np.linspace(max(1, S*0.5), S*1.5, 30)
     vr = np.linspace(0.05, max(0.6, sigma*1.5), 30)
     SG, VG = np.meshgrid(sr, vr)
@@ -247,7 +240,7 @@ else:
     )
 
 st.divider()
-_slbl("Implied Volatility Calculator")
+section_header("Implied Volatility Calculator")
 if calc_iv:
     iv = implied_volatility_newton(mkt_price, option_S, option_K, option_T, option_r/100, iv_type)
     if np.isnan(iv):
@@ -271,4 +264,3 @@ else:
     st.info("Enter a market price in the sidebar and click **Calculate IV**.")
 
 app_footer()
-
