@@ -39,12 +39,12 @@ name = "Macro Dashboard"
 icon = ":material/public:"
 
 [[pages]]
-path = "pages/8_portfolio_manager.py"
+path = "pages/8_Portfolio_Manager.py"
 name = "Portfolio Manager"
 icon = ":material/folder:"
 
 [[pages]]
-path = "pages/9_portfolio_analysis.py"
+path = "pages/9_Portfolio_Analysis.py"
 name = "Saved Analysis"
 icon = ":material/analytics:"
 
