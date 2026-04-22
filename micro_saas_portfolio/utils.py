@@ -117,8 +117,8 @@ html, body {
 .block-container {
   padding-top: 0.75rem !important;
   padding-bottom: 2rem !important;
-  padding-left: 1.75rem !important;
-  padding-right: 1.75rem !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
   max-width: 1340px !important;
 }
 #MainMenu, footer, [data-testid="stToolbar"],
@@ -133,6 +133,14 @@ header[data-testid="stHeader"] {
 section[data-testid="stSidebar"] {
   background: var(--bg2) !important;
   border-right: 1px solid var(--b1) !important;
+}
+/* Sidebar collapse/expand button — always on top, always clickable */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+  z-index: 9999 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
 }
 section[data-testid="stSidebar"] > div {
   background: transparent !important;
