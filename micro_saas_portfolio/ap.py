@@ -334,25 +334,40 @@ st.markdown(f"""
 .qd-ql-label {{ font-size: 12.5px; color: #8ba3bd; font-weight: 500; }}
 .qd-ql-arrow {{ font-size: 12px; color: #2a3d55; }}
 
-/* ── Page link overrides ───────────────────────────────── */
-div[data-testid="stPageLink"] {{
-  margin: 0 !important;
-}}
-div[data-testid="stPageLink"] a {{
-  display: block !important; width: 100% !important; height: 100% !important;
-  position: absolute !important; inset: 0 !important;
-  opacity: 0 !important; z-index: 10 !important;
-  border-radius: 14px !important;
-}}
+/* page link styles handled globally in utils.py */
 
-/* card clickable overlay */
-.qd-card-link-wrap {{
-  position: relative;
-}}
-
+/* ── Tablet ── */
 @media (max-width: 1100px) {{
   .qd-strip {{ grid-template-columns: repeat(3, 1fr); }}
   .qd-hero-stats {{ display: none; }}
+  .qd-page {{ padding: 0 16px 32px; }}
+  .qd-hero {{ padding: 24px 22px; margin: 16px 0 14px; }}
+  .qd-hero-h1 {{ font-size: 26px; }}
+}}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {{
+  .qd-topbar {{ padding: 0 14px; gap: 10px; height: 50px; }}
+  .qd-ticker-belt {{ display: none; }}
+  .qd-logo-sub {{ display: none; }}
+  .qd-logo-name {{ font-size: 14px; }}
+  .qd-btn:not(.qd-btn-accent) {{ display: none; }}
+  .qd-clock {{ display: none; }}
+  .qd-page {{ padding: 0 12px 24px; }}
+  .qd-hero {{ flex-direction: column; padding: 20px 18px; gap: 16px; }}
+  .qd-hero-h1 {{ font-size: 22px; }}
+  .qd-hero-sub {{ font-size: 12px; gap: 8px; }}
+  .qd-hero-stats {{ width: 100%; justify-content: space-around; }}
+  .qd-hs {{ padding: 12px 16px; }}
+  .qd-hs-val {{ font-size: 22px; }}
+  .qd-strip {{ grid-template-columns: repeat(2, 1fr); border-radius: 10px; }}
+  .qd-sc {{ padding: 12px 14px; }}
+  .qd-sc-price {{ font-size: 16px; }}
+}}
+
+@media (max-width: 480px) {{
+  .qd-strip {{ grid-template-columns: repeat(2, 1fr); }}
+  .qd-hero-h1 {{ font-size: 19px; }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -454,7 +469,6 @@ st.markdown(f"""
     <button class="qd-btn">↓ Export</button>
     <button class="qd-btn qd-btn-accent">＋ New Trade</button>
   </div>
-</div>
 
 <script>
 (function() {{
@@ -512,7 +526,6 @@ st.markdown(f"""
       <div class="qd-hs-lbl">Data Feed</div>
     </div>
   </div>
-</div>
 """, unsafe_allow_html=True)
 
 # ── MARKET STRIP ──────────────────────────────────────────────────────────────
@@ -635,8 +648,7 @@ with main_col:
         for col, (path, icon, name, desc, tag, tc, tbg) in zip(cols, row_mods):
             with col:
                 st.markdown(f"""
-<div class="qd-card-link-wrap">
-  <div class="qd-card">
+<div class="qd-card">
     <div class="qd-card-icon">{icon}</div>
     <div class="qd-card-name">{name}</div>
     <div class="qd-card-desc">{desc}</div>
@@ -644,8 +656,7 @@ with main_col:
       <span class="qd-tag" style="color:{tc};background:{tbg};">{tag}</span>
       <span class="qd-card-arrow">→</span>
     </div>
-  </div>
-</div>""", unsafe_allow_html=True)
+  </div>""", unsafe_allow_html=True)
                 try:
                     st.page_link(path, label="Open")
                 except Exception:
