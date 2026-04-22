@@ -21,20 +21,11 @@ from analytics import (
     rolling_vol,
 )
 from utils import (
-    ACCENT,
-    GREEN,
-    RED,
-    apply_responsive_layout,
-    apply_theme,
-    get_active_plan,
-    html_report,
-    make_download_zip,
-    page_header,
-    premium_notice,
-    safe_num,
-    safe_pct,
-    app_footer,
-)
+    ACCENT, GREEN, RED, AMBER, TEXT2, BG3, BORDER,
+    apply_responsive_layout, apply_theme,
+    get_active_plan, html_report, make_download_zip,
+    page_header, premium_notice, safe_num, safe_pct, app_footer,
+    section_header,)
 
 st.set_page_config(page_title="Risk & Attribution", layout="wide", page_icon="📊")
 apply_theme()
@@ -116,7 +107,15 @@ plan = get_active_plan()
 st.sidebar.caption(f"Workspace plan: {plan.upper()}")
 
 if not st.session_state.get("risk_analysis_clicked", False):
-    st.info("Fill in the sidebar and click **Run Risk Analysis**.")
+    st.markdown(
+        f'<div style="background:#131920;border:1px solid rgba(255,255,255,0.06);border-radius:10px;'
+        f'padding:22px;text-align:center;margin:10px 0;">'
+        f'<div style="font-size:24px;margin-bottom:10px;">⚡</div>'
+        f'<div style="font-size:13px;font-weight:600;margin-bottom:5px;">Risk & Attribution</div>'
+        f'<div style="font-size:12px;color:#7a8fa8;">Fill in the sidebar and click <strong>Run Risk Analysis</strong>.</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
     st.stop()
 
 try:
@@ -165,7 +164,7 @@ pvar95 = parametric_var(port_ret, 0.95)
 cvar95 = cvar(port_ret, var95)
 up_cap, down_cap = compute_capture_ratios(port_ret, bench_ret_s)
 
-st.markdown("### Risk Summary")
+section_header("Risk Summary")
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Ann. Return", safe_pct(ann_ret))
 c2.metric("Ann. Volatility", safe_pct(ann_vol))
@@ -206,7 +205,7 @@ st.divider()
 
 col_a, col_b = st.columns(2)
 with col_a:
-    st.markdown("### Rolling Metrics")
+    section_header("Rolling Metrics")
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(rolling_vol(port_ret, roll_window), label="Rolling Vol")
     ax.plot(rolling_sharpe(port_ret, rf=rf, window=roll_window), label="Rolling Sharpe")
@@ -216,7 +215,7 @@ with col_a:
     st.pyplot(fig, clear_figure=True)
 
 with col_b:
-    st.markdown("### Benchmark Diagnostics")
+    section_header("Benchmark Diagnostics")
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(rolling_beta(port_ret, bench_ret_s, roll_window), label="Rolling Beta")
     ax.plot(rolling_corr(port_ret, bench_ret_s, roll_window), label="Rolling Corr")
@@ -229,7 +228,7 @@ with col_b:
 
 st.divider()
 
-st.markdown("### Risk Contribution")
+section_header("Risk Contribution")
 cov_ann = covariance_matrix(ret)
 contr = marginal_vol_contribution(weights, cov_ann.values)
 risk_df = pd.DataFrame({"Ticker": tickers, "Weight": weights, "Risk Contribution": contr}).sort_values("Risk Contribution", ascending=False)
@@ -247,7 +246,7 @@ with r2c:
 
 st.divider()
 
-st.markdown("### Stress Test Lab")
+section_header("Stress Test Lab")
 st.caption("A simple rule-based engine to approximate portfolio behavior under macro and concentration shocks.")
 
 stress_df = pd.DataFrame({
@@ -291,7 +290,7 @@ with sright:
 
 st.divider()
 
-st.markdown("### Factor Exposure")
+section_header("Factor Exposure")
 if plan != "pro":
     premium_notice("Factor regression")
 else:
@@ -311,7 +310,7 @@ else:
 
 st.divider()
 
-st.markdown("### Desk Notes")
+section_header("Desk Notes")
 messages = []
 if beta > 1.1:
     messages.append("Portfolio beta is above 1, so it is likely to amplify broad market moves.")
