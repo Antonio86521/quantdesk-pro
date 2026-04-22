@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
-from utils import apply_theme, apply_responsive_layout, page_header, BORDER, TEXT, MUTED, ACCENT, ACCENT2, app_footer
+from utils import apply_theme, apply_responsive_layout, page_header, BORDER, TEXT, MUTED, ACCENT, ACCENT2, app_footer, TEXT2, BG3, BG4
 
 st.set_page_config(page_title="Factor Exposure", layout="wide", page_icon="📊")
 apply_theme()
@@ -19,7 +19,7 @@ st.markdown(
     .fx-card {{
         border: 1px solid {BORDER};
         border-radius: 16px;
-        background: linear-gradient(180deg, #081220 0%, #0a1626 100%);
+        background: #131920;
         padding: 16px 16px 14px 16px;
         min-height: 110px;
     }}
@@ -45,14 +45,14 @@ st.markdown(
     .section-shell {{
         border: 1px solid {BORDER};
         border-radius: 18px;
-        background: linear-gradient(180deg, #07111c 0%, #0a1422 100%);
+        background: #0d1117;
         padding: 18px;
         margin-bottom: 16px;
     }}
     .mini-stat {{
         border: 1px solid {BORDER};
         border-radius: 14px;
-        background: #08111d;
+        background: #131920;
         padding: 14px;
         min-height: 88px;
     }}
