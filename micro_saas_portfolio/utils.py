@@ -121,12 +121,11 @@ html, body {
   padding-right: 1.5rem !important;
   max-width: 1340px !important;
 }
-#MainMenu, footer, [data-testid="stToolbar"],
+#MainMenu, footer,
 [data-testid="manage-app-button"] { visibility: hidden !important; }
 header[data-testid="stHeader"] {
   background: transparent !important;
   border-bottom: none !important;
-  height: 0 !important;
 }
 
 /* ─── SIDEBAR ────────────────────────────────────────────────────────── */
